@@ -1,6 +1,6 @@
+const apiUrl = process.env.controldbserverapi ?? "not set"
 
-export default function Page() {
-return (
-    <div> controldb landing</div>
-)
+export default function ApiDiv() {
+    return <div>{String(apiUrl)}</div>;
+
 }
