@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import { ChevronRight, type LucideIcon } from "lucide-react"
 
 import {
@@ -33,6 +34,8 @@ export function NavConfiguration({
     }[]
   }[]
 }) {
+  const pathname = usePathname()
+
   return (
     <SidebarGroup>
       <SidebarGroupLabel>Application Configuration</SidebarGroupLabel>
@@ -42,7 +45,11 @@ export function NavConfiguration({
             <SidebarMenuButton
               asChild
               tooltip={item.title}
-              className={item.isActive ? "bg-accent text-accent-foreground" : ""}
+              className={
+                pathname === item.url
+                  ? "bg-accent text-accent-foreground"
+                  : ""
+              }
             >
               <Link href={item.url}>
                 {item.icon && <item.icon className="mr-2 h-4 w-4" />}

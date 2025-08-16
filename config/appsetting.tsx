@@ -25,9 +25,14 @@ export const AppConfig = {
     {
       title: "Control Db",
       url: "/appconfiguration/controldb",
-      icon: SquareTerminal,
-      isActive: true
-    }
+      icon: SquareTerminal
+    }, 
+    {
+      title: "App Db",
+      url: "/appconfiguration/appdb",
+      icon: SquareTerminal
+    }, 
+
   ],
   projects: [
     {
