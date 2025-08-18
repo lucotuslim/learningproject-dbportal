@@ -2,7 +2,7 @@
 import React from "react";
 import { columns as baseColumns } from "./columns";
 import { DataTable } from "./data-table";
-import {IapiControlDbUrl} from "./interfaces"
+import {IapiControlDbUrl} from "@/interfaces/controldb";
 
 const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ Controldburl: url }))
