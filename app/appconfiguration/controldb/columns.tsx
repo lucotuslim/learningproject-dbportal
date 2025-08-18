@@ -7,8 +7,7 @@ import {IapiControlDbUrlWithSqlServer} from "@/interfaces/controldb"
 // You can use a Zod schema here if you want.
 
 export const columns: ColumnDef<IapiControlDbUrlWithSqlServer>[] = [
- 
-  {  accessorKey: "Controldburl",
+   {  accessorKey: "Controldburl",
     header: "Control DB URL"
   },
   {
@@ -38,6 +37,15 @@ export const columns: ColumnDef<IapiControlDbUrlWithSqlServer>[] = [
   {
     accessorKey: "AuthenticationMode",
     header: "Authentication Mode",
+  }, 
+
+  {
+    accessorKey: "messsage",
+    header: "Message",
+  },
+  {
+    accessorKey: "error",
+    header: "Error?",
   }
 ]
 

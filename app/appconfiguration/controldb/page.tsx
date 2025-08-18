@@ -2,57 +2,56 @@
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import {IapiControlDbUrl,IapiControlDbUrlWithSqlServer, ISqlServerInstance} from "@/interfaces/controldb";
-import {ApiRequest} from "@/lib/utils"
+import { IapiControlDbUrl, IapiControlDbUrlWithSqlServer, ISqlServerInstance, IapiControlDbUrlWithError } from "@/interfaces/controldb";
+import { ApiRequest } from "@/lib/utils";
 
 const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ Controldburl: url }))
   : [];
 
-  
 export default function ApiDiv() {
-  const [data, setData] = React.useState<IapiControlDbUrlWithSqlServer[]>([]);
+  const [data, setData] = React.useState<IapiControlDbUrlWithSqlServer[]|IapiControlDbUrlWithError[]>([]);
 
-  React.useEffect(() => {
-    const fetchData = async () => {
-      const results = await Promise.all(
-        apiControlDbUrl.map(async url => {
+
+React.useEffect(() => {
+  const fetchData = async () => {
+    const results:IapiControlDbUrlWithSqlServer[]|IapiControlDbUrlWithError[] = await Promise.all(
+      apiControlDbUrl.map(async (url) => {
+        try {
           const result = await ApiRequest<ISqlServerInstance>(url.Controldburl);
-          return {
+          return result.items.map((item: ISqlServerInstance) => ({
+            ...item,
+            message: result.message,
+            error: result.error,
             Controldburl: url.Controldburl,
-            ...result
-          };
-        })
-      );
-      setData(results);
-    };
-    fetchData();
-  }, []);
+          }));
+        } catch (err) {
+          console.error(`Error fetching from ${url.Controldburl}:`, err);
+          return [{
+            message: null,
+            error: (err as Error).message,
+            Controldburl: url.Controldburl,
+          }];
+        }
+      })
+    );
+    // Flatten results
+    const controldbs = results.flat();
+    console.log("Fetched data:", controldbs);
+    setData(controldbs);
+  };
+  fetchData();
+}, [apiControlDbUrl]);
 
-  // const dynamicColumns = [
-  //   ...baseColumns,
-  //   {
-  //     accessorKey: "extra",
-  //     header: "Extra Info",
-  //     cell: ({ row }: { row: { original: IapiControlDbUrl } }) => {
-  //       const [result, setResult] = React.useState<string>("Loading...");
-  //       React.useEffect(() => {
-  //         fetch(row.original.Controldburl)
-  //           .then(res => res.ok ? res.text() : Promise.reject("Error"))
-  //           .then(data => setResult(data))
-  //           .catch(() => setResult("Error"));
-  //       }, [row.original.Controldburl]);
-  //       return <span>{result}</span>;
-  //     },
-  //   },
-  // ];
 
-  //   return (
-  //   <div className="container mx-auto py-10">
-  //     <DataTable columns={columns} data={data} />
-  //   </div>
-  // )
-   
+
+  
+
+  return (
+    <div className="container mx-auto py-10">
+      <DataTable columns={columns} data={data} />
+    </div>
+  );
 }
 
 
