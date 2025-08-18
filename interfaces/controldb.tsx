@@ -11,3 +11,5 @@ export interface ISqlServerInstance {
   ClusterStatus: string;
   AuthenticationMode: string;
 }
+
+export interface IapiControlDbUrlWithSqlServer extends IapiControlDbUrl, ISqlServerInstance {}
