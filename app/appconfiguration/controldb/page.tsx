@@ -42,10 +42,7 @@ React.useEffect(() => {
   };
   fetchData();
 }, [apiControlDbUrl]);
-
-
-
-  
+ 
 
   return (
     <div className="container mx-auto py-10">
