@@ -12,6 +12,5 @@ export async function ApiRequest<T>(
 ): Promise<ApiInterface<T>> {
   const response = await fetch(fetchUrl, options);
   if (!response.ok) throw new Error(`API error: ${response.status}`);
-  console.log (JSON.stringify(response))
   return await response.json();
 }

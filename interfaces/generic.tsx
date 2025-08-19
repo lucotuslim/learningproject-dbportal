@@ -6,13 +6,13 @@
  }
 
 export interface ISqlServerInstance {
-  MachineName: string;
-  ServerName: string;
-  Edition: string;
-  ProductVersion: string;
-  EngineEdition: string;
-  ClusterStatus: string;
-  AuthenticationMode: string;
+  MachineName?: string;
+  ServerName?: string;
+  Edition?: string;
+  ProductVersion?: string;
+  EngineEdition?: string;
+  ClusterStatus?: string;
+  AuthenticationMode?: string;
 }
 
 export interface IErrorResponse {

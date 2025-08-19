@@ -40,7 +40,7 @@ export const columns: ColumnDef<IapiControlDbUrlWithSqlServer>[] = [
   }, 
 
   {
-    accessorKey: "messsage",
+    accessorKey: "message",
     header: "Message",
   },
   {
