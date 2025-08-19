@@ -1,8 +1,10 @@
+import { NavManagements } from "@/components/nav-managements"
 import {
-type LucideIcon,
+  type LucideIcon,
 } from "lucide-react"
 
 import {
+  DatabaseIcon,
   GalleryVerticalEnd,
   AudioWaveform,
   Command,
@@ -10,6 +12,7 @@ import {
   Bot,
   BookOpen,
   Settings2,
+  ServerCog,
   Frame,
   PieChart,
   Map
@@ -26,14 +29,27 @@ export const AppConfig = {
       title: "Control Db",
       url: "/appconfiguration/controldb",
       icon: SquareTerminal
-    }, 
+    },
     {
       title: "App Db",
       url: "/appconfiguration/appdb",
       icon: SquareTerminal
-    }, 
+    },
 
   ],
+  NavManagements: [
+    {
+      name: "Servers",
+      url: "/managements/servers",
+      icon: ServerCog
+    },
+        {
+      name: "Databases",
+      url: "/managements/databases",
+      icon: DatabaseIcon
+    },
+  ],
+
   projects: [
     {
       name: "Design Engineering",

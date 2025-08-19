@@ -26,6 +26,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import {AppConfig} from "@/config/appsetting";
+import { NavManagements } from "./nav-managements"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -35,7 +36,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavConfiguration items={AppConfig.navConfiguration} />
-        <NavProjects projects={AppConfig.projects} />
+        <NavManagements managements={AppConfig.NavManagements} />
+        {/* <NavProjects projects={AppConfig.projects} /> */}
       </SidebarContent>
       <SidebarFooter>
         {/* <NavUser user={AppConfig.user} /> */}
