@@ -1,7 +1,31 @@
-"use client"
+"use client";
 
-const apiUrl = process.env.NEXT_PUBLIC_APPDBSERVERAPI ?? "env NEXT_PUBLIC_APPDBSERVERAPI not set";
+import { useEffect, useState } from "react";
+import { Subscription } from "rxjs";
+import { serverwithapi } from "@/lib/rxjs";
 
-export default function ApiDiv() {
-  return <div> {apiUrl}</div>
+export default function RxjsServer() {
+  const [message, setMessage] = useState< {Servername: string , ServerUrl: string}>({Servername: "", ServerUrl: ""});
+
+  useEffect(() => {
+    // Call our RxJS function with a server name
+    const observable$ = serverwithapi("sql-prod");
+
+    // Subscribe to the observable
+    const subscription: Subscription = observable$.subscribe((val) => {
+      setMessage(val);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center justify-center h-screen">
+      <h1 className="text-2xl font-bold">RxJS Server Formatter</h1>
+      <p className="text-lg mt-4">{message.ServerUrl}</p>
+    </div>
+  );
 }
