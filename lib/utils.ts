@@ -14,3 +14,12 @@ export async function ApiRequest<T>(
   if (!response.ok) throw new Error(`API error: ${response.status}`);
   return await response.json();
 }
+
+// export async function ApiRequest<T>(
+//   fetchUrl: string,
+//   options?: RequestInit
+// ): Promise<ApiInterface<T>> {
+//   const response = await fetch(fetchUrl, options);
+//   if (!response.ok) throw new Error(`API error: ${response.status}`);
+//   return await response.json();
+// }
