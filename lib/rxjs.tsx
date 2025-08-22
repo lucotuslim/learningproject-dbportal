@@ -12,7 +12,7 @@ export function serverwithapi(servername: string) {
   );
 }
 
-function ApiRequestRxjs<T>(fetchUrl: string,
+export function ApiRequestRxjs<T>(fetchUrl: string,
   options?: RequestInit) { 
   return fromFetch(fetchUrl, options).pipe(
     switchMap(response => {
@@ -22,13 +22,4 @@ function ApiRequestRxjs<T>(fetchUrl: string,
       return response.json() as Promise<ApiInterface<T>>;
     })
   );
-}
-
-export async function ApiRequest<T>(
-  fetchUrl: string,
-  options?: RequestInit
-): Promise<ApiInterface<T>> {
-  const response = await fetch(fetchUrl, options);
-  if (!response.ok) throw new Error(`API error: ${response.status}`);
-  return await response.json();
 }
