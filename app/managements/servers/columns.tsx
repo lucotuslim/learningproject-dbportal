@@ -27,8 +27,8 @@ export const columns: ColumnDef<IapiInfo<IServerInfoDetails>>[] = [
 
   },
   {
-    accessorKey: "Edition",
-    header: "Edition",
+    accessorKey: "type",
+    header: "Type",
   },
   {
     accessorKey: "ProductVersion",
