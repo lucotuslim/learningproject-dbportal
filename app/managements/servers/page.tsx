@@ -2,47 +2,31 @@
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { IapiControlDbUrl} from "@/interfaces/controldb";
-import { IapiSqlServerInfo,ISqlServerInfo } from "@/interfaces/server";
-
-import { ApiRequest } from "@/lib/utils";
+import { IapiControlDbUrl, IapiControlDbUrlWithSqlServer } from "@/interfaces/controldb";
 import { ISqlServerInstance } from "@/interfaces/generic";
+import { useObservable } from "rxjs-hooks";
+import { ApiGetControlDbRxjs } from "@/lib/rxjs";
+import { map } from "rxjs/operators";
 
 const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ Controldburl: url }))
+  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(",").map((url) => ({
+      Controldburl: url,
+    }))
   : [];
 
 export default function ApiDiv() {
-  const [data, setData] = React.useState<IapiSqlServerInfo[]>([]);
-
-React.useEffect(() => {
-  const fetchData = async () => {
-    const results = await Promise.all(
-      apiControlDbUrl.map(async (url) => {
-        try {
-          const result = await ApiRequest<ISqlServerInfo>(url.Controldburl);
-          return result.items.map((item: ISqlServerInfo) => ({
-            ...item,
-            message: result.message || "",
-            error: result.error || false,
-            Controldburl: url.Controldburl,
-          }));
-        } catch (err) {
-          console.error(`Error fetching from ${url.Controldburl}:`, err);
-          return [{
-            message: err instanceof Error ? err.message : "Unknown error",
-            error: true,
-            Controldburl: url.Controldburl,
-          }];
-        }
-      })
-    );
-    const controldbs = results.flat();
-    console.log("Fetched data:", controldbs);
-    setData(controldbs);
-  };
-  fetchData();
-}, [apiControlDbUrl]);
+  const data: IapiControlDbUrlWithSqlServer[] = useObservable(
+    () =>
+      ApiGetControlDbRxjs<ISqlServerInstance>(apiControlDbUrl).pipe(
+        map((results) =>
+          results.map((result) => ({
+            serverurl: result.Controldburl,
+            ...result,
+          }))
+        )
+      ),
+    [] as IapiControlDbUrlWithSqlServer[]
+  );
 
   return (
     <div className="container mx-auto py-10">
@@ -50,6 +34,3 @@ React.useEffect(() => {
     </div>
   );
 }
-
-
-

@@ -34,6 +34,7 @@ export function ApiGetControlDbRxjs<T>(
         map((result) =>
           result.items.map((item) => ({
             ...item,
+            type: 'ControlDb',
             message: result.message || "",
             error: result.error || false,
             Controldburl: entry.Controldburl,
@@ -45,6 +46,7 @@ export function ApiGetControlDbRxjs<T>(
               Controldburl: entry.Controldburl,
               message: err.message || "Unknown error",
               error: true,
+              type: 'ControlDb',
             } as IapiControlDbUrlWithSqlServer,
           ])
         )

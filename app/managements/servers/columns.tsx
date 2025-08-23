@@ -1,20 +1,21 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import {IapiSqlServerInfo} from "@/interfaces/server"
+import {IapiControlDbUrlWithSqlServer} from "@/interfaces/controldb"
 import Link from "next/link"
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
 
-export const columns: ColumnDef<IapiSqlServerInfo>[] = [
-   {  accessorKey: "Controldburl",
-    header: "Control DB URL"
+export const columns: ColumnDef<IapiControlDbUrlWithSqlServer>[] = [
+   {  accessorKey: "serverurl",
+    header: "Server Api Url"
   },
   {
-    accessorKey: "MachineName",
-    header: "Machine Name",
+    accessorKey: "type",
+    header: "Type",
   },
+
   {
     accessorKey: "ServerName",
     header: "Server Name",
