@@ -26,24 +26,24 @@ export function ApiRequestRxjs<T>(fetchUrl: string,
 }
 
 export function ApiGetControlDbRxjs<T>(
-  apiControlDbUrl: { Controldburl: string }[]
+  apiControlDbUrl: { apiurl: string }[]
 ) {
   return forkJoin(
     apiControlDbUrl.map((entry) =>
-      ApiRequestRxjs<ISqlServerInstance>(entry.Controldburl).pipe(
+      ApiRequestRxjs<ISqlServerInstance>(entry.apiurl).pipe(
         map((result) =>
           result.items.map((item) => ({
             ...item,
             type: 'ControlDb',
             message: result.message || "",
             error: result.error || false,
-            Controldburl: entry.Controldburl,
+            apiurl: entry.apiurl,
           }))
         ),
         catchError((err) =>
           of([
             {
-              Controldburl: entry.Controldburl,
+              apiurl: entry.apiurl,
               message: err.message || "Unknown error",
               error: true,
               type: 'ControlDb',

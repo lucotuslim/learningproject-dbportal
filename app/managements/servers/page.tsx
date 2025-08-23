@@ -10,7 +10,7 @@ import { map } from "rxjs/operators";
 
 const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(",").map((url) => ({
-      Controldburl: url,
+      apiurl: url,
     }))
   : [];
 
@@ -20,7 +20,7 @@ export default function ApiDiv() {
       ApiGetControlDbRxjs<ISqlServerInstance>(apiControlDbUrl).pipe(
         map((results) =>
           results.map((result) => ({
-            serverurl: result.Controldburl,
+            serverurl: result.apiurl,
             ...result,
           }))
         )

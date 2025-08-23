@@ -2,7 +2,8 @@
  export interface ApiInterface<T> { 
   items : T[];
   message? : string;
-  error?: boolean
+  error?: boolean;
+  apiurl: string
  }
 
 export interface ISqlServerInstance {

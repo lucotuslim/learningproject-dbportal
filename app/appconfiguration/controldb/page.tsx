@@ -11,7 +11,7 @@ import { catchError, forkJoin, map, of } from "rxjs";
 import { ApiGetControlDbRxjs } from "@/lib/rxjs";
 
 const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ Controldburl: url }))
+  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
   : [];
 
 export default function ApiDiv() {

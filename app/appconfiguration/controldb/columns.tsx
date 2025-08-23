@@ -8,7 +8,7 @@ import Link from "next/link"
 // You can use a Zod schema here if you want.
 
 export const columns: ColumnDef<IapiControlDbUrlWithSqlServer>[] = [
-   {  accessorKey: "Controldburl",
+   {  accessorKey: "apiurl",
     header: "Control DB URL"
   },
   {
