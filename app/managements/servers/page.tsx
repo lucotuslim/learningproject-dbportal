@@ -2,32 +2,41 @@
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { IapiControlDbUrl, IapiControlDbUrlWithSqlServer } from "@/interfaces/controldb";
-import { ISqlServerInstance } from "@/interfaces/generic";
+import { IapiUrl, IapiInfo } from "@/interfaces/generic";
+import { IServerInfoDetails } from "@/interfaces/server";
 import { useObservable } from "rxjs-hooks";
-import { ApiGetControlDbRxjs } from "@/lib/rxjs";
-import { map } from "rxjs/operators";
+import { ApiGetServerInfoDetails , getApiEndpoint} from "@/lib/rxjs";
+import { forkJoin, map, switchMap } from "rxjs";
 
-const apiControlDbUrl: IapiControlDbUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(",").map((url) => ({
-      apiurl: url,
-    }))
-  : [];
+// const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
+//   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
+//   : [];
+
+const apiurl: IapiUrl[] = [
+  { apiurl: "localhost" }
+];
 
 export default function ApiDiv() {
-  const data: IapiControlDbUrlWithSqlServer[] = useObservable(
-    () =>
-      ApiGetControlDbRxjs<ISqlServerInstance>(apiControlDbUrl).pipe(
-        map((results) =>
-          results.map((result) => ({
-            serverurl: result.apiurl,
-            ...result,
-          }))
+
+    const data: IapiInfo<IServerInfoDetails>[] = useObservable(() =>
+    forkJoin(
+      apiurl.map((entry) =>
+        getApiEndpoint(entry.apiurl, "server").pipe(
+          switchMap((api) =>
+            ApiGetServerInfoDetails<IServerInfoDetails>([{ apiurl: api.ServerUrl }])
+          )
         )
-      ),
-    [] as IapiControlDbUrlWithSqlServer[]
+      )
+    ).pipe(
+      // flatten results if needed
+      map((results) => results.flat())
+    ),
+    [] as IapiInfo<IServerInfoDetails>[]
   );
 
+  if (data.length === 0) {
+    return <div className="container mx-auto py-10">Loading...</div>;
+  }
   return (
     <div className="container mx-auto py-10">
       <DataTable columns={columns} data={data} />

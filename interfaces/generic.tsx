@@ -20,3 +20,9 @@ export interface IErrorResponse {
   message: string;
   error: boolean;
 }
+
+export interface IapiUrl {
+  apiurl: string;
+}
+
+export type IapiInfo<T> = IErrorResponse & IapiUrl & Partial<T> & { type: string };

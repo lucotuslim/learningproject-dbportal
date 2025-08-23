@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { Subscription } from "rxjs";
-import { serverwithapi } from "@/lib/rxjs";
+import { getApiEndpoint } from "@/lib/rxjs";
 
 export default function RxjsServer() {
   const [message, setMessage] = useState< {Servername: string , ServerUrl: string}>({Servername: "", ServerUrl: ""});
 
   useEffect(() => {
     // Call our RxJS function with a server name
-    const observable$ = serverwithapi("sql-prod");
+    const observable$ = getApiEndpoint("sql-prod", "databases");
 
     // Subscribe to the observable
     const subscription: Subscription = observable$.subscribe((val) => {

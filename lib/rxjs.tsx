@@ -1,15 +1,21 @@
-import { catchError, forkJoin, map, of } from "rxjs";
+import { catchError, forkJoin, map, Observable, of } from "rxjs";
 import { ApiInterface, ISqlServerInstance } from '@/interfaces/generic';
 import { fromFetch } from 'rxjs/fetch';
 import { switchMap, throwError } from 'rxjs';
-import { IapiControlDbUrlWithSqlServer } from "@/interfaces/controldb";
+import { IapiInfo } from "@/interfaces/generic";
+import {apiSetting} from "@/config/apisetting"
 
-export function serverwithapi(servername: string) {
+export function getApiEndpoint(servername: string, type: string) {
+  const setting = apiSetting.find((entry) => entry.type === type);
+  if (!setting) {
+    throw new Error(`API type "${type}" not found in apiSetting`);
+  }
+  const endpoint = setting.endpoint;
   return of(servername).pipe(
-    map(name => ({
+    map((name) => ({
       Servername: name,
-      ServerUrl: `http://${name}:3000/api/server`
-    })),
+      ServerUrl: `http://${name}:3000/api/${endpoint}`,
+    }))
   );
 }
 
@@ -25,20 +31,22 @@ export function ApiRequestRxjs<T>(fetchUrl: string,
   );
 }
 
-export function ApiGetControlDbRxjs<T>(
-  apiControlDbUrl: { apiurl: string }[]
-) {
+export function ApiGetServerInfoDetails<T extends object>(
+  apiUrl: { apiurl: string }[]
+): Observable<IapiInfo<T>[]> {
   return forkJoin(
-    apiControlDbUrl.map((entry) =>
-      ApiRequestRxjs<ISqlServerInstance>(entry.apiurl).pipe(
+    apiUrl.map((entry) =>
+      ApiRequestRxjs<T>(entry.apiurl).pipe(
         map((result) =>
-          result.items.map((item) => ({
-            ...item,
-            type: 'ControlDb',
-            message: result.message || "",
-            error: result.error || false,
-            apiurl: entry.apiurl,
-          }))
+          result.items.map((item) =>
+            ({
+              ...item,
+              type: "ControlDb",
+              message: result.message || "",
+              error: result.error || false,
+              apiurl: entry.apiurl,
+            }) as IapiInfo<T>
+          )
         ),
         catchError((err) =>
           of([
@@ -46,14 +54,44 @@ export function ApiGetControlDbRxjs<T>(
               apiurl: entry.apiurl,
               message: err.message || "Unknown error",
               error: true,
-              type: 'ControlDb',
-            } as IapiControlDbUrlWithSqlServer,
+              type: "ControlDb",
+            } as IapiInfo<T>,
           ])
         )
       )
     )
-  ).pipe(
-    map((results) => results.flat())
-  );
+  ).pipe(map((results) => results.flat()));
 }
 
+
+export function ApiGetControlDbRxjs<T extends object>(
+  apiControlDbUrl: { apiurl: string }[]
+): Observable<IapiInfo<T>[]> {
+  return forkJoin(
+    apiControlDbUrl.map((entry) =>
+      ApiRequestRxjs<T>(entry.apiurl).pipe(
+        map((result) =>
+          result.items.map((item) =>
+            ({
+              ...item,
+              type: "ControlDb",
+              message: result.message || "",
+              error: result.error || false,
+              apiurl: entry.apiurl,
+            }) as IapiInfo<T>
+          )
+        ),
+        catchError((err) =>
+          of([
+            {
+              apiurl: entry.apiurl,
+              message: err.message || "Unknown error",
+              error: true,
+              type: "ControlDb",
+            } as IapiInfo<T>,
+          ])
+        )
+      )
+    )
+  ).pipe(map((results) => results.flat()));
+}

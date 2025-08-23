@@ -1,6 +1,6 @@
 import { IErrorResponse } from "./generic";
 
-export interface ISqlServerInfo {
+export interface IServerInfoDetails {
   BuildClrVersion?: string;
   Collation?: string;
   CollationID?: number;
@@ -37,4 +37,4 @@ export interface ISqlServerInfo {
   Version?: string; // corresponds to @@VERSION
 }
 
-export interface IapiSqlServerInfo extends ISqlServerInfo, IErrorResponse{}
+//export interface IapiSqlServerInfo extends ISqlServerInfo, IErrorResponse{}
