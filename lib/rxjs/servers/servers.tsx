@@ -1,10 +1,8 @@
 import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
-import { ApiInterface, ISqlServerInstance } from '@/interfaces/generic';
-import { fromFetch } from 'rxjs/fetch';
 import { switchMap, throwError } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { apiSetting } from "@/config/apisetting"
-import { IServerInfoDetails } from "@/interfaces/server";
+import {ApiRequestRxjs} from '@/lib/rxjs/generic';
 
 export function getAllServer<T extends { MachineName?: string }>(
   apiControlDbUrls: { apiurl: string }[]
@@ -30,7 +28,7 @@ export function getAllServer<T extends { MachineName?: string }>(
       // map each server to its getApiEndpoint observable
       forkJoin(
         (servers as IapiInfo<T>[]).map(server =>
-          getApiEndpoint("localhost", "server").pipe(
+          getApiEndpoint(server.MachineName!, "server").pipe(
             switchMap(api =>
               ApiGetServerInfoDetails<T>([{ apiurl: api.ServerUrl, apitype: "ControlDb" }])
             )
@@ -41,7 +39,6 @@ export function getAllServer<T extends { MachineName?: string }>(
     // flatten array-of-arrays
     map(results => results.flat())
   );
-
 }
 
 export function getApiEndpoint(servername: string, type: string) {
@@ -58,17 +55,6 @@ export function getApiEndpoint(servername: string, type: string) {
   );
 }
 
-export function ApiRequestRxjs<T>(fetchUrl: string,
-  options?: RequestInit) {
-  return fromFetch(fetchUrl, options).pipe(
-    switchMap(response => {
-      if (!response.ok) {
-        return throwError(() => new Error(`API error: ${response.status}`));
-      }
-      return response.json() as Promise<ApiInterface<T>>;
-    })
-  );
-}
 
 export function ApiGetServerInfoDetails<T extends object>(
   apiUrl: { apiurl: string, apitype: string }[]

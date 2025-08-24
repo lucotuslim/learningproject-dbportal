@@ -4,7 +4,7 @@ export const apiSetting = [
         endpoint: "server"
     },
     {
-        type: "databases" , 
-        endpoint: "databases"
+        type: "clientinfo" , 
+        endpoint: "clientinfo"
     },
 ];

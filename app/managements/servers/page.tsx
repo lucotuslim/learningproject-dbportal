@@ -5,7 +5,7 @@ import { DataTable } from "./data-table";
 import { IapiUrl, IapiInfo } from "@/interfaces/generic";
 import { IServerInfoDetails } from "@/interfaces/server";
 import { useObservable } from "rxjs-hooks";
-import { ApiGetServerInfoDetails , getApiEndpoint, getAllServer} from "@/lib/rxjs";
+import { ApiGetServerInfoDetails , getApiEndpoint, getAllServer} from "@/lib/rxjs/servers/servers";
 import { forkJoin, map, switchMap } from "rxjs";
 
 const apiControlDbUrls: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI

@@ -1,31 +1,36 @@
-"use client";
+"use client"
+import React from "react";
+import { columns } from "./columns";
+import { DataTable } from "./data-table";
+import { IapiUrl, IapiInfo } from "@/interfaces/generic";
+import { ISqlServerInstance } from "@/interfaces/generic";
+import { useObservable } from "rxjs-hooks";
+import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
+import {clientinfo} from "@/lib/rxjs/controldb/controldb"
+import { IClientInfo } from "@/interfaces/controldb";
 
-import { useEffect, useState } from "react";
-import { Subscription } from "rxjs";
-import { getApiEndpoint } from "@/lib/rxjs";
+// const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
+//   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
+//   : [];
 
-export default function RxjsServer() {
-  const [message, setMessage] = useState< {Servername: string , ServerUrl: string}>({Servername: "", ServerUrl: ""});
+const apiControlDbUrl= [{ apiurl: "http://localhost:3000/api/clientinfo" }];
 
-  useEffect(() => {
-    // Call our RxJS function with a server name
-    const observable$ = getApiEndpoint("sql-prod", "databases");
+export default function ApiDiv() {
+  const data: IapiInfo<ISqlServerInstance>[] = useObservable(() =>
 
-    // Subscribe to the observable
-    const subscription: Subscription = observable$.subscribe((val) => {
-      setMessage(val);
-    });
+    
+    clientinfo<IClientInfo>(apiControlDbUrl),
 
-    // Cleanup on unmount
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    [] as IapiInfo<ISqlServerInstance>[] // initial value
+  );
+
+  if (data.length === 0) {
+    return <div className="container mx-auto py-10">Loading...</div>;
+  }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <h1 className="text-2xl font-bold">RxJS Server Formatter</h1>
-      <p className="text-lg mt-4">{message.ServerUrl}</p>
+    <div className="container mx-auto py-10">
+      <DataTable columns={columns} data={data} />
     </div>
   );
 }
