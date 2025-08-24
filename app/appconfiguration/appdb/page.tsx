@@ -17,10 +17,7 @@ const apiControlDbUrl= [{ apiurl: "http://localhost:3000/api/clientinfo" }];
 
 export default function ApiDiv() {
   const data: IapiInfo<ISqlServerInstance>[] = useObservable(() =>
-
-    
     clientinfo<IClientInfo>(apiControlDbUrl),
-
     [] as IapiInfo<ISqlServerInstance>[] // initial value
   );
 
