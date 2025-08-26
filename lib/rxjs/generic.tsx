@@ -1,5 +1,6 @@
+import { apiSetting } from '@/config/apisetting';
 import { ApiInterface } from '@/interfaces/generic';
-import { switchMap, throwError } from 'rxjs';
+import { switchMap, throwError, map, of } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
 
 export function ApiRequestRxjs<T>(fetchUrl: string,
@@ -11,5 +12,19 @@ export function ApiRequestRxjs<T>(fetchUrl: string,
       }
       return response.json() as Promise<ApiInterface<T>>;
     })
+  );
+}
+
+export function getApiEndpoint(servername: string, type: string) {
+  const setting = apiSetting.find((entry) => entry.type === type);
+  if (!setting) {
+    throw new Error(`API type "${type}" not found in apiSetting`);
+  }
+  const endpoint = setting.endpoint;
+  return of(servername).pipe(
+    map((name) => ({
+      Servername: name,
+      ServerUrl: `http://${name}:3000/api/${endpoint}`,
+    }))
   );
 }

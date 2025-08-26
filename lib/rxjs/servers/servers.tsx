@@ -2,7 +2,10 @@ import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap 
 import { switchMap, throwError } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { apiSetting } from "@/config/apisetting"
-import {ApiRequestRxjs} from '@/lib/rxjs/generic';
+import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
+import { IServerInfoDetails } from "@/interfaces/server";
+import { clientinfo } from "../controldb/controldb";
+import { IClientInfo } from "@/interfaces/controldb";
 
 export function getAllServer<T extends { MachineName?: string }>(
   apiControlDbUrls: { apiurl: string }[]
@@ -29,7 +32,7 @@ export function getAllServer<T extends { MachineName?: string }>(
       forkJoin(
         (servers as IapiInfo<T>[]).map(server =>
           getApiEndpoint(server.MachineName!, "server").pipe(
-            switchMap(api =>
+            switchMap((api: { ServerUrl: string }) =>
               ApiGetServerInfoDetails<T>([{ apiurl: api.ServerUrl, apitype: "ControlDb" }])
             )
           )
@@ -38,20 +41,6 @@ export function getAllServer<T extends { MachineName?: string }>(
     ),
     // flatten array-of-arrays
     map(results => results.flat())
-  );
-}
-
-export function getApiEndpoint(servername: string, type: string) {
-  const setting = apiSetting.find((entry) => entry.type === type);
-  if (!setting) {
-    throw new Error(`API type "${type}" not found in apiSetting`);
-  }
-  const endpoint = setting.endpoint;
-  return of(servername).pipe(
-    map((name) => ({
-      Servername: name,
-      ServerUrl: `http://${name}:3000/api/${endpoint}`,
-    }))
   );
 }
 
@@ -87,6 +76,78 @@ export function ApiGetServerInfoDetails<T extends object>(
     )
   ).pipe(map((results) => results.flat()));
 }
+
+export function GetClientServerFunction(
+  serverlist: { ServerName: string }[]
+): Observable<IapiInfo<IServerInfoDetails>[]> {
+  return forkJoin(
+    serverlist.map((entry) =>
+      getApiEndpoint(entry.ServerName, "clientinfo").pipe(
+        switchMap((api) => clientinfo<IClientInfo>([{ apiurl: api.ServerUrl }]))
+      )
+    )
+  ).pipe(
+    // flatten to list of client items
+    map((results) => results.flat() as IapiInfo<IClientInfo>[]),
+    // derive distinct server names from client items and fetch server details
+    switchMap((clientItems) => {
+      const servers = Array.from(
+        new Set(
+          clientItems
+            .map((ci) => (ci as any).server)
+            .filter(Boolean)
+        )
+      );
+
+      if (servers.length === 0) return of([] as IapiInfo<IServerInfoDetails>[]);
+
+      const serverDetailStreams = servers.map((servername) =>
+        getApiEndpoint(servername, "server").pipe(
+          switchMap((api) =>
+            ApiGetServerInfoDetails<IServerInfoDetails>([
+              { apiurl: api.ServerUrl, apitype: "ClientDb" },
+            ])
+          )
+        )
+      );
+
+      return forkJoin(serverDetailStreams).pipe(map((results) => results.flat()));
+    })
+  );
+}
+
+export function ApiGetClientDbRxjs<T extends object>(
+  apiClientDbUrl: { apiurl: string }[]
+): Observable<IapiInfo<T>[]> {
+  return forkJoin(
+    apiClientDbUrl.map((entry) =>
+      ApiRequestRxjs<T>(entry.apiurl).pipe(
+        map((result) =>
+          result.items.map((item) =>
+            ({
+              ...item,
+              type: "ClientDb",
+              message: result.message || "",
+              error: result.error || false,
+              apiurl: entry.apiurl,
+            }) as IapiInfo<T>
+          )
+        ),
+        catchError((err) =>
+          of([
+            {
+              apiurl: entry.apiurl,
+              message: err.message || "Unknown error",
+              error: true,
+              type: "ClientDb",
+            } as IapiInfo<T>,
+          ])
+        )
+      )
+    )
+  ).pipe(map((results) => results.flat()));
+}
+
 
 export function ApiGetControlDbRxjs<T extends object>(
   apiControlDbUrl: { apiurl: string }[]

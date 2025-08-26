@@ -2,23 +2,27 @@
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { IapiUrl, IapiInfo } from "@/interfaces/generic";
-import { ISqlServerInstance } from "@/interfaces/generic";
+import {  IapiInfo } from "@/interfaces/generic";
 import { useObservable } from "rxjs-hooks";
-import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
 import {clientinfo} from "@/lib/rxjs/controldb/controldb"
 import { IClientInfo } from "@/interfaces/controldb";
+import { getApiEndpoint} from  "@/lib/rxjs/generic";
+import { forkJoin, map, of, switchMap } from "rxjs";
+import { ApiGetServerInfoDetails } from "@/lib/rxjs/servers/servers";
+import { GetClientServerFunction } from "@/lib/rxjs/servers/servers";
+import { IServerInfoDetails } from "@/interfaces/server";
 
 // const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
 //   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
 //   : [];
 
-const apiControlDbUrl= [{ apiurl: "http://localhost:3000/api/clientinfo" }];
+const serverlist= [{ ServerName: "controldb1" }];
 
 export default function ApiDiv() {
-  const data: IapiInfo<ISqlServerInstance>[] = useObservable(() =>
-    clientinfo<IClientInfo>(apiControlDbUrl),
-    [] as IapiInfo<ISqlServerInstance>[] // initial value
+     
+  const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
+    GetClientServerFunction(serverlist),
+    [] as IapiInfo<IServerInfoDetails>[]
   );
 
   if (data.length === 0) {
