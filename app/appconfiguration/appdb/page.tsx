@@ -16,12 +16,12 @@ import { IServerInfoDetails } from "@/interfaces/server";
 //   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
 //   : [];
 
-const serverlist= [{ ServerName: "controldb1" }];
+const ControlDbServerlist= [{ ServerName: "controldb1" }];
 
 export default function ApiDiv() {
      
   const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
-    GetClientServerFunction(serverlist),
+    GetClientServerFunction(ControlDbServerlist),
     [] as IapiInfo<IServerInfoDetails>[]
   );
 

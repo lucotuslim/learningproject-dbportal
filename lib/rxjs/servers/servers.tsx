@@ -1,9 +1,7 @@
 import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
-import { switchMap, throwError } from 'rxjs';
+import { switchMap } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
-import { apiSetting } from "@/config/apisetting"
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
-import { IServerInfoDetails } from "@/interfaces/server";
 import { clientinfo } from "../controldb/controldb";
 import { IClientInfo } from "@/interfaces/controldb";
 
@@ -25,10 +23,20 @@ export function getAllServer<T extends { MachineName?: string }>(
     )
   )
 
-  return forkJoin([controldb$]).pipe(
-    // forkJoin([controldb$]) emits an array of arrays, so destructure
+  const clientserver$ = controldb$.pipe(
+    mergeMap(controldbs =>
+      // controldbs is an array, map each to an Observable and flatten
+      forkJoin(
+        controldbs.map(controldb =>
+          GetClientServerFunction({ ServerName: controldb!.MachineName! })
+        )
+      )
+    ),
+    map(results => results.flat()) // flatten the array of arrays
+  )
+  
+  return forkJoin([controldb$, clientserver$]).pipe(
     switchMap(([servers]) =>
-      // map each server to its getApiEndpoint observable
       forkJoin(
         (servers as IapiInfo<T>[]).map(server =>
           getApiEndpoint(server.MachineName!, "server").pipe(
@@ -39,11 +47,9 @@ export function getAllServer<T extends { MachineName?: string }>(
         )
       )
     ),
-    // flatten array-of-arrays
     map(results => results.flat())
   );
 }
-
 
 export function ApiGetServerInfoDetails<T extends object>(
   apiUrl: { apiurl: string, apitype: string }[]
@@ -77,16 +83,14 @@ export function ApiGetServerInfoDetails<T extends object>(
   ).pipe(map((results) => results.flat()));
 }
 
-export function GetClientServerFunction(
-  serverlist: { ServerName: string }[]
-): Observable<IapiInfo<IServerInfoDetails>[]> {
-  return forkJoin(
-    serverlist.map((entry) =>
-      getApiEndpoint(entry.ServerName, "clientinfo").pipe(
+
+export function GetClientServerFunction<T extends object>(
+  ControlDbServer: { ServerName: string }
+): Observable<IapiInfo<T>[]> {
+  return getApiEndpoint(ControlDbServer.ServerName, "clientinfo").pipe(
         switchMap((api) => clientinfo<IClientInfo>([{ apiurl: api.ServerUrl }]))
       )
-    )
-  ).pipe(
+  .pipe(
     // flatten to list of client items
     map((results) => results.flat() as IapiInfo<IClientInfo>[]),
     // derive distinct server names from client items and fetch server details
@@ -99,18 +103,17 @@ export function GetClientServerFunction(
         )
       );
 
-      if (servers.length === 0) return of([] as IapiInfo<IServerInfoDetails>[]);
+      if (servers.length === 0) return of([] as IapiInfo<T>[]);
 
       const serverDetailStreams = servers.map((servername) =>
         getApiEndpoint(servername, "server").pipe(
           switchMap((api) =>
-            ApiGetServerInfoDetails<IServerInfoDetails>([
+            ApiGetServerInfoDetails<T>([
               { apiurl: api.ServerUrl, apitype: "ClientDb" },
             ])
           )
         )
       );
-
       return forkJoin(serverDetailStreams).pipe(map((results) => results.flat()));
     })
   );
