@@ -7,7 +7,7 @@ import Link from "next/link"
 
 export const columns: ColumnDef<IapiInfo<IServerInfoDetails>>[] = [
    {  accessorKey: "apiurl",
-    header: "Control DB URL"
+    header: "Api Url"
   },
   {
     accessorKey: "ServerName",
@@ -24,29 +24,12 @@ export const columns: ColumnDef<IapiInfo<IServerInfoDetails>>[] = [
         </Link>
       )
     }
-
   },
   {
     accessorKey: "type",
     header: "Type",
   },
-  {
-    accessorKey: "ProductVersion",
-    header: "Product Version",
-  },
-  {
-    accessorKey: "EngineEdition",
-    header: "Engine Edition",
-  },
-  {
-    accessorKey: "ClusterStatus",
-    header: "Cluster Status",
-  },
-  {
-    accessorKey: "AuthenticationMode",
-    header: "Authentication Mode",
-  }, 
-
+  
   {
     accessorKey: "Version",
     header: "Sql Server Version",

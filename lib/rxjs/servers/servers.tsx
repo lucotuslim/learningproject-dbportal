@@ -36,17 +36,6 @@ export function getAllServer<T extends { MachineName?: string }>(
   )
   
   return forkJoin([controldb$, clientserver$]).pipe(
-    switchMap(([servers]) =>
-      forkJoin(
-        (servers as IapiInfo<T>[]).map(server =>
-          getApiEndpoint(server.MachineName!, "server").pipe(
-            switchMap((api: { ServerUrl: string }) =>
-              ApiGetServerInfoDetails<T>([{ apiurl: api.ServerUrl, apitype: "ControlDb" }])
-            )
-          )
-        )
-      )
-    ),
     map(results => results.flat())
   );
 }
@@ -54,33 +43,42 @@ export function getAllServer<T extends { MachineName?: string }>(
 export function ApiGetServerInfoDetails<T extends object>(
   apiUrl: { apiurl: string, apitype: string }[]
 ): Observable<IapiInfo<T>[]> {
-  return forkJoin(
-    apiUrl.map((entry) =>
-      ApiRequestRxjs<T>(entry.apiurl).pipe(
-        map((result) =>
-          result.items.map((item) =>
-            ({
-              ...item,
-              type: entry.apitype,
-              message: result.message || "",
-              error: result.error || false,
+    return forkJoin(
+      apiUrl.map((entry) =>
+        ApiRequestRxjs<T>(entry.apiurl).pipe(
+          tap((result) => {
+            console.log('ApiGetServerInfoDetails result:', {
               apiurl: entry.apiurl,
-            }) as IapiInfo<T>
+              apitype: entry.apitype,
+              items: result.items,
+              message: result.message,
+              error: result.error
+            });
+          }),
+          map((result) =>
+            result.items.map((item) =>
+              ({
+                ...item,
+                type: entry.apitype,
+                message: result.message || "",
+                error: result.error || false,
+                apiurl: entry.apiurl,
+              }) as IapiInfo<T>
+            )
+          ),
+          catchError((err) =>
+            of([
+              {
+                apiurl: entry.apiurl,
+                message: err.message || "Unknown error",
+                error: true,
+                type: entry.apitype,
+              } as IapiInfo<T>,
+            ])
           )
-        ),
-        catchError((err) =>
-          of([
-            {
-              apiurl: entry.apiurl,
-              message: err.message || "Unknown error",
-              error: true,
-              type: entry.apitype,
-            } as IapiInfo<T>,
-          ])
         )
       )
-    )
-  ).pipe(map((results) => results.flat()));
+    ).pipe(map((results) => results.flat()));
 }
 
 

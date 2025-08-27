@@ -14,6 +14,7 @@ export interface ISqlServerInstance {
   EngineEdition?: string;
   ClusterStatus?: string;
   AuthenticationMode?: string;
+    Version?: string;
 }
 
 export interface IErrorResponse {

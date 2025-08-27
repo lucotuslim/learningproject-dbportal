@@ -34,7 +34,9 @@ export interface IServerInfoDetails {
   SqlCharSetName?: string;
   SqlSortOrder?: number;
   SqlSortOrderName?: string;
-  Version?: string; // corresponds to @@VERSION
+  Version?: string;
+  ClusterStatus?: string;
+  AuthenticationMode?: string;
 }
 
 //export interface IapiSqlServerInfo extends ISqlServerInfo, IErrorResponse{}
