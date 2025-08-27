@@ -1,9 +1,41 @@
+
 import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
 import { switchMap } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
 import { clientinfo } from "../controldb/controldb";
 import { IClientInfo } from "@/interfaces/controldb";
+
+export function getServerByName<T extends { MachineName?: string }>(
+  apiControlDbUrls: { apiurl: string }[],
+  serverName: string
+): Observable<IapiInfo<T>[]> {
+  const controldb$ = ApiGetControlDbRxjs<T>(apiControlDbUrls).pipe(
+    map(controldbs =>
+      controldbs.filter(controldb =>
+        controldb.MachineName === serverName
+      )
+    )
+  );
+
+  const clientserver$ = controldb$.pipe(
+    mergeMap(controldbs =>
+      controldbs.length > 0
+        ? forkJoin(
+            controldbs.map(controldb =>
+              GetClientServerFunction({ ServerName: controldb!.MachineName! })
+            )
+          )
+        : of([])
+    ),
+    map(results => results.flat())
+  );
+
+  return forkJoin([controldb$, clientserver$]).pipe(
+    map(results => results.flat())
+  );
+}
+
 
 export function getAllServer<T extends { MachineName?: string }>(
   apiControlDbUrls: { apiurl: string }[]

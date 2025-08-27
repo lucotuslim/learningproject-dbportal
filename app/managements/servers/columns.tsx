@@ -17,7 +17,7 @@ export const columns: ColumnDef<IapiInfo<IServerInfoDetails>>[] = [
         if (!serverName) return null
       return (
         <Link
-          href={`/managements/servers?servername=${encodeURIComponent(serverName)}`}
+          href={`/managements/servers/${serverName}`}
           className="text-blue-600 hover:underline"
         >
           {serverName}
