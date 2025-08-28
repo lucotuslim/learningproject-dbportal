@@ -1,5 +1,4 @@
-
-import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
+import { catchError, forkJoin, map, mergeMap, Observable, of, tap } from "rxjs";
 import { switchMap } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
@@ -7,33 +6,15 @@ import { clientinfo } from "../controldb/controldb";
 import { IClientInfo } from "@/interfaces/controldb";
 
 export function getServerByName<T extends { MachineName?: string }>(
-  apiControlDbUrls: { apiurl: string }[],
   serverName: string
 ): Observable<IapiInfo<T>[]> {
-  const controldb$ = ApiGetControlDbRxjs<T>(apiControlDbUrls).pipe(
-    map(controldbs =>
-      controldbs.filter(controldb =>
-        controldb.MachineName === serverName
-      )
-    )
-  );
-
-  const clientserver$ = controldb$.pipe(
-    mergeMap(controldbs =>
-      controldbs.length > 0
-        ? forkJoin(
-            controldbs.map(controldb =>
-              GetClientServerFunction({ ServerName: controldb!.MachineName! })
-            )
+  return getApiEndpoint(serverName, "server").pipe(
+          switchMap((api) =>
+            ApiGetServerInfoDetails<T>([
+              { apiurl: api.ServerUrl, apitype: "ClientDb" },
+            ])
           )
-        : of([])
-    ),
-    map(results => results.flat())
-  );
-
-  return forkJoin([controldb$, clientserver$]).pipe(
-    map(results => results.flat())
-  );
+        );
 }
 
 
@@ -56,15 +37,14 @@ export function getAllServer<T extends { MachineName?: string }>(
   )
 
   const clientserver$ = controldb$.pipe(
-    mergeMap(controldbs =>
-      // controldbs is an array, map each to an Observable and flatten
-      forkJoin(
-        controldbs.map(controldb =>
-          GetClientServerFunction({ ServerName: controldb!.MachineName! })
-        )
-      )
-    ),
-    map(results => results.flat()) // flatten the array of arrays
+    mergeMap(controldbs => {
+      // Pass all server objects at once to GetClientServerFunction
+      if (controldbs.length === 0) return of([]);
+      return GetClientServerFunction(
+        controldbs.map(controldb => ({ ServerName: controldb.MachineName! }))
+      );
+    }),
+    map(results => results.flat())
   )
   
   return forkJoin([controldb$, clientserver$]).pipe(
@@ -115,11 +95,16 @@ export function ApiGetServerInfoDetails<T extends object>(
 
 
 export function GetClientServerFunction<T extends object>(
-  ControlDbServer: { ServerName: string }
+  ControlDbServer: { ServerName: string }[]
 ): Observable<IapiInfo<T>[]> {
-  return getApiEndpoint(ControlDbServer.ServerName, "clientinfo").pipe(
+  // create an array of Observables for each ControlDbServer to fetch its clientinfo
+  return forkJoin(
+    ControlDbServer.map((ctrl) =>
+      getApiEndpoint(ctrl.ServerName, "clientinfo").pipe(
         switchMap((api) => clientinfo<IClientInfo>([{ apiurl: api.ServerUrl }]))
       )
+    )
+  )
   .pipe(
     // flatten to list of client items
     map((results) => results.flat() as IapiInfo<IClientInfo>[]),
