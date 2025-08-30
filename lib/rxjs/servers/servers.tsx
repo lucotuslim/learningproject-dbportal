@@ -1,4 +1,4 @@
-import { catchError, concat, forkJoin, map, merge, mergeAll, mergeMap, Observable, of, tap } from "rxjs";
+import { catchError, concat, forkJoin, map, merge, mergeAll, mergeMap, Observable, of, tap, race } from "rxjs";
 import { switchMap } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
@@ -19,7 +19,7 @@ export function getServerByName<T extends { MachineName?: string }>(
 
 
 export function getAllServer<T extends { MachineName?: string }>(
-  apiControlDbUrls: { apiurl: string }[]
+  apiControlDbUrls: { apiurl: string , apitype: string }[]
 ): Observable<IapiInfo<T>[]> {
 
   return ApiGetControlDbRxjs<T>(apiControlDbUrls).pipe(
@@ -51,7 +51,7 @@ export function ApiGetServerInfoDetails<T extends object>(
 ): Observable<IapiInfo<T>[]> {
   return forkJoin(
     apiUrl.map((entry) =>
-      ApiRequestRxjs<T>(entry.apiurl).pipe(
+      ApiRequestRxjs<T>(entry.apiurl, entry.apitype).pipe(
         tap((result) => {
           console.log('ApiGetServerInfoDetails result:', {
             apiurl: entry.apiurl,
@@ -65,7 +65,7 @@ export function ApiGetServerInfoDetails<T extends object>(
           result.items.map((item) =>
             ({
               ...item,
-              type: entry.apitype,
+              apitype: entry.apitype,
               message: result.message || "",
               error: result.error || false,
               apiurl: entry.apiurl,
@@ -78,7 +78,7 @@ export function ApiGetServerInfoDetails<T extends object>(
               apiurl: entry.apiurl,
               message: err.message || "Unknown error",
               error: true,
-              type: entry.apitype,
+              apitype: entry.apitype,
             } as IapiInfo<T>,
           ])
         )
@@ -87,7 +87,6 @@ export function ApiGetServerInfoDetails<T extends object>(
   ).pipe(map((results) => results.flat()));
 }
 
-
 export function GetClientServerFunction<T extends object>(
   ControlDbServer: { ServerName: string }[]
 ): Observable<IapiInfo<T>[]> {
@@ -95,7 +94,7 @@ export function GetClientServerFunction<T extends object>(
   return forkJoin(
     ControlDbServer.map((ctrl) =>
       getApiEndpoint(ctrl.ServerName, "clientinfo").pipe(
-        switchMap((api) => clientinfo<IClientInfo>([{ apiurl: api.ServerUrl }]))
+        switchMap((api) => clientinfo<IClientInfo>([{ apiurl: api.ServerUrl, apitype: "ClientDb" }]))
       )
     )
   )
@@ -128,67 +127,33 @@ export function GetClientServerFunction<T extends object>(
     );
 }
 
-export function ApiGetClientDbRxjs<T extends object>(
-  apiClientDbUrl: { apiurl: string }[]
-): Observable<IapiInfo<T>[]> {
-  return forkJoin(
-    apiClientDbUrl.map((entry) =>
-      ApiRequestRxjs<T>(entry.apiurl).pipe(
-        map((result) =>
-          result.items.map((item) =>
-            ({
-              ...item,
-              type: "ClientDb",
-              message: result.message || "",
-              error: result.error || false,
-              apiurl: entry.apiurl,
-            }) as IapiInfo<T>
-          )
-        ),
-        catchError((err) =>
-          of([
-            {
-              apiurl: entry.apiurl,
-              message: err.message || "Unknown error",
-              error: true,
-              type: "ClientDb",
-            } as IapiInfo<T>,
-          ])
-        )
-      )
-    )
-  ).pipe(map((results) => results.flat()));
-}
-
-
 export function ApiGetControlDbRxjs<T extends object>(
-  apiControlDbUrl: { apiurl: string }[]
+  apiControlDbUrl: { apiurl: string; apitype: string }[]
 ): Observable<IapiInfo<T>[]> {
-  return forkJoin(
-    apiControlDbUrl.map((entry) =>
-      ApiRequestRxjs<T>(entry.apiurl).pipe(
-        map((result) =>
-          result.items.map((item) =>
-            ({
-              ...item,
-              type: "ControlDb",
-              message: result.message || "",
-              error: result.error || false,
-              apiurl: entry.apiurl,
-            }) as IapiInfo<T>
+  return merge(
+    ...apiControlDbUrl.map((entry) =>
+      ApiRequestRxjs<T>(entry.apiurl, entry.apitype).pipe(
+        mergeMap((result) =>
+          result.items.map(
+            (item) =>
+              ([{
+                ...item,
+                message: result.message || "",
+                error: result.error || false,
+                apiurl: entry.apiurl,
+                apitype: entry.apitype,
+              }]) as IapiInfo<T>[]
           )
         ),
         catchError((err) =>
-          of([
-            {
-              apiurl: entry.apiurl,
-              message: err.message || "Unknown error",
-              error: true,
-              type: "ControlDb",
-            } as IapiInfo<T>,
-          ])
+          of([{
+            apiurl: entry.apiurl,
+            message: err.message || "Unknown error",
+            error: true,
+            apitype: entry.apitype,
+          } ]as IapiInfo<T>[])
         )
       )
     )
-  ).pipe(map((results) => results.flat()));
+  );
 }

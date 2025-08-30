@@ -26,10 +26,9 @@ export const columns: ColumnDef<IapiInfo<IServerInfoDetails>>[] = [
     }
   },
   {
-    accessorKey: "type",
-    header: "Type",
+    accessorKey: "apitype",
+    header: "ApiType",
   },
-  
   {
     accessorKey: "Version",
     header: "Sql Server Version",

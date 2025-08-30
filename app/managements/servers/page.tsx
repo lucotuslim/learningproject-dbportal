@@ -2,34 +2,17 @@
 import React from "react";
 import { columns } from "./columns";
 import { DataTable } from "./data-table";
-import { IapiUrl, IapiInfo } from "@/interfaces/generic";
+import { IapiInfo } from "@/interfaces/generic";
 import { IServerInfoDetails } from "@/interfaces/server";
 import { useObservable } from "rxjs-hooks";
-import { ApiGetServerInfoDetails , getAllServer} from "@/lib/rxjs/servers/servers";
-import { forkJoin, map, switchMap } from "rxjs";
+import {  getAllServer} from "@/lib/rxjs/servers/servers";
 
-const apiControlDbUrls: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
+const apiControlDbUrls= process.env.NEXT_PUBLIC_CONTROLSERVERAPI
+  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url , apitype: "ControlDb"}))
   : [];
 
  export default function ApiDiv() {
- // previous alternative approach (kept for reference)
- // const data: IapiInfo<IServerInfoDetails>[] = useObservable(() =>
- //   forkJoin(
- //     apiurl.map((entry) =>
- //       getApiEndpoint(entry.apiurl, "server").pipe(
- //         switchMap((api) =>
- //           ApiGetServerInfoDetails<IServerInfoDetails>([{ apiurl: api.ServerUrl, apitype: "ControlDb"}])
- //         )
- //       )
- //     )
- //   ).pipe(
- //     // flatten results if needed
- //     map((results) => results.flat())
- //   ),
- //   [] as IapiInfo<IServerInfoDetails>[]
- // );
-
+ 
   const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
     getAllServer<IServerInfoDetails>(apiControlDbUrls),
     [] as IapiInfo<IServerInfoDetails>[]

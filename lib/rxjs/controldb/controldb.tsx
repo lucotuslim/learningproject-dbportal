@@ -5,11 +5,11 @@ import { apiSetting } from "@/config/apisetting"
 import {ApiRequestRxjs} from '@/lib/rxjs/generic';
 
 export function clientinfo<T extends object>(
-  apiclienturl: { apiurl: string }[]
+  apiclienturl: { apiurl: string, apitype: string }[]
 ): Observable<IapiInfo<T>[]> {
   return forkJoin(
     apiclienturl.map((entry) =>
-      ApiRequestRxjs<T>(entry.apiurl).pipe(
+      ApiRequestRxjs<T>(entry.apiurl, entry.apitype).pipe(
         map((result) =>
           result.items.map((item) =>
             ({

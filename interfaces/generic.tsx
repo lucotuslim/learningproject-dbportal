@@ -3,7 +3,7 @@
   items : T[];
   message? : string;
   error?: boolean;
-  apiurl: string
+  apiurl: string;
  }
 
 export interface ISqlServerInstance {
@@ -24,6 +24,7 @@ export interface IErrorResponse {
 
 export interface IapiUrl {
   apiurl: string;
+  apitype: string
 }
 
-export type IapiInfo<T> = IErrorResponse & IapiUrl & Partial<T> & { type: string };
+export type IapiInfo<T> = IErrorResponse & IapiUrl & Partial<T>;
