@@ -31,10 +31,7 @@ const apiControlDbUrls: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
  // );
 
   const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
-    getAllServer<IServerInfoDetails>(apiControlDbUrls).pipe(
-      // flatten results if needed
-      map((results) => results.flat())
-    ),
+    getAllServer<IServerInfoDetails>(apiControlDbUrls),
     [] as IapiInfo<IServerInfoDetails>[]
   );
 

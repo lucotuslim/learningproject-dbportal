@@ -22,7 +22,7 @@ export default function Page() {
     }
     // getServerByName returns an array, so map to first row or null
     return getServerByName<IServerInfoDetails>(serverName).pipe(
-      map((rows: IapiInfo<IServerInfoDetails>[]) => rows.length > 0 ? rows[0] : null)
+      map((rows: IapiInfo<IServerInfoDetails>[]) =>   rows[0] )
     );
   }, null);
 
@@ -36,7 +36,9 @@ export default function Page() {
   );
 // Simple details component for a single server
 function ServerDetails({ data }: { data: IapiInfo<IServerInfoDetails> }) {
-  if (!data) return null;
+  if (!data) return  (
+    <div>No server details available</div>
+  );
   const details = data as IapiInfo<IServerInfoDetails>;
   return (
     <div className=" shadow rounded p-6">
