@@ -8,7 +8,7 @@ import { useObservable } from "rxjs-hooks";
 import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
 
 const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
+  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url, apitype: "controldb" }))
   : [];
 
 export default function ApiDiv() {
