@@ -33,12 +33,15 @@ export function getAllServer<T extends { MachineName?: string }>(
         controldb => !!controldb.MachineName && controldb.MachineName.trim() !== ""
       )
     ),
-    // call GetClientServerFunction for each control db and join results, then flatten
-    mergeMap(controldbs => {
+    // Wait for ApiGetControlDbRxjs to complete, then process next step
+    switchMap(controldbs => {
+      if (controldbs.length === 0) return of([]);
       const calls = controldbs.map(controldb =>
         GetClientServerFunction<T>([{ ServerName: controldb.MachineName! }])
       );
-      return forkJoin(calls).pipe(
+      // Use merge to emit results as soon as each completes
+      return merge(...calls).pipe(
+        toArray(),
         map(results => [...results.flat(), ...controldbs])
       );
     })
@@ -123,6 +126,7 @@ export function GetClientServerFunction<T extends object>(
       })
     );
 }
+
 export function ApiGetControlDbRxjs<T extends object>(
   apiControlDbUrl: { apiurl: string; apitype: string }[]
 ): Observable<IapiInfo<T>[]> {
