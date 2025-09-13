@@ -8,7 +8,8 @@ export function ApiRequestRxjs<T>(fetchUrl: string, apitype:string,
   return fromFetch(fetchUrl, options).pipe(
     switchMap(response => {
       if (!response.ok) {
-        return throwError(() => new Error(`API error: ${response.status}`));
+       // return throwError(() => new Error(`API error: ${response.status}`));
+      
       }
       //return response.json() as Promise<ApiInterface<T>>;
 

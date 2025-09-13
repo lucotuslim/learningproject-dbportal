@@ -1,4 +1,3 @@
-import { IErrorResponse } from "./generic";
 
 export interface IServerInfoDetails {
   BuildClrVersion?: string;

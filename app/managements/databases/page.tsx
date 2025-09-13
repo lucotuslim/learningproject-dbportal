@@ -6,6 +6,7 @@ import { IapiInfo } from "@/interfaces/generic";
 import {IDatabaseInfo } from "@/interfaces/databases";
 import { useObservable } from "rxjs-hooks";
 import {  getAllServer} from "@/lib/rxjs/servers/servers";
+import {getAllDatabase} from "@/lib/rxjs/databases/databases";
 
 const apiControlDbUrls= process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url , apitype: "ControlDb"}))
@@ -13,9 +14,9 @@ const apiControlDbUrls= process.env.NEXT_PUBLIC_CONTROLSERVERAPI
 
  export default function ApiDiv() {
  
-  const data = useObservable<IapiInfo<IDatabaseInfo>[]>(() =>
-    getAllServer<IDatabaseInfo>(apiControlDbUrls),
-    [] as IapiInfo<IDatabaseInfo>[]
+  const data = useObservable<IapiInfo<IDatabaseInfo & { MachineName?: string }>[]>(() =>
+    getAllDatabase<IDatabaseInfo & { MachineName?: string }>(apiControlDbUrls),
+    [] as IapiInfo<IDatabaseInfo & { MachineName?: string }>[]  
   );
 
   if (data.length === 0) {
