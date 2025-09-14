@@ -1,13 +1,13 @@
-import { getAllServer } from "@/lib/rxjs/servers/servers";
+import { ApiGetServerInfoDetails, getAllServer } from "@/lib/rxjs/servers/servers";
 import { IServerInfoDetails } from "@/interfaces/server";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
-import { mergeMap, toArray, map } from 'rxjs/operators';
+import { mergeMap, toArray, map, catchError } from 'rxjs/operators';
 import { IapiInfo } from "@/interfaces/generic";
-import { Observable, from } from "rxjs";
+import { Observable, from, of , switchMap } from "rxjs";
 
 export function getAllDatabase<T extends { MachineName?: string }>(
   apiControlDbUrls: { apiurl: string , apitype: string }[]
-) : Observable<IapiInfo<T>[]> {
+): Observable<IapiInfo<T>[]> {
   return getAllServer<IServerInfoDetails>(apiControlDbUrls).pipe(
     mergeMap(servers =>
       from(servers).pipe(
@@ -15,7 +15,25 @@ export function getAllDatabase<T extends { MachineName?: string }>(
           getApiEndpoint(server.MachineName!, "databases").pipe(
             mergeMap(api =>
               ApiRequestRxjs<T>(api.ServerUrl, "Database").pipe(
-                map((res): IapiInfo<T> => ({ ...(res as any), message: (res as any)?.message ?? '' }))
+                mergeMap((res) =>
+                  from(res.items.map((item) => ({
+                    ...item,
+                    message: res.message ?? '',
+                    error: res.error ?? false,
+                    apiurl: api.ServerUrl,
+                    apitype: 'Database',
+                    MachineName: server.MachineName
+                  } as IapiInfo<T>)))
+                ),
+                catchError((err) =>
+                  of({
+                    error: true,
+                    message: err.message ?? 'Unknown error',
+                    apiurl: api.ServerUrl,
+                    apitype: 'Database',
+                    MachineName: server.MachineName
+                  } as IapiInfo<T>)
+                )
               )
             )
           )
@@ -25,3 +43,20 @@ export function getAllDatabase<T extends { MachineName?: string }>(
     )
   );
 }
+
+export function GetDatabase <T extends object>
+(serverName: string, 
+databaseName: string) 
+: Observable<IapiInfo<T> []> {
+  
+  return getApiEndpoint(serverName, "server").pipe(
+    switchMap((api) =>
+      ApiGetServerInfoDetails<T>(
+        { apiurl: api.ServerUrl, apitype: "ClientDb" },
+      )
+    )
+  );
+
+}
+
+

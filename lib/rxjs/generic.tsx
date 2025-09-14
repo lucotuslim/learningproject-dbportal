@@ -31,7 +31,7 @@ export function getApiEndpoint(servername: string, type: string) {
   return of(servername).pipe(
     map((name) => ({
       Servername: name,
-      ServerUrl: `http://${name}:3000/api/${endpoint}`,
+      ServerUrl: `http://${name}api:3000/api/${endpoint}`,
     }))
   );
 }
