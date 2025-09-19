@@ -14,7 +14,6 @@ export const columns: ColumnDef<IapiInfo<IDatabaseInfo>>[] = [
 		  const dbName = row.original.name
 			if (!dbName) return null
 		const machineName = (row.original as any).MachineName;
-
 			return (
 				<Link
 		href={`/managements/databases/${machineName}/${dbName}`}

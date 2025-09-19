@@ -47,15 +47,29 @@ export function getAllDatabase<T extends { MachineName?: string }>(
 export function GetDatabase <T extends object>
 (serverName: string, 
 databaseName: string) 
-: Observable<IapiInfo<T> []> {
-  
-  return getApiEndpoint(serverName, "server").pipe(
-    switchMap((api) =>
-      ApiGetServerInfoDetails<T>(
-        { apiurl: api.ServerUrl, apitype: "ClientDb" },
+: Observable<IapiInfo<T>[]> {
+
+  return ApiRequestRxjs<T>(
+    `http://${serverName}api:3000/api/database/${databaseName}`, 
+    "DatabaseDetail"
+    ).pipe(
+      map(result =>
+        result.items.map(item => ({
+          ...item,
+          apitype: "Database",
+          message: result.message ?? "",
+          error: result.error ?? false,
+          apiurl: `http://${serverName}api:3000/api/database/${databaseName}/master`,
+        }) as IapiInfo<T>)
       )
-    )
-  );
+    );
+  // return getApiEndpoint(serverName, "server").pipe(
+  //   switchMap((api) =>
+  //     ApiGetServerInfoDetails<T>(
+  //       { apiurl: api.ServerUrl, apitype: "ClientDb" },
+  //     )
+  //   )
+  // );
 
 }
 
