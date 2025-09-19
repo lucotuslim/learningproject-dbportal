@@ -53,15 +53,15 @@ export function ApiGetServerInfoDetails<T extends object>(
 ): Observable<IapiInfo<T>[]> {
 
   return ApiRequestRxjs<T>(apiUrl.apiurl, apiUrl.apitype).pipe(
-    tap((result) => {
-      console.log('ApiGetServerInfoDetails result:', {
-        apiurl: apiUrl.apiurl,
-        apitype: apiUrl.apitype,
-        items: result.items,
-        message: result.message,
-        error: result.error
-      });
-    }),
+    // tap((result) => {
+    //   console.log('ApiGetServerInfoDetails result:', {
+    //     apiurl: apiUrl.apiurl,
+    //     apitype: apiUrl.apitype,
+    //     items: result.items,
+    //     message: result.message,
+    //     error: result.error
+    //   });
+    // }),
     map((result) =>
       result.items.map((item) =>
         ({
