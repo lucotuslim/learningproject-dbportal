@@ -20,8 +20,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
 import { json } from "stream/consumers";
-
-export const columns: ColumnDef<IapiInfo<IDatabaseInfo>>[] = [
+//export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseInfo>>[] => [
+export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseInfo>>[] => [
 	{ accessorKey: "MachineName", header: "MachineName" },
 	{ accessorKey: "database_id", header: "Database ID" },
 	{ accessorKey: "name", header: "Database Name",
@@ -56,8 +56,10 @@ export const columns: ColumnDef<IapiInfo<IDatabaseInfo>>[] = [
       const handleDelete = (servername: string, databasename:string, databaseid: number) => {
      
 		  console.log('deleting database', databasename, 'on server', servername);
-  const url = `http://${servername}api:3000/databases/${databaseid}`;
-  ApiRequestRxjs(url, "Database", { method: "DELETE" }).subscribe({
+  const url = `http://${servername}api:3000/api/databases/${databaseid}`;
+  ApiRequestRxjs(url, "Database", { method: "DELETE" ,     headers: {
+      "Content-Type": "application/json",
+    }}).subscribe({
     next: (result) => {
       // Optionally show a toast or refresh data
       console.log("Delete result:", result);
