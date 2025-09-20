@@ -16,14 +16,13 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useState } from "react";
-import { json } from "stream/consumers";
+import { toast } from "sonner"
+
 //export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseInfo>>[] => [
 export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseInfo>>[] => [
 	{ accessorKey: "MachineName", header: "MachineName" },
-	{ accessorKey: "database_id", header: "Database ID" },
 	{ accessorKey: "name", header: "Database Name",
 			 cell: ({ row }) => {
 		  const dbName = row.original.name
@@ -42,11 +41,53 @@ export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseIn
 	{ accessorKey: "compatibility_level", header: "Compatibility Level" },
 	{ accessorKey: "user_access_desc", header: "User Access" },
 	{ accessorKey: "state_desc", header: "State" },
-	{ accessorKey: "recovery_model_desc", header: "Recovery Model" },
+	{ accessorKey: "recovery_model_desc", header: "Recovery Model", 
+  cell: ({ row }) => {
+    const currentValue = row.original.recovery_model_desc;
+    const machineName = (row.original as any).MachineName;
+    const databaseId = row.original.database_id;
+    const databaseName = row.original.name;
+    
+    const handleRecoveryChange = (payloadtype: string, databaseid: number , databasename: string ,newRecoveryModel: string) => {
+      const url = `http://${machineName}api:3000/api/databases`;
+      ApiRequestRxjs(url, "Database", { 
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payloadtype: payloadtype, databaseId: databaseid, mode: newRecoveryModel })
+      }).subscribe({
+        next: () => {
+          toast("Recovery Model Updated", {
+            description: `${databasename} in ${machineName} Changed to ${newRecoveryModel}`,
+          });
+          refreshData();
+        },
+        error: (err) => console.error("Update error:", err)
+      });
+    };
+
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm">{currentValue}</Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onClick={() => handleRecoveryChange("recovery", databaseId!, databaseName!, "SIMPLE")}>
+            Simple
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleRecoveryChange("recovery", databaseId!, databaseName!,"FULL")}>
+            Full
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleRecoveryChange("recovery", databaseId!, databaseName!,"BULK_LOGGED")}>
+            Bulk-Logged
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
+},
 	{ accessorKey: "containment_desc", header: "Containment" },
 	{ accessorKey: "error", header: "Error" },
 	{ accessorKey: "message", header: "Message" },
-
 
  {
     id: "actions",
@@ -54,22 +95,27 @@ export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseIn
     cell: ({ row }) => {
 	  const [open, setOpen] = useState(false);
       const handleDelete = (servername: string, databasename:string, databaseid: number) => {
-     
 		  console.log('deleting database', databasename, 'on server', servername);
   const url = `http://${servername}api:3000/api/databases/${databaseid}`;
   ApiRequestRxjs(url, "Database", { method: "DELETE" ,     headers: {
       "Content-Type": "application/json",
     }}).subscribe({
     next: (result) => {
-      // Optionally show a toast or refresh data
-      console.log("Delete result:", result);
+        toast("Drop Database", {
+          description: `Dropped database ${databasename} on server ${servername}`,
+          action: {
+            label: "Close",
+            onClick: () => console.log("Undo"),
+          }
+        }
+        )
+        refreshData();
     },
     error: (err) => {
       // Handle error
       console.error("Delete error:", err);
     }
   });
-		
         setOpen(false);
         // Optionally show a toast or refresh data
       };

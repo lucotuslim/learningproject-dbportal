@@ -30,10 +30,12 @@ const [refreshData, data] = useEventCallback(
     return <div className="container mx-auto py-10">Loading...</div>;
   }
   return (
+    <div>
     <div> 
+                <RefreshCcw onClick={() => refreshData(undefined)} />
 
+    </div>
     <div className="container mx-auto py-10">
-          <RefreshCcw onClick={() => refreshData(undefined)} />
 
       <DataTable columns={columns(() => refreshData(undefined))} data={data} />
     </div>
