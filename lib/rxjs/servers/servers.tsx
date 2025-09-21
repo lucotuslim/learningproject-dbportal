@@ -1,4 +1,4 @@
-import { catchError, concat, forkJoin, map, merge, mergeAll, mergeMap, Observable, of, tap, race, toArray, from } from "rxjs";
+import { catchError, forkJoin, map, merge, mergeMap, Observable, of, tap,  toArray, from } from "rxjs";
 import { switchMap } from 'rxjs';
 import { IapiInfo } from "@/interfaces/generic";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
@@ -106,7 +106,7 @@ export function GetClientServerFunction<T extends object>(
         const servers = Array.from(
           new Set(
             clientItems
-              .map((ci) => (ci as any).server)
+              .map((ci) => (ci as IapiInfo<IClientInfo & { server?: string }>).server)
               .filter(Boolean)
           )
         );
@@ -114,7 +114,7 @@ export function GetClientServerFunction<T extends object>(
         if (servers.length === 0) return of([] as IapiInfo<T>[]);
 
         const serverDetailStreams = servers.map((servername) =>
-          getApiEndpoint(servername, "server").pipe(
+          getApiEndpoint(servername!, "server").pipe(
             switchMap((api) =>
               ApiGetServerInfoDetails<T>(
                 { apiurl: api.ServerUrl, apitype: "ClientDb" },

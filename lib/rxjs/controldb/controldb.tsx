@@ -1,7 +1,5 @@
-import { catchError, filter, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
-import { switchMap, throwError } from 'rxjs';
+import { catchError, forkJoin, map, Observable, of } from "rxjs";
 import { IapiInfo } from "@/interfaces/generic";
-import { apiSetting } from "@/config/apisetting"
 import {ApiRequestRxjs} from '@/lib/rxjs/generic';
 
 export function clientinfo<T extends object>(
@@ -17,7 +15,7 @@ export function clientinfo<T extends object>(
               message: result.message || "",
               error: result.error || false,
               apiurl: entry.apiurl,
-              type: (item as any)?.type ?? ""
+              apitype: (item as T & { type?: string })?.type ?? ""
             }) as IapiInfo<T>
           )
         ),
@@ -27,7 +25,7 @@ export function clientinfo<T extends object>(
               apiurl: entry.apiurl,
               message: err.message || "Unknown error",
               error: true,
-              type: ""
+              apitype: entry.apitype
             } as IapiInfo<T>,
           ])
         )

@@ -1,5 +1,5 @@
 "use client"
-import React, { useCallback, useState } from "react";
+
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
 import { IapiInfo } from "@/interfaces/generic";
@@ -33,7 +33,6 @@ const [refreshData, data] = useEventCallback(
     <div>
     <div> 
                 <RefreshCcw onClick={() => refreshData(undefined)} />
-
     </div>
     <div className="container mx-auto py-10">
 

@@ -2,8 +2,6 @@
 import { IapiInfo } from "@/interfaces/generic";
 import { useParams } from "next/navigation";
 import { useObservable } from "rxjs-hooks";
-import { DataTable } from "./data-table";
-import { columns } from "./columns";
 import {IDatabaseDetailsInfo} from "@/interfaces/databases";
 import { GetDatabase } from "@/lib/rxjs/databases/databases";
 

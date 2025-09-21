@@ -7,8 +7,6 @@ import { map } from "rxjs";
 import { useParams } from "next/navigation";
 import { useObservable } from "rxjs-hooks";
 import { of } from "rxjs";
-import { DataTable } from "../data-table";
-import { columns } from "../columns";
 
 export default function Page() {
   const params = useParams() // team === "nextjs"

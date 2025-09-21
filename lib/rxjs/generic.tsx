@@ -1,6 +1,6 @@
 import { apiSetting } from '@/config/apisetting';
 import { ApiInterface } from '@/interfaces/generic';
-import { switchMap, throwError, map, of } from 'rxjs';
+import { switchMap,  map, of } from 'rxjs';
 import { fromFetch } from 'rxjs/fetch';
 
 export function ApiRequestRxjs<T>(fetchUrl: string, apitype:string,

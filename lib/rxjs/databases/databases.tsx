@@ -1,9 +1,9 @@
-import { ApiGetServerInfoDetails, getAllServer } from "@/lib/rxjs/servers/servers";
+import {  getAllServer } from "@/lib/rxjs/servers/servers";
 import { IServerInfoDetails } from "@/interfaces/server";
 import { ApiRequestRxjs, getApiEndpoint } from '@/lib/rxjs/generic';
 import { mergeMap, toArray, map, catchError } from 'rxjs/operators';
 import { IapiInfo } from "@/interfaces/generic";
-import { Observable, from, of , switchMap } from "rxjs";
+import { Observable, from, of} from "rxjs";
 
 export function getAllDatabase<T extends { MachineName?: string }>(
   apiControlDbUrls: { apiurl: string , apitype: string }[]
