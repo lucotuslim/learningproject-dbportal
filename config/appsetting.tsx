@@ -30,6 +30,14 @@ export const AppConfig = {
       url: "/appconfiguration/controldb",
       icon: SquareTerminal
     },
+
+
+    {
+      title: "Client Info",
+      url: "/appconfiguration/clientinfo",
+      icon: SquareTerminal
+    },
+
     {
       title: "App Db",
       url: "/appconfiguration/appdb",
