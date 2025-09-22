@@ -9,6 +9,8 @@ import Link from "next/link"
 // You can use a Zod schema here if you want.
 
 export const columns: ColumnDef<IapiInfo<IClientInfo>>[] = [
+
+  {accessorKey: "apiurl", header: "Api Url"},
    {  accessorKey: "clientName",
     header: "Client Name"
   },
