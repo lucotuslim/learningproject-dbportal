@@ -160,6 +160,7 @@ export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseIn
       )
     }
   },
+  {accessorKey: "foundInControlDb", header: "In Control DB"},
   { accessorKey: "create_date", header: "Create Date" },
   { accessorKey: "compatibility_level", header: "Compatibility Level" },
   { accessorKey: "user_access_desc", header: "User Access" },
