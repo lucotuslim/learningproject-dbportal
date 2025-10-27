@@ -12,6 +12,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/componen
 import { toast } from "sonner"
 
 const formSchema = z.object({
+    env:  z.string().min(1, "Environment is required"),
     Namespace: z.string().min(1, "Namespace is required"),
     Zipname: z.string().min(1, "Zipname is required"),
     SftpUsername: z.string().min(1, "SFTP Username is required"),
@@ -37,13 +38,14 @@ export default function UserInputForm() {
         setIsSubmitting(true);
         try {
             // Example: send to your API endpoint using fetch
-            const res = await fetch("/api/upload", {
+            const res = await fetch("/api/run-extract", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(values),
             });
             if (!res.ok) {
-                const errorStatus = await res.status; // or res.json() if server returns JSON
+                console.log(res)
+                const errorStatus = res.status; // or res.json() if server returns JSON
                 throw new Error(`Upload failed: ${errorStatus}`);
             }
             toast.info(`Submitted Namespace: ${values.Namespace}`)
@@ -58,6 +60,11 @@ export default function UserInputForm() {
 <div className="flex gap-6 m-6">
             <form onSubmit={form.handleSubmit(onSubmit)}>
                 <CardContent className="space-y-4">
+                    <div>
+                        <Label htmlFor="Environment">Environment</Label>
+                        <Input id="env" placeholder="Enter Environment" {...form.register("env")} />
+                    </div>
+
                     <div>
                         <Label htmlFor="Namespace">Namespace</Label>
                         <Input id="Namespace" placeholder="Enter namespace" {...form.register("Namespace")} />
