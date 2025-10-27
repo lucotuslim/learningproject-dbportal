@@ -58,6 +58,26 @@ export const AppConfig = {
     },
   ],
 
+
+  tasks: [
+    {
+      name: "Document Extraction",
+      url: "/tasks/documentextraction",
+      icon: Frame,
+    },
+    // {
+    //   name: "Sales & Marketing",
+    //   url: "#",
+    //   icon: PieChart,
+    // },
+    // {
+    //   name: "Travel",
+    //   url: "#",
+    //   icon: Map,
+    // },
+  ],
+
+
   projects: [
     {
       name: "Design Engineering",
