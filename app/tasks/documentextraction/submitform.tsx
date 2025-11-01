@@ -60,7 +60,7 @@ export default function SubmitForm() {
                     SftpPassword: values.SftpPassword,
                     ContainerName: values.env,      // or another field if you want
                     Namespace: values.Namespace,
-                    CreatedBy: "me",
+                    CreatedBy: "Api",
                 },
             };
 
