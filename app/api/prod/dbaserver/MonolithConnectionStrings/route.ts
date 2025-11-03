@@ -1,7 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
-import { getPool } from "@/lib/dbaserver"; // <-- from your previous setup
+import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -17,7 +17,7 @@ const typeDefs = `#graphql
 
   type Query {
     namespaces(db: String!): [Namespace!]!
-    namespace(db: String!, ClientID: ID!): Namespace
+    namespace(db: String!, namespace: String!): Namespace
   }
 
   type Mutation {
@@ -35,7 +35,7 @@ const resolvers = {
   Query: {
     // Fetch all namespaces
     namespaces: async (_: any, { db }: { db: string }) => {
-      const pool = await getPool(db);
+      const pool = await getDbaServerPool(db);
       const result = await pool.request().query(`
         SELECT 
           ClientID, 
@@ -49,21 +49,22 @@ const resolvers = {
     },
 
     // Fetch a single namespace by ClientID
-    namespace: async (_: any, { db, ClientID }: { db: string; ClientID: string }) => {
-      const pool = await getPool(db);
-      const result = await pool
-        .request()
-        .input("ClientID", ClientID)
-        .query(`
-          SELECT 
-            ClientID, 
-            Namespace, 
-            ConstringDatabaseName, 
-            ConstringServerName, 
-            CreatedDate 
-          FROM Vw_MonolithConnectionStrings_Prod_Env
-          WHERE ClientID = @ClientID
-        `);
+    namespace: async (_: any, { db, namespace }: { db: string; namespace: string }) => {
+      console.log ("Fetching namespace:", namespace, "from db:", db);
+        const pool = await getDbaServerPool(db);
+  const result = await pool
+    .request()
+    .input("Namespace", namespace)
+    .query(`
+      SELECT 
+        ClientID, 
+        Namespace, 
+        ConstringDatabaseName, 
+        ConstringServerName, 
+        CreatedDate 
+      FROM Vw_MonolithConnectionStrings_Prod_Env
+      WHERE Namespace = @Namespace
+    `);
       return result.recordset[0] || null;
     },
   },
@@ -83,7 +84,7 @@ const resolvers = {
         ConstringServerName: string;
       }
     ) => {
-      const pool = await getPool(db);
+      const pool = await getDbaServerPool(db);
       const result = await pool
         .request()
         .input("Namespace", Namespace)

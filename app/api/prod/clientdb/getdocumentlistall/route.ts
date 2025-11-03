@@ -26,8 +26,10 @@ const resolvers = {
         const request = pool.request();
         
         // Call stored procedure (no JSON mode)
-        const result = await request.execute("[dbo].[GetDocumentListAll]");
-
+        // const result = await request.execute(" dbo.GetDocumentListAll @IsJson  = 0");
+const result = await request.query(`
+  EXEC GetDocumentListAll @IsJson = 0;
+`);
         // Return only DocumentGUID column
         return result.recordset.map((row: any) => ({
           DocumentGUID: row.DocumentGUID,
