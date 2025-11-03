@@ -78,9 +78,11 @@ export default function SubmitForm() {
             }
 
             const result = data.data.addDocExportOutput;
-            toast.success(`Export created for namespace: ${result.Namespace}`);
+            console.log(JSON.stringify(result));
+            toast.success(`Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`, { duration: 5000 });
+            form.reset();
         } catch (error) {
-            console.error ( (error as Error).message);
+            console.error((error as Error).message);
             toast.error((error as Error).message);
         } finally {
             setIsSubmitting(false);

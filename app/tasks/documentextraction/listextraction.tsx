@@ -43,8 +43,8 @@ export function ListExtraction() {
 
     React.useEffect(() => {
         const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:3000/api/prod/dbaserver/documentations";
-        const query = `query Query($db: String!) { docExportOutputs(db: $db) { ExportGuid Filename } }`;
-        const variables = { db: process.env.DOCEXPORT_DB || "master" };
+        const query = `query Query($db: String!) { docExportOutputs(db: $db) { ExportGuid Filename SftpUser ContainerName Namespace CreatedBy } }`;
+        const variables = { db: "DocManagement" };
 
         let mounted = true
         setLoading(true)

@@ -1,7 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
-import { getPool } from "@/lib/dbaserver";
+import { getDbaServerPool } from "@/lib/dbaserver";
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -12,7 +12,6 @@ const typeDefs = `#graphql
     Password: String
     SftpUser: String
     SftpPassword: String
-    sftppassword: String
     ContainerName: String
     Namespace: String
     CreatedBy: String
@@ -59,7 +58,7 @@ const resolvers = {
   Query: {
     // query that requires explicit db param
     docExportOutputs: async (_: any, { db }: { db: string }) => {
-      const pool = await getPool(db);
+      const pool = await getDbaServerPool(db);
       const result = await pool.request().query(`
         SELECT * FROM [dbo].[DocExportOutput]
       `);
@@ -69,7 +68,7 @@ const resolvers = {
     // convenience no-arg query that uses env default DB
     docExports: async () => {
       const db = process.env.DOCEXPORT_DB || process.env.DEFAULT_DB || "master";
-      const pool = await getPool(db);
+      const pool = await getDbaServerPool(db);
       const result = await pool.request().query(`
         SELECT * FROM [dbo].[DocExportOutput]
       `);
@@ -79,7 +78,7 @@ const resolvers = {
 
   Mutation: {
     addDocExportOutput: async (_: any, { db, input }: { db: string; input: Record<string, any> }) => {
-      const pool = await getPool(db);
+      const pool = await getDbaServerPool(db);
 
       // Build dynamic column and parameter lists
       const columns = Object.keys(input);
@@ -111,30 +110,3 @@ const server = new ApolloServer({ typeDefs, resolvers });
 const handler = startServerAndCreateNextHandler<NextRequest>(server);
 export const GET = handler;
 export const POST = handler;
-
-const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:3000/api/prod/dbaserver/documentations";
-const query = `query Query($db: String!) { docExportOutputs(db: $db) { ExportGuid Filename } }`;
-const variables = { db: process.env.DOCEXPORT_DB || "master" };
-
-try {
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, variables }),
-  });
-
-  const json = await res.json().catch(() => null);
-
-  if (!res.ok) throw new Error(`Network error: ${res.status} - ${JSON.stringify(json)}`);
-
-  if (json?.errors?.length) {
-    const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ");
-    throw new Error(`GraphQL error: ${msg}`);
-  }
-
-  const items = json?.data?.docExportOutputs ?? [];
-  // use items
-} catch (err: any) {
-  console.error("Query failed:", err);
-  // set error state: err.message || String(err)
-}
