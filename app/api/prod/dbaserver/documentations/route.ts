@@ -7,7 +7,7 @@ import { getDbaServerPool } from "@/lib/dbaserver";
 const typeDefs = `#graphql
 
   type DocExportOutput {
-    ExportGuid: ID!
+    ExportGuid: String
     Filename: String
     Password: String
     SftpUser: String
@@ -24,6 +24,7 @@ const typeDefs = `#graphql
   }
 
   input DocExportOutputInput {
+  ExportGuid: String
     Filename: String
     Password: String
     SftpUser: String

@@ -9,7 +9,7 @@ const typeDefs = `#graphql
     DocumentGUID: String!
   }
   type Query {
-    GetDocumentListAll(db: String!, servername: String!): [GetDocumentListAll!]!
+    GetDocumentListAll(servername: String!, db: String! ): [GetDocumentListAll!]!
   }
 `;
 
@@ -18,16 +18,16 @@ const resolvers = {
   Query: {
     GetDocumentListAll: async (
       _: any,
-      { db, servername }: { db: string; servername: string }
+      { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {
-        console.log (`Connecting to server ${servername} db ${db}` )
-        const pool = await getClientPool(db, servername);
+        console.log(`Connecting to server ${servername} db ${db}`);
+        const pool = await getClientPool(servername, db );
         const request = pool.request();
-        
+
         // Call stored procedure (no JSON mode)
         // const result = await request.execute(" dbo.GetDocumentListAll @IsJson  = 0");
-const result = await request.query(`
+        const result = await request.query(`
   EXEC GetDocumentListAll @IsJson = 0;
 `);
         // Return only DocumentGUID column
@@ -36,7 +36,7 @@ const result = await request.query(`
         }));
       } catch (err) {
         console.error("SQL error:", err);
-        throw  err ;
+        throw err;
       }
     },
   },

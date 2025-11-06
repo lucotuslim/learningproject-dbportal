@@ -31,7 +31,7 @@ const baseConfig: Omit<SQLConfig, "server" | "database"> = {
 
 const pools: Record<string, sql.ConnectionPool> = {};
 
-export async function getClientPool(dbName: string, serverName: string) {
+export async function getClientPool(serverName: string , dbName: string ) {
   const poolKey = `${serverName}-${dbName}`.toLowerCase();
   //  const poolKey = "ClientPool";
 

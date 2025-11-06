@@ -9,15 +9,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner"
-import { addDocExportOutput, fetchNamespace } from "./lib";
+import { addDocExportOutput, fetchNamespace,fetchDocuments } from "./lib";
 
+
+	// [ExportGuid] [nvarchar](100) NULL,
+	// [Filename] [nvarchar](100) NULL,
+	// [Password] [nvarchar](100) NULL,
+	// [SftpUser] [nvarchar](100) NULL,
+	// [sftppassword] [nvarchar](100) NULL,
+	// [ContainerName] [nvarchar](100) NULL,
+	// [Namespace] [nvarchar](100) NULL,
+	// [CreatedBy] [nvarchar](100) NULL,
+	// [env] [varchar](50) NULL
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
   Namespace: z.string().min(1, "Namespace is required"),
-  Zipname: z.string().min(1, "Zipname is required"),
-  SftpUsername: z.string().min(1, "SFTP Username is required"),
-  SftpPassword: z.string().min(1, "SFTP Password is required"),
+  Filename: z.string().min(1, "Filename is required"),
+  SftpUser: z.string().min(1, "SFTP Username is required"),
+  sftppassword: z.string().min(1, "SFTP Password is required"),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -30,23 +40,33 @@ export default function SubmitForm() {
     defaultValues: {
       env: "",
       Namespace: "",
-      Zipname: "",
-      SftpUsername: "",
-      SftpPassword: "",
+      Filename: "",
+      SftpUser: "",
+      sftppassword: "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const namespace = await fetchNamespace("ServerInventory", "CYNamespace");
-      console.log("Fetched Namespace:", namespace);
-      const result = await addDocExportOutput("DocManagement", values);
+      const namespace = await fetchNamespace("ServerInventory", values.Namespace);
+      console.log("Fetched Namespace:", JSON.stringify(namespace));
+      const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
+      console.log("Fetched Documents:", JSON.stringify(documents));
+      const containername = `${namespace.Namespace}-${namespace.ClientID}`;
+      console.log("Container Name:", containername);
+      // need to call before that
+      const newvalue = {
+        ...values,
+        ExportGuid:  Math.random().toString(36).substring(2, 15)
+      }
+      console.log  (JSON.stringify (newvalue));
+      const result = await addDocExportOutput("DocManagement", newvalue);
       toast.success(
         `Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`,
         { duration: 5000 }
       );
-      form.reset();
+      //form.reset();
     } catch (error) {
       console.error((error as Error).message);
       toast.error((error as Error).message);
@@ -70,13 +90,13 @@ export default function SubmitForm() {
           </div>
 
           <div>
-            <Label htmlFor="Zipname">Zipname</Label>
-            <Input id="Zipname" placeholder="Enter zip name" {...form.register("Zipname")} />
+            <Label htmlFor="Filename">Filename</Label>
+            <Input id="Filename" placeholder="Enter Zip filename" {...form.register("Filename")} />
           </div>
 
           <div>
-            <Label htmlFor="SftpUsername">SFTP Username</Label>
-            <Input id="SftpUsername" placeholder="Enter SFTP username" {...form.register("SftpUsername")} />
+            <Label htmlFor="SftpUser">SFTP Username</Label>
+            <Input id="SftpUser" placeholder="Enter SFTP username" {...form.register("SftpUser")} />
           </div>
 
           <div>
@@ -85,7 +105,7 @@ export default function SubmitForm() {
               id="SftpPassword"
               type="password"
               placeholder="Enter SFTP password"
-              {...form.register("SftpPassword")}
+              {...form.register("sftppassword")}
             />
           </div>
         </CardContent>
