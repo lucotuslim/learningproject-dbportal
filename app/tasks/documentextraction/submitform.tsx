@@ -11,6 +11,9 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner"
 import { addDocExportOutput, fetchNamespace, fetchDocuments,submitBulkExport } from "./lib";
 import { getApiToken } from "@/lib/utils";
+import { encryptString, decryptString } from "@/lib/utils";
+import { en } from "zod/v4/locales";
+
 // [ExportGuid] [nvarchar](100) NULL,
 // [Filename] [nvarchar](100) NULL,
 // [Password] [nvarchar](100) NULL,
@@ -46,6 +49,13 @@ export default function SubmitForm() {
   });
 
   const onSubmit = async (values: FormValues) => {
+    const key = Buffer.from([
+  1, 35, 69, 103, 137, 171, 205, 239,
+  18, 52, 86, 120, 154, 188, 222, 241,
+  17, 34, 51, 68, 85, 102, 119, 136,
+  153, 170, 187, 204, 221, 238, 255, 0
+]);
+
     setIsSubmitting(true);
     try {
       const namespace = await fetchNamespace("ServerInventory", values.Namespace);
@@ -88,11 +98,10 @@ export default function SubmitForm() {
       }
 
       console.log(JSON.stringify(newvalue));
-//       INSERT INTO [dbo].[DocExportOutput]
-// ([ExportGuid],[Filename],[Password],[SftpUser],[sftppassword],[ContainerName],[Namespace],[CreatedBy])
-// VALUES ( 
-// '$($Guid)', '$($Filename)', '$($Password)', '$($SftpUser)', '$($sftppassword)', '$($ContainerName)', '$($Namespace)', '$($CreatedBy)'
-// )
+      const encsftppassword = encryptString(newvalue.sftppassword, key);
+      newvalue.sftppassword = encsftppassword;
+      const encpassword = encryptString(newvalue.Password, key);
+      newvalue.Password = encpassword;
 
       const result = await addDocExportOutput("DocManagement", newvalue);
       toast.success(

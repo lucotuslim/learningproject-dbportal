@@ -12,7 +12,7 @@ const typeDefs = `#graphql
     Filename: String
     Password: String
     SftpUser: String
-    SftpPassword: String
+    sftppassword: String
     ContainerName: String
     Namespace: String
     CreatedBy: String
@@ -30,7 +30,7 @@ const typeDefs = `#graphql
     Filename: String
     Password: String
     SftpUser: String
-    SftpPassword: String
+    sftppassword: String
     ContainerName: String
     Namespace: String
     CreatedBy: String
@@ -49,8 +49,7 @@ function normalizeRecord(row: any) {
     Filename: row.Filename ?? row.Filename,
     Password: row.Password ?? row.Password,
     SftpUser: row.SftpUser ?? row.SftpUser,
-    SftpPassword: row.SftpPassword ?? row.SftpPassword,
-    sftppassword: row.SftpPassword ?? row.sftppassword ?? null,
+    sftppassword: row.sftppassword ?? row.sftppassword,
     ContainerName: row.ContainerName ?? row.ContainerName,
     Namespace: row.Namespace ?? row.Namespace,
     CreatedBy: row.CreatedBy ?? row.CreatedBy,
