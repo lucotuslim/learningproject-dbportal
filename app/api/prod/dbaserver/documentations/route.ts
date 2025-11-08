@@ -7,6 +7,7 @@ import { getDbaServerPool } from "@/lib/dbaserver";
 const typeDefs = `#graphql
 
   type DocExportOutput {
+    env: String
     ExportGuid: String
     Filename: String
     Password: String
@@ -24,6 +25,7 @@ const typeDefs = `#graphql
   }
 
   input DocExportOutputInput {
+  env: String
   ExportGuid: String
     Filename: String
     Password: String
@@ -42,6 +44,7 @@ const typeDefs = `#graphql
 // helper to normalize record fields
 function normalizeRecord(row: any) {
   return {
+    env: row.env ?? row.env,
     ExportGuid: row.ExportGuid ?? row.ExportGuid,
     Filename: row.Filename ?? row.Filename,
     Password: row.Password ?? row.Password,
