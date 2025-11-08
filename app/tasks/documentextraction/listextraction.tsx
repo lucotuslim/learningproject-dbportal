@@ -1,6 +1,6 @@
 "use client"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import {  decryptString } from "@/lib/utils";
+import { decryptString } from "@/lib/utils";
 import { toast } from "sonner"
 
 import * as React from "react"
@@ -125,27 +125,46 @@ export function ListExtraction() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem
-                                onClick={() => {
-                                    // if (!document.Password) {
-                                    //     toast.error("No password available");
-                                    //     return;
-                                    // }
-                                    try {
-                                        const decPassword = decryptString(document.Password);
-                                        const decsftppassword= decryptString(document.sftppassword);
+                        <DropdownMenuItem
+                            onClick={async () => {
+                                // if (!document.Password) {
+                                //     toast.error("No password available");
+                                //     return;
+                                // }
+                                try {
+                                    // Fetch and parse decrypted file password
+                                    const res1 = await fetch('/api/decrypt', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ encpassword: document.Password }),
+                                    });
+                                    const json1 = await res1.json();
+                                    const decPassword = json1?.decPassword;
 
-                                        toast.success(`Decrypted File Password: ${decPassword} 
+                                    // Fetch and parse decrypted SFTP password
+                                    const res2 = await fetch('/api/decrypt', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        body: JSON.stringify({ encpassword: document.sftppassword }),
+                                    });
+                                    const json2 = await res2.json();
+                                    const decsftppassword = json2?.decPassword;
+
+                                    toast.success(`Decrypted File Password: ${decPassword} 
 SFTP Password: ${decsftppassword}
-                                            `  , { duration: 10000 });
-                                    } catch (err) {
-                                        console.error("Failed to decrypt password:", err);
-                                        toast.error("Failed to decrypt password");
-                                    }
-                                }}
-                            >
-                                Get Password
-                            </DropdownMenuItem>
+                                            `, { duration: 10000 });
+                                } catch (err) {
+                                    console.error("Failed to decrypt password:", err);
+                                    toast.error("Failed to decrypt password");
+                                }
+                            }}
+                        >
+                            Get Password
+                        </DropdownMenuItem>
 
                             <DropdownMenuItem
                                 onClick={() => navigator.clipboard.writeText(document.ExportGuid)}

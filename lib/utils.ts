@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import {ApiInterface} from "@/interfaces/generic";
 import {IApiTokenParams} from "@/interfaces/generic";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-const key = Buffer.from(process.env.ENCRYPTION_KEY!.split(",").map(Number));
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -18,7 +17,7 @@ export async function ApiRequest<T>(
   return await response.json();
 }
 
-export function encryptString(plainText: string): string {
+export function encryptString(plainText: string, key: Buffer): string {
   if (![16, 32].includes(key.length)) {
     throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
   }
@@ -36,7 +35,7 @@ export function encryptString(plainText: string): string {
 /**
  * Decrypt a Base64 ciphertext encrypted with PowerShell's ConvertFrom-SecureString -Key
  */
-export function decryptString(encryptedBase64: string): string {
+export function decryptString(encryptedBase64: string, key: Buffer): string {
   if (![16, 32].includes(key.length)) {
     throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
   }

@@ -11,8 +11,6 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner"
 import { addDocExportOutput, fetchNamespace, fetchDocuments,submitBulkExport } from "./lib";
 import { getApiToken } from "@/lib/utils";
-import { encryptString, decryptString } from "@/lib/utils";
-import { en } from "zod/v4/locales";
 
 // [ExportGuid] [nvarchar](100) NULL,
 // [Filename] [nvarchar](100) NULL,
@@ -83,7 +81,7 @@ export default function SubmitForm() {
         ContainerName: containername,
         ZipName: values.Filename,
         SftpUsername: values.SftpUser,
-        SftpPassword: values.sftppassword,
+        sftppassword: values.sftppassword,
         DocumentsGUID: documents
       });
       console.log("Submitted Bulk Export:", JSON.stringify(submitBulkExportres));
@@ -98,9 +96,28 @@ export default function SubmitForm() {
       }
 
       console.log(JSON.stringify(newvalue));
-      const encsftppassword = encryptString(newvalue.sftppassword, key);
+      //const encsftppassword = encryptString(newvalue.sftppassword); 
+      const encsftppassword = await fetch('/api/encrypt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newvalue.sftppassword }),
+      })
+      .then(res => res.json())
+      .then(data => data.encPassword);
       newvalue.sftppassword = encsftppassword;
-      const encpassword = encryptString(newvalue.Password, key);
+      
+      //const encpassword = encryptString(newvalue.Password);
+      const encpassword = await fetch('/api/encrypt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newvalue.Password }),
+      })
+      .then(res => res.json())
+      .then(data => data.encPassword);
       newvalue.Password = encpassword;
 
       const result = await addDocExportOutput("DocManagement", newvalue);

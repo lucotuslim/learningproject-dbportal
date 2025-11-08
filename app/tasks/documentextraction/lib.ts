@@ -7,7 +7,7 @@ interface IsubmitBulkExportParams {
   ContainerName: string;
   ZipName: string;
   SftpUsername: string;
-  SftpPassword: string;
+  sftppassword: string;
   DocumentsGUID: string[];
 }
 
@@ -28,7 +28,7 @@ export async function submitBulkExport(submitBulkExportParams: IsubmitBulkExport
     "ContainerName": submitBulkExportParams.ContainerName,
     "ZipName": submitBulkExportParams.ZipName,
     "SftpUsername": submitBulkExportParams.SftpUsername,
-    "SftpPassword": submitBulkExportParams.SftpPassword,
+    "sftppassword": submitBulkExportParams.sftppassword,
     "sftpHostName": submitBulkExportParams.sftpHostName
   };
 
@@ -122,7 +122,7 @@ export async function addDocExportOutput(
         Filename
         Password
         SftpUser
-        SftpPassword
+        sftppassword
         ContainerName
         Namespace
         CreatedBy
@@ -137,7 +137,7 @@ export async function addDocExportOutput(
       Filename: values.Filename,
       Password: values.Password,
       SftpUser: values.SftpUser,
-      SftpPassword: values.sftppassword,
+      sftppassword: values.sftppassword,
       ContainerName: values.ContainerName,
       Namespace: values.Namespace,
       CreatedBy: "Api",
