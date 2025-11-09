@@ -1,5 +1,71 @@
+
 import { getApiToken } from "@/lib/utils";
-import { toast } from "sonner";
+
+function openExportReportInNewTab(exportStatus: any, failedDocuments: any[]) {
+  const newWindow = window.open("", "_blank", "noopener,noreferrer");
+  if (!newWindow) return;
+
+  // Convert ExportStatus to table rows
+  const exportStatusRows = Object.entries(exportStatus)
+    .map(
+      ([key, value]) =>
+        `<tr><td style="font-weight:bold; padding:4px 8px;">${key}</td><td style="padding:4px 8px;">${value}</td></tr>`
+    )
+    .join("");
+
+  // Convert FailedDocuments to table rows
+  const failedDocsRows = failedDocuments
+    .map((doc) => {
+      return `<tr>
+        <td style="padding:4px 8px;">${doc.documentId}</td>
+        <td style="padding:4px 8px;">${doc.reason}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const html = `
+    <html>
+      <head>
+        <title>Export Report</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 20px; }
+          h1 { margin-bottom: 20px; }
+          h2 { margin-top: 30px; }
+          table { border-collapse: collapse; width: 100%; margin-top: 10px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background-color: #f0f0f0; }
+        </style>
+      </head>
+      <body>
+        <h1>Export Report</h1>
+
+        <h2>Export Status</h2>
+        <table>
+          <tbody>
+            ${exportStatusRows}
+          </tbody>
+        </table>
+
+        <h2>Failed Documents</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>Document ID</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${failedDocsRows || `<tr><td colspan="2">No failed documents</td></tr>`}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `;
+
+  newWindow.document.write(html);
+  newWindow.document.close();
+}
+
 
 interface IsubmitBulkExportParams {
   Url: string;
@@ -18,12 +84,7 @@ export async function checkexportStatus(
   Namespace: string,
   ExportGuid: string
 ) {
-  // Placeholder function for checking export status
 
-  //  [Parameter(Mandatory=$true)][string]$env,
-  //     [Parameter(Mandatory=$true)][string]$Namespace,
-  //     [Parameter(Mandatory=$true)][string]$ExportGuid
-  // )
   const namespace = await fetchNamespace("ServerInventory", Namespace);
   const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
   const token = await getApiToken({
@@ -36,17 +97,27 @@ export async function checkexportStatus(
     ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
   });
 
-    //   Get-DocBulkExportStatusReport -Url $CurrentGetDocBulkExportStatusConfig.Url `
-    // -Method $CurrentGetDocBulkExportStatusConfig.Method -Token $Token.access_token -ContainerName $ContainerName `
-    // -ContentType $CurrentGetDocBulkExportStatusConfig.ContentType `
-    // -ExportGuid $ExportGuid
-
-
-
-  toast.success(
-    `Checking export status for Env: ${env}, Namespace: ${Namespace}, ExportGuid: ${ExportGuid}`
-  );
-}
+    console.log (   ({
+    Url: process.env.NEXT_PUBLIC_GetDocBulkExportStatusUrl!,
+    Method: process.env.NEXT_PUBLIC_GetDocBulkExportStatusMethod!,
+    Token: token.access_token,
+    ContainerName: ContainerName,
+    ContentType: process.env.NEXT_PUBLIC_GetDocBulkExportStatusContentType!,
+    ExportGuid: ExportGuid,
+  })
+ ) 
+const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
+    Url: process.env.NEXT_PUBLIC_GetDocBulkExportStatusUrl!,
+    Method: process.env.NEXT_PUBLIC_GetDocBulkExportStatusMethod!,
+    Token: token.access_token,
+    ContainerName: ContainerName,
+    ContentType: process.env.NEXT_PUBLIC_GetDocBulkExportStatusContentType!,
+    ExportGuid: ExportGuid,
+  }); 
+    console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
+    console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
+    openExportReportInNewTab(getDocBulkExportStatusReport.ExportStatus, getDocBulkExportStatusReport.FailedDocuments);
+  }
 
 // GetDocBulkExportStatus.ts
 
@@ -59,7 +130,7 @@ interface DocBulkExportStatusParams {
   ExportGuid: string;
 }
 
-export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<string> {
+export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
   try {
@@ -71,7 +142,7 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
     });
 
     const response = await fetch(Url, {
-      method: Method.toUpperCase(),
+      method: Method,
       headers
     });
 
@@ -101,7 +172,7 @@ interface DocBulkExportStatusReportParams {
 interface ExportStatus {
   exportComment?: string;
   totalDocumentsCount?: number;
-  processedDocumentPercentage?: number;
+  processedDocumentPercentage?: string;
   processedDocumentSuccessfulCount?: number;
   processedDocumentFailedCount?: number;
 }
@@ -129,7 +200,7 @@ export async function GetDocBulkExportStatusReport(
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
   try {
-    const rawResponse = await GetDocBulkExportStatus({
+    const BulkExportStatusResRaw = await GetDocBulkExportStatus({
       Url,
       Method,
       Token,
@@ -137,11 +208,12 @@ export async function GetDocBulkExportStatusReport(
       ContentType,
       ExportGuid,
     });
+    console.log ("Raw Response:", BulkExportStatusResRaw);
+    const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
+//    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
 
-    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
-
-    const exportStatus = json.apiResult?.exportStatus ?? {};
-    const failedDocuments = exportStatus.failedDocuments ?? [];
+    const exportStatus = BulkExportStatusRes.ExportStatus ?? {};
+    const failedDocuments = BulkExportStatusRes.FailedDocuments ?? [];
 
     const ExportStatus: ExportStatus = {
       exportComment: exportStatus.exportComment,

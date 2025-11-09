@@ -2,6 +2,7 @@
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import {checkexportStatus} from "./lib"
 import { toast } from "sonner"
+import {GetDocBulkExportStatusReport} from "./lib"
 
 import * as React from "react"
 import {
