@@ -1,4 +1,5 @@
 export interface IDocExportOutput {
+  env: string
   ExportGuid: string
   Filename: string
   Password: string

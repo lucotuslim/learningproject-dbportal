@@ -1,3 +1,6 @@
+import { getApiToken } from "@/lib/utils";
+import { toast } from "sonner";
+
 interface IsubmitBulkExportParams {
   Url: string;
   Method: string;
@@ -10,33 +13,179 @@ interface IsubmitBulkExportParams {
   sftppassword: string;
   DocumentsGUID: string[];
 }
+export async function checkexportStatus(
+  env: string,
+  Namespace: string,
+  ExportGuid: string
+) {
+  // Placeholder function for checking export status
+
+  //  [Parameter(Mandatory=$true)][string]$env,
+  //     [Parameter(Mandatory=$true)][string]$Namespace,
+  //     [Parameter(Mandatory=$true)][string]$ExportGuid
+  // )
+  const namespace = await fetchNamespace("ServerInventory", Namespace);
+  const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
+  const token = await getApiToken({
+    Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
+    Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
+    ContentType: process.env.NEXT_PUBLIC_DocApiTokenContentType!,
+    GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
+    ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+    Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+    ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
+  });
+
+    //   Get-DocBulkExportStatusReport -Url $CurrentGetDocBulkExportStatusConfig.Url `
+    // -Method $CurrentGetDocBulkExportStatusConfig.Method -Token $Token.access_token -ContainerName $ContainerName `
+    // -ContentType $CurrentGetDocBulkExportStatusConfig.ContentType `
+    // -ExportGuid $ExportGuid
 
 
-export async function submitBulkExport(submitBulkExportParams: IsubmitBulkExportParams): Promise<any> {
-    //  $DocBulkExportResponse= Send-DocBulkExport -Url $CurrentSendDocBulkExportConfig.Url `
-    // -Method $CurrentSendDocBulkExportConfig.Method `
-    // -sftpHostName $CurrentSendDocBulkExportConfig.sftpHostName `
-    // -ContentType $CurrentSendDocBulkExportConfig.ContentType `
-    // -Token $Token.access_token  -ContainerName $ContainerName `
-    // -ZipName $ZipName -SftpUsername $SftpUsername -SftpPassword $SftpPassword `
-    // -DocumentsGUID $Documents | ConvertFrom-Json
 
-  
+  toast.success(
+    `Checking export status for Env: ${env}, Namespace: ${Namespace}, ExportGuid: ${ExportGuid}`
+  );
+}
+
+// GetDocBulkExportStatus.ts
+
+interface DocBulkExportStatusParams {
+  Url: string;
+  Method: string;
+  Token: string;
+  ContainerName: string;
+  ContentType: string;
+  ExportGuid: string;
+}
+
+export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<string> {
+  const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
+
+  try {
+    const headers = new Headers({
+      "Content-Type": ContentType,
+      "Authorization": `Bearer ${Token}`,
+      "ContainerName": ContainerName,
+      "exportGuid": ExportGuid
+    });
+
+    const response = await fetch(Url, {
+      method: Method.toUpperCase(),
+      headers
+    });
+
+    const content = await response.text();
+
+    if (!response.ok) {
+      // Mimic PowerShell’s catch: capture HTTP error body
+      throw new Error(content || `HTTP error: ${response.status}`);
+    }
+
+    return content;
+  } catch (error: any) {
+    return error.message || String(error);
+  }
+}
+
+
+interface DocBulkExportStatusReportParams {
+  Url: string;
+  Method: string;
+  Token: string;
+  ContainerName: string;
+  ContentType: string;
+  ExportGuid: string;
+}
+
+interface ExportStatus {
+  exportComment?: string;
+  totalDocumentsCount?: number;
+  processedDocumentPercentage?: number;
+  processedDocumentSuccessfulCount?: number;
+  processedDocumentFailedCount?: number;
+}
+
+interface FailedDocument {
+  [key: string]: any;
+}
+
+interface DocBulkExportStatusResponse {
+  apiResult?: {
+    exportStatus?: {
+      exportComment?: string;
+      totalDocumentsCount?: number;
+      processedDocumentPercentage?: number;
+      processedDocumentSuccessfulCount?: number;
+      processedDocumentFailedCount?: number;
+      failedDocuments?: FailedDocument[];
+    };
+  };
+}
+
+export async function GetDocBulkExportStatusReport(
+  params: DocBulkExportStatusReportParams
+): Promise<{ ExportStatus: ExportStatus; FailedDocuments: FailedDocument[] }> {
+  const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
+
+  try {
+    const rawResponse = await GetDocBulkExportStatus({
+      Url,
+      Method,
+      Token,
+      ContainerName,
+      ContentType,
+      ExportGuid,
+    });
+
+    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
+
+    const exportStatus = json.apiResult?.exportStatus ?? {};
+    const failedDocuments = exportStatus.failedDocuments ?? [];
+
+    const ExportStatus: ExportStatus = {
+      exportComment: exportStatus.exportComment,
+      totalDocumentsCount: exportStatus.totalDocumentsCount,
+      processedDocumentPercentage: exportStatus.processedDocumentPercentage,
+      processedDocumentSuccessfulCount: exportStatus.processedDocumentSuccessfulCount,
+      processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
+    };
+
+    return { ExportStatus, FailedDocuments: failedDocuments };
+  } catch (error: any) {
+    throw new Error(`GetDocBulkExportStatusReport: ${error.message || error}`);
+  }
+}
+
+
+export async function submitBulkExport(
+  submitBulkExportParams: IsubmitBulkExportParams
+): Promise<any> {
+  //  $DocBulkExportResponse= Send-DocBulkExport -Url $CurrentSendDocBulkExportConfig.Url `
+  // -Method $CurrentSendDocBulkExportConfig.Method `
+  // -sftpHostName $CurrentSendDocBulkExportConfig.sftpHostName `
+  // -ContentType $CurrentSendDocBulkExportConfig.ContentType `
+  // -Token $Token.access_token  -ContainerName $ContainerName `
+  // -ZipName $ZipName -SftpUsername $SftpUsername -SftpPassword $SftpPassword `
+  // -DocumentsGUID $Documents | ConvertFrom-Json
+
   const headers = {
     "Content-Type": submitBulkExportParams.ContentType,
-    "Authorization": `Bearer ${submitBulkExportParams.Token}`,
-    "ContainerName": submitBulkExportParams.ContainerName,
-    "ZipName": submitBulkExportParams.ZipName,
-    "SftpUsername": submitBulkExportParams.SftpUsername,
-    "sftppassword": submitBulkExportParams.sftppassword,
-    "sftpHostName": submitBulkExportParams.sftpHostName
+    Authorization: `Bearer ${submitBulkExportParams.Token}`,
+    ContainerName: submitBulkExportParams.ContainerName,
+    ZipName: submitBulkExportParams.ZipName,
+    SftpUsername: submitBulkExportParams.SftpUsername,
+    sftppassword: submitBulkExportParams.sftppassword,
+    sftpHostName: submitBulkExportParams.sftpHostName,
   };
 
   const response = await fetch(submitBulkExportParams.Url, {
-      method: submitBulkExportParams.Method,
-      headers: headers,
-      body: JSON.stringify({ DocumentsGUID: submitBulkExportParams.DocumentsGUID }),
-    });
+    method: submitBulkExportParams.Method,
+    headers: headers,
+    body: JSON.stringify({
+      DocumentsGUID: submitBulkExportParams.DocumentsGUID,
+    }),
+  });
 
   if (!response.ok) {
     throw new Error(`API error: ${response.status}`);
@@ -108,11 +257,10 @@ export async function addDocExportOutput(
     SftpUser: string;
     sftppassword: string;
     Password: string;
-    ContainerName: string
+    ContainerName: string;
   }
 ) {
-
-  console.log (JSON.stringify(values));
+  console.log(JSON.stringify(values));
 
   const mutation = `
     mutation AddDocExportOutput($db: String!, $input: DocExportOutputInput!) {
