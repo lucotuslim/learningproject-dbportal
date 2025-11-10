@@ -1,71 +1,6 @@
 
 import { getApiToken } from "@/lib/utils";
 
-function openExportReportInNewTab(exportStatus: any, failedDocuments: any[]) {
-  const newWindow = window.open("", "_blank", "noopener,noreferrer");
-  if (!newWindow) return;
-
-  // Convert ExportStatus to table rows
-  const exportStatusRows = Object.entries(exportStatus)
-    .map(
-      ([key, value]) =>
-        `<tr><td style="font-weight:bold; padding:4px 8px;">${key}</td><td style="padding:4px 8px;">${value}</td></tr>`
-    )
-    .join("");
-
-  // Convert FailedDocuments to table rows
-  const failedDocsRows = failedDocuments
-    .map((doc) => {
-      return `<tr>
-        <td style="padding:4px 8px;">${doc.documentId}</td>
-        <td style="padding:4px 8px;">${doc.reason}</td>
-      </tr>`;
-    })
-    .join("");
-
-  const html = `
-    <html>
-      <head>
-        <title>Export Report</title>
-        <style>
-          body { font-family: Arial, sans-serif; padding: 20px; }
-          h1 { margin-bottom: 20px; }
-          h2 { margin-top: 30px; }
-          table { border-collapse: collapse; width: 100%; margin-top: 10px; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-          th { background-color: #f0f0f0; }
-        </style>
-      </head>
-      <body>
-        <h1>Export Report</h1>
-
-        <h2>Export Status</h2>
-        <table>
-          <tbody>
-            ${exportStatusRows}
-          </tbody>
-        </table>
-
-        <h2>Failed Documents</h2>
-        <table>
-          <thead>
-            <tr>
-              <th>Document ID</th>
-              <th>Reason</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${failedDocsRows || `<tr><td colspan="2">No failed documents</td></tr>`}
-          </tbody>
-        </table>
-      </body>
-    </html>
-  `;
-
-  newWindow.document.write(html);
-  newWindow.document.close();
-}
-
 
 interface IsubmitBulkExportParams {
   Url: string;
@@ -116,7 +51,20 @@ const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
   }); 
     console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
     console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
-    openExportReportInNewTab(getDocBulkExportStatusReport.ExportStatus, getDocBulkExportStatusReport.FailedDocuments);
+
+    const data = {
+      username: "chee_yong",
+      exportGuid: "123e4567-e89b-12d3-a456-426614174000",
+      status: "Completed",
+    };
+
+    // Open new tab for result page
+    const newTab = window.open("./documentextraction/report", "_blank");
+
+    // Wait a bit for the new tab to load, then send data
+    setTimeout(() => {
+      newTab?.postMessage({ type: "RESULT_DATA", payload: getDocBulkExportStatusReport }, "*");
+    }, 500);
   }
 
 // GetDocBulkExportStatus.ts

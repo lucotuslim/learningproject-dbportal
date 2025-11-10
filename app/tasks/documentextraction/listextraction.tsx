@@ -130,8 +130,6 @@ export function ListExtraction() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-
-
                             <DropdownMenuItem onClick={() => checkexportStatus(document.env, document.Namespace, document.ExportGuid)}>
                                 Check Export Status
                             </DropdownMenuItem>
