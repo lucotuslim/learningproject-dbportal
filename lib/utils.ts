@@ -4,6 +4,33 @@ import {ApiInterface} from "@/interfaces/generic";
 import {IApiTokenParams} from "@/interfaces/generic";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
+interface PushResponse {
+  url_token: string;
+  payload: string;
+  expire_after_days: number;
+  expire_after_views: number;
+  expired: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function createPush(payload: string): Promise<PushResponse> {
+  const response = await fetch('http://192.168.100.152/p.json', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: new URLSearchParams({
+      'password[payload]': payload
+    })
+  });
+
+  const data: PushResponse = await response.json();
+  console.log(`Share this secret URL: http://192.168.100.152/p/${data.url_token}`);
+  return data;
+}
+
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }

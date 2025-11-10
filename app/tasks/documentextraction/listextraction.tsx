@@ -2,7 +2,7 @@
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import {checkexportStatus} from "./lib"
 import { toast } from "sonner"
-import {GetDocBulkExportStatusReport} from "./lib"
+import {createPush} from "@/lib/utils"
 
 import * as React from "react"
 import {
@@ -175,7 +175,10 @@ SFTP Password: ${decsftppassword}
                                 Get Password
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(document.ExportGuid)}
+                                onClick={async () =>  {
+                                    const data = await createPush('stupid');
+                                    console.log(data);
+                                }}
                             >
                                 Generate Password Pusher
                             </DropdownMenuItem>
