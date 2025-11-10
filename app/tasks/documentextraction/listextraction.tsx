@@ -1,8 +1,8 @@
 "use client"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import {checkexportStatus} from "./lib"
+import { checkexportStatus } from "./lib"
 import { toast } from "sonner"
-import {createPush} from "@/lib/utils"
+import { createPush } from "@/lib/utils"
 
 import * as React from "react"
 import {
@@ -175,9 +175,49 @@ SFTP Password: ${decsftppassword}
                                 Get Password
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                onClick={async () =>  {
-                                    const data = await createPush('stupid');
-                                    console.log(data);
+                                onClick={async () => {
+
+                                    try {
+                                        const res1 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.Password }),
+                                        });
+                                        const json1 = await res1.json();
+                                        const decPasswordpusher = await createPush(json1?.decPassword);
+                                        console.log(decPasswordpusher)
+                                        // Fetch and parse decrypted SFTP password
+                                        const res2 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.sftppassword }),
+                                        });
+                                        const json2 = await res2.json();
+                                        const decsftppasswordpusher = await createPush(json2?.decPassword);
+                                        console.log(decsftppasswordpusher)
+
+                                        const newTab = window.open("./documentextraction/pwpusher", "_blank");
+
+                                        // Wait a bit for the new tab to load, then send data
+                                        setTimeout(() => {
+                                            newTab?.postMessage({ type: "RESULT_DATA", payload: { decPassword: decPasswordpusher, decSftpPassword: decsftppasswordpusher } }, "*");
+                                        }, 500);
+
+
+                                        //                                         toast.success(`Decrypted File Password: ${decPassword} 
+                                        // SFTP Password: ${decsftppassword}
+                                        //                                             `, { duration: 10000 });
+                                    } catch (err) {
+                                        console.error("Failed to decrypt password:", err);
+                                        toast.error("Failed to decrypt password");
+                                    }
+
+
+                                    //const data = await createPush('stupid');
                                 }}
                             >
                                 Generate Password Pusher

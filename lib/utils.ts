@@ -15,7 +15,7 @@ interface PushResponse {
 }
 
 export async function createPush(payload: string): Promise<PushResponse> {
-  const response = await fetch('http://192.168.100.152/p.json', {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_PWPUSHER_API_URL}/p.json`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -26,7 +26,7 @@ export async function createPush(payload: string): Promise<PushResponse> {
   });
 
   const data: PushResponse = await response.json();
-  console.log(`Share this secret URL: http://192.168.100.152/p/${data.url_token}`);
+  console.log(`Share this secret URL: ${process.env.NEXT_PUBLIC_PWPUSHER_API_URL}/p/${data.url_token}`);
   return data;
 }
 

@@ -52,12 +52,6 @@ const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
     console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
     console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
 
-    const data = {
-      username: "chee_yong",
-      exportGuid: "123e4567-e89b-12d3-a456-426614174000",
-      status: "Completed",
-    };
-
     // Open new tab for result page
     const newTab = window.open("./documentextraction/report", "_blank");
 
