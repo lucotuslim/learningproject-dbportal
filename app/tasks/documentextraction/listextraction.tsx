@@ -3,6 +3,7 @@ import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./lib"
 import { toast } from "sonner"
 import { createPush } from "@/lib/utils"
+import {getClientData} from "@/app/api/clientdb/route"
 
 import * as React from "react"
 import {
@@ -63,7 +64,7 @@ export function ListExtraction() {
 
                     const json = await res.json().catch(() => null)
 
-                    if (!res.ok) throw new Error(`Network error: ${res.status} - ${JSON.stringify(json)}`)
+                    if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
 
                     if (json?.errors?.length) {
                         const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ")
@@ -176,7 +177,6 @@ SFTP Password: ${decsftppassword}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 onClick={async () => {
-
                                     try {
                                         const res1 = await fetch('/api/decrypt', {
                                             method: 'POST',

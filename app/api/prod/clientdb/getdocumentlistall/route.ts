@@ -2,6 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 import { getClientPool } from "@/lib/clientdb";
+import {getClientData} from "@/app/api/clientdb/route"
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -21,17 +22,18 @@ const resolvers = {
       { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {
-        console.log(`Connecting to server ${servername} db ${db}`);
-        const pool = await getClientPool(servername, db );
-        const request = pool.request();
+        
+        //const pool = await getClientPool(servername, db );
+        //const request = pool.request();
 
         // Call stored procedure (no JSON mode)
         // const result = await request.execute(" dbo.GetDocumentListAll @IsJson  = 0");
-        const result = await request.query(`
-  EXEC GetDocumentListAll @IsJson = 0;
-`);
+//         const result = await request.query(`
+//   EXEC GetDocumentListAll @IsJson = 0;
+// `);
+          const data = await getClientData(servername, db, `EXEC GetDocumentListAll @IsJson = 0;`);
         // Return only DocumentGUID column
-        return result.recordset.map((row: any) => ({
+        return data.map((row: any) => ({
           DocumentGUID: row.DocumentGUID,
         }));
       } catch (err) {

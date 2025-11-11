@@ -2,6 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 import { getDbaServerPool } from "@/lib/dbaserver";
+import {getDbaserverData} from "@/app/api/dbaserver/route"
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -61,22 +62,25 @@ const resolvers = {
   Query: {
     // query that requires explicit db param
     docExportOutputs: async (_: any, { db }: { db: string }) => {
-      const pool = await getDbaServerPool(db);
-      const result = await pool.request().query(`
+      // const pool = await getDbaServerPool(db);
+      // const result = await pool.request().query(`
+      //   SELECT * FROM [dbo].[DocExportOutput]
+      // `);
+      const result = await getDbaserverData(db, `
         SELECT * FROM [dbo].[DocExportOutput]
       `);
-      return result.recordset.map(normalizeRecord);
+      return result.map(normalizeRecord);
     },
 
-    // convenience no-arg query that uses env default DB
-    docExports: async () => {
-      const db = process.env.DOCEXPORT_DB || process.env.DEFAULT_DB || "master";
-      const pool = await getDbaServerPool(db);
-      const result = await pool.request().query(`
-        SELECT * FROM [dbo].[DocExportOutput]
-      `);
-      return result.recordset.map(normalizeRecord);
-    }
+    // // convenience no-arg query that uses env default DB
+    // docExports: async () => {
+    //   const db = process.env.DOCEXPORT_DB || process.env.DEFAULT_DB || "master";
+    //   const pool = await getDbaServerPool(db);
+    //   const result = await pool.request().query(`
+    //     SELECT * FROM [dbo].[DocExportOutput]
+    //   `);
+    //   return result.recordset.map(normalizeRecord);
+    // }
   },
 
   Mutation: {
