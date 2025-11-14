@@ -14,7 +14,7 @@ export async function fetchNamespace(db: string, namespace: string) {
   const variables = { db, namespace };
 
   const res = await fetch(
-    "http://localhost:3000/api/prod/dbaserver/MonolithConnectionStrings",
+    "http://localhost:3001/api/prod/dbaserver/MonolithConnectionStrings",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -53,7 +53,7 @@ query Query($servername: String!, $db: String!) {
   const variables = { servername: servername, db: dbname };
 
   const res = await fetch(
-    "http://localhost:3000/api/prod/clientdb/getdocumentlistall",
+    "http://localhost:3001/api/prod/clientdb/getdocumentlistall",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -110,7 +110,7 @@ export async function addDocExportOutput(
   };
 
   const res = await fetch(
-    "http://localhost:3000/api/prod/dbaserver/documentations",
+    "http://localhost:3001/api/prod/dbaserver/documentations",
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -1,8 +1,14 @@
+// db-dba-pool.ts
 import sql from "mssql";
 import os from "os";
-import { config as SQLConfig } from "mssql";
+import type { config as SQLConfig } from "mssql";
 
-const baseConfig: Omit<SQLConfig, "database"> = {
+/**
+ * Common base config (server is provided here because your previous version had it)
+ * Note: We avoid placing driver-specific keys into the typed object directly without casting,
+ * because some versions of @types/mssql don't expose them.
+ */
+const baseConfigCommon: Omit<SQLConfig, "database"> = {
   server: process.env.DB_SERVER || "localhost",
   options: {
     encrypt: true,
@@ -13,31 +19,53 @@ const baseConfig: Omit<SQLConfig, "database"> = {
     min: 0,
     idleTimeoutMillis: 30000,
   },
-  ...(process.env.DB_PASSWORD
-    ? {
-        user: process.env.DB_USER || "sa",
-        password: process.env.DB_PASSWORD,
-      }
-    : {
-        authentication: {
-          type: "ntlm",
-          options: {
-            domain: process.env.DB_DOMAIN || os.hostname(),
-            userName: process.env.DB_USER || os.userInfo().username,
-            password: "",
-          },
-        },
-      }),
 };
 
+/**
+ * Build the final SQLConfig depending on whether DB_PASSWORD is present.
+ * - If DB_PASSWORD exists: use SQL Auth (user/password) with the default driver (tedious)
+ * - Otherwise: use msnodesqlv8 with trustedConnection: true (Windows Integrated Auth)
+ */
+function buildConfigForDb(dbName: string): SQLConfig {
+  const common = {
+    ...baseConfigCommon,
+    database: dbName,
+  };
+
+  if (process.env.DB_PASSWORD) {
+    // SQL Authentication (typed)
+    return {
+      ...common,
+      user: process.env.DB_USER || "sa",
+      password: process.env.DB_PASSWORD,
+    } as SQLConfig;
+  }
+
+  // No DB_PASSWORD -> use Windows Trusted Connection (msnodesqlv8)
+  // msnodesqlv8 expects options.trustedConnection = true. Some typings do not include 'driver',
+  // so we construct a small object and cast the authentication/driver portion into the SQLConfig type.
+  const winConfig = {
+    ...common,
+    // driver isn't always present in types; cast below
+    driver: "msnodesqlv8",
+    options: {
+      ...(common.options ?? {}),
+      // msnodesqlv8 specific option to use Windows integrated auth
+      trustedConnection: true,
+    },
+  };
+
+  return winConfig as unknown as SQLConfig;
+}
+
+/* Pools cache */
 const pools: Record<string, sql.ConnectionPool> = {};
 
-export async function getDbaServerPool( dbName: string) {
+/* Exported function */
+export async function getDbaServerPool(dbName: string) {
   const poolKey = `${dbName}`.toLowerCase();
-  //  const poolKey = "ClientPool";
 
   if (pools[poolKey]) {
-    // 🧠 Reuse only if still connected
     console.log(`Pool Action:    Reused`);
     console.log("Current pools:", Object.keys(pools));
     if (pools[poolKey].connected) return pools[poolKey];
@@ -51,25 +79,25 @@ export async function getDbaServerPool( dbName: string) {
         `Pool Error:     Failed to reconnect ${poolKey}. Deleting pool.`,
         e
       );
+      try {
+        pools[poolKey].close?.();
+      } catch { /* ignore */ }
       delete pools[poolKey]; // broken connection → recreate
     }
   }
 
-  const config: SQLConfig = {
-    ...baseConfig,
-    database: dbName,
-  };
+  const config: SQLConfig = buildConfigForDb(dbName);
 
-  // console.log(`Pool Action: Creating new`);
   try {
+    config.user="custadds\\pv28925"
+    
+    console.log(JSON.stringify(config));
     const pool = new sql.ConnectionPool(config);
     await pool.connect();
-    console.log(`Connected to server  ${config.server} database ${dbName}`);
+    console.log(`Connected to server ${config.server} database ${dbName} (driver=${(config as any).driver ?? "tedious"})`);
     pools[poolKey] = pool;
     return pool;
   } catch (error) {
-    //console.error(`Pool Error: Failed to connect ${}and create pool for ${poolKey}`, error);
-    // 💡 Important: Throw the error so the calling function knows the DB is unreachable.
     const errMsg =
       error instanceof Error ? error.message : JSON.stringify(error);
     throw new Error(
