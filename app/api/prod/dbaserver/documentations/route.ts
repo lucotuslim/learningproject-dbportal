@@ -2,16 +2,18 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 import { getDbaServerPool } from "@/lib/dbaserver";
-import { getConnection } from "@/lib/dbserver.js"
+import {getDbaserverData} from "@/app/api/dbaserver/route"
+
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
 
   type DocExportOutput {
+    env: String
     ExportGuid: String
     Filename: String
     Password: String
     SftpUser: String
-    SftpPassword: String
+    sftppassword: String
     ContainerName: String
     Namespace: String
     CreatedBy: String
@@ -24,11 +26,12 @@ const typeDefs = `#graphql
   }
 
   input DocExportOutputInput {
+  env: String
   ExportGuid: String
     Filename: String
     Password: String
     SftpUser: String
-    SftpPassword: String
+    sftppassword: String
     ContainerName: String
     Namespace: String
     CreatedBy: String
@@ -42,12 +45,12 @@ const typeDefs = `#graphql
 // helper to normalize record fields
 function normalizeRecord(row: any) {
   return {
+    env: row.env ?? row.env,
     ExportGuid: row.ExportGuid ?? row.ExportGuid,
     Filename: row.Filename ?? row.Filename,
     Password: row.Password ?? row.Password,
     SftpUser: row.SftpUser ?? row.SftpUser,
-    SftpPassword: row.SftpPassword ?? row.SftpPassword,
-    sftppassword: row.SftpPassword ?? row.sftppassword ?? null,
+    sftppassword: row.sftppassword ?? row.sftppassword,
     ContainerName: row.ContainerName ?? row.ContainerName,
     Namespace: row.Namespace ?? row.Namespace,
     CreatedBy: row.CreatedBy ?? row.CreatedBy,
@@ -59,33 +62,17 @@ const resolvers = {
   Query: {
     // query that requires explicit db param
     docExportOutputs: async (_: any, { db }: { db: string }) => {
-      const conn = await getDbaServerPool("ServerInventory");
-
+      // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
       //   SELECT * FROM [dbo].[DocExportOutput]
       // `);
-      // return result.recordset.map(normalizeRecord);
-      try {
-        const query = `
-      SELECT * FROM [dbo].[DocExportOutput]
-    `;
-
-        const result: any = await new Promise((resolve, reject) => {
-          conn.query(query, (err: any, rows: any) => {
-            if (err) return reject(err);
-            resolve(rows);
-          });
-        });
-
-        return result.map(normalizeRecord);
-      } finally {
-        // always close connection
-        conn.close();
-      }
-
+      const result = await getDbaserverData(db, `
+        SELECT * FROM [dbo].[DocExportOutput]
+      `);
+      return result.map(normalizeRecord);
     },
 
-    // convenience no-arg query that uses env default DB
+    // // convenience no-arg query that uses env default DB
     // docExports: async () => {
     //   const db = process.env.DOCEXPORT_DB || process.env.DEFAULT_DB || "master";
     //   const pool = await getDbaServerPool(db);

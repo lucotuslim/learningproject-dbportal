@@ -1,5 +1,9 @@
 "use client"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
+import { checkexportStatus } from "./lib"
+import { toast } from "sonner"
+import { createPush } from "@/lib/utils"
+import {getClientData} from "@/app/api/clientdb/route"
 
 import * as React from "react"
 import {
@@ -42,41 +46,41 @@ export function ListExtraction() {
     const [error, setError] = React.useState<string | null>(null)
 
     React.useEffect(() => {
-        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:3001/api/prod/dbaserver/documentations";
-        const query = `query Query($db: String!) { docExportOutputs(db: $db) { ExportGuid Filename SftpUser ContainerName Namespace CreatedBy } }`;
-        const variables = { db: "DocumentManagement" };
+        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:3000/api/prod/dbaserver/documentations";
+        const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy } }`;
+        const variables = { db: "DocManagement" };
 
         let mounted = true
         setLoading(true)
         setError(null)
 
-        ;(async () => {
-            try {
-                const res = await fetch(endpoint, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ query, variables }),
-                })
+            ; (async () => {
+                try {
+                    const res = await fetch(endpoint, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ query, variables }),
+                    })
 
-                const json = await res.json().catch(() => null)
+                    const json = await res.json().catch(() => null)
 
-                if (!res.ok) throw new Error(`Network error: ${res.status} - ${JSON.stringify(json)}`)
+                    if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
 
-                if (json?.errors?.length) {
-                    const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ")
-                    throw new Error(`GraphQL error: ${msg}`)
+                    if (json?.errors?.length) {
+                        const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ")
+                        throw new Error(`GraphQL error: ${msg}`)
+                    }
+
+                    const items = json?.data?.docExportOutputs ?? []
+
+                    if (mounted) setData(items)
+                } catch (err: any) {
+                    console.error("Query failed:", err)
+                    if (mounted) setError(typeof err === "string" ? err : (err?.message ?? JSON.stringify(err)))
+                } finally {
+                    if (mounted) setLoading(false)
                 }
-
-                const items = json?.data?.docExportOutputs ?? []
-
-                if (mounted) setData(items)
-            } catch (err: any) {
-                console.error("Query failed:", err)
-                if (mounted) setError(typeof err === "string" ? err : (err?.message ?? JSON.stringify(err)))
-            } finally {
-                if (mounted) setLoading(false)
-            }
-        })()
+            })()
 
         return () => {
             mounted = false
@@ -84,6 +88,10 @@ export function ListExtraction() {
     }, [])
 
     const columns: ColumnDef<IDocExportOutput>[] = [
+        {
+            accessorKey: "env",
+            header: "Environment"
+        },
         {
             accessorKey: "ExportGuid",
             header: "Export Guid"
@@ -113,7 +121,6 @@ export function ListExtraction() {
             enableHiding: false,
             cell: ({ row }) => {
                 const document = row.original
-
                 return (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -124,10 +131,96 @@ export function ListExtraction() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => checkexportStatus(document.env, document.Namespace, document.ExportGuid)}>
+                                Check Export Status
+                            </DropdownMenuItem>
+
                             <DropdownMenuItem
-                                onClick={() => navigator.clipboard.writeText(document.ExportGuid)}
+                                onClick={async () => {
+                                    // if (!document.Password) {
+                                    //     toast.error("No password available");
+                                    //     return;
+                                    // }
+                                    try {
+                                        // Fetch and parse decrypted file password
+                                        const res1 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.Password }),
+                                        });
+                                        const json1 = await res1.json();
+                                        const decPassword = json1?.decPassword;
+
+                                        // Fetch and parse decrypted SFTP password
+                                        const res2 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.sftppassword }),
+                                        });
+                                        const json2 = await res2.json();
+                                        const decsftppassword = json2?.decPassword;
+
+                                        toast.success(`Decrypted File Password: ${decPassword} 
+SFTP Password: ${decsftppassword}
+                                            `, { duration: 10000 });
+                                    } catch (err) {
+                                        console.error("Failed to decrypt password:", err);
+                                        toast.error("Failed to decrypt password");
+                                    }
+                                }}
                             >
-                                Generate Password Pusher.
+                                Get Password
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={async () => {
+                                    try {
+                                        const res1 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.Password }),
+                                        });
+                                        const json1 = await res1.json();
+                                        const decPasswordpusher = await createPush(json1?.decPassword);
+                                        console.log(decPasswordpusher)
+                                        // Fetch and parse decrypted SFTP password
+                                        const res2 = await fetch('/api/decrypt', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                            },
+                                            body: JSON.stringify({ encpassword: document.sftppassword }),
+                                        });
+                                        const json2 = await res2.json();
+                                        const decsftppasswordpusher = await createPush(json2?.decPassword);
+                                        console.log(decsftppasswordpusher)
+
+                                        const newTab = window.open("./documentextraction/pwpusher", "_blank");
+
+                                        // Wait a bit for the new tab to load, then send data
+                                        setTimeout(() => {
+                                            newTab?.postMessage({ type: "RESULT_DATA", payload: { decPassword: decPasswordpusher, decSftpPassword: decsftppasswordpusher } }, "*");
+                                        }, 500);
+
+
+                                        //                                         toast.success(`Decrypted File Password: ${decPassword} 
+                                        // SFTP Password: ${decsftppassword}
+                                        //                                             `, { duration: 10000 });
+                                    } catch (err) {
+                                        console.error("Failed to decrypt password:", err);
+                                        toast.error("Failed to decrypt password");
+                                    }
+
+
+                                    //const data = await createPush('stupid');
+                                }}
+                            >
+                                Generate Password Pusher
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -253,7 +346,7 @@ export function ListExtraction() {
                 </Table>
             </div>
             <div className="flex items-center justify-end space-x-2 py-4">
-                 
+
                 <div className="space-x-2">
                     <Button
                         variant="outline"

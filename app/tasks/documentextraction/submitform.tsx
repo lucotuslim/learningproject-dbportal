@@ -7,20 +7,20 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner"
-import { addDocExportOutput, fetchNamespace,fetchDocuments } from "./lib";
+import { addDocExportOutput, fetchNamespace, fetchDocuments, submitBulkExport } from "./lib";
+import { getApiToken } from "@/lib/utils";
 
-
-	// [ExportGuid] [nvarchar](100) NULL,
-	// [Filename] [nvarchar](100) NULL,
-	// [Password] [nvarchar](100) NULL,
-	// [SftpUser] [nvarchar](100) NULL,
-	// [sftppassword] [nvarchar](100) NULL,
-	// [ContainerName] [nvarchar](100) NULL,
-	// [Namespace] [nvarchar](100) NULL,
-	// [CreatedBy] [nvarchar](100) NULL,
-	// [env] [varchar](50) NULL
+// [ExportGuid] [nvarchar](100) NULL,
+// [Filename] [nvarchar](100) NULL,
+// [Password] [nvarchar](100) NULL,
+// [SftpUser] [nvarchar](100) NULL,
+// [sftppassword] [nvarchar](100) NULL,
+// [ContainerName] [nvarchar](100) NULL,
+// [Namespace] [nvarchar](100) NULL,
+// [CreatedBy] [nvarchar](100) NULL,
+// [env] [varchar](50) NULL
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -47,6 +47,7 @@ export default function SubmitForm() {
   });
 
   const onSubmit = async (values: FormValues) => {
+   
     setIsSubmitting(true);
     try {
       const namespace = await fetchNamespace("ServerInventory", values.Namespace);
@@ -55,16 +56,68 @@ export default function SubmitForm() {
       console.log("Fetched Documents:", JSON.stringify(documents));
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
       console.log("Container Name:", containername);
+      const token = await getApiToken({
+        Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
+        Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
+        ContentType: process.env.NEXT_PUBLIC_DocApiTokenContentType!,
+        GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
+        ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+        Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+        ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!
+      });
+      console.log("Fetched API Token:", token.access_token);
+      const submitBulkExportres = await submitBulkExport({
+        Url: process.env.NEXT_PUBLIC_DocSubmitBulkExportUrl!,
+        Method: process.env.NEXT_PUBLIC_DocSubmitBulkExportMethod!,
+        sftpHostName: process.env.NEXT_PUBLIC_DocSubmitBulkExportHostName!,
+        ContentType: process.env.NEXT_PUBLIC_DocSubmitBulkExportContentType!,
+        Token: token.access_token,
+        ContainerName: containername,
+        ZipName: values.Filename,
+        SftpUsername: values.SftpUser,
+        sftppassword: values.sftppassword,
+        DocumentsGUID: documents
+      });
+      console.log("Submitted Bulk Export:", JSON.stringify(submitBulkExportres));
+
       // need to call before that
       const newvalue = {
         ...values,
-        ExportGuid:  Math.random().toString(36).substring(2, 15)
+        ExportGuid: submitBulkExportres["Export GUID"],
+        Filename: submitBulkExportres["Export File Name"],
+        Password: submitBulkExportres["Password"],
+        ContainerName: containername
       }
-      console.log  (JSON.stringify (newvalue));
+
+      console.log(JSON.stringify(newvalue));
+      //const encsftppassword = encryptString(newvalue.sftppassword); 
+      const encsftppassword = await fetch('/api/encrypt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newvalue.sftppassword }),
+      })
+      .then(res => res.json())
+      .then(data => data.encPassword);
+      newvalue.sftppassword = encsftppassword;
+      
+      //const encpassword = encryptString(newvalue.Password);
+      const encpassword = await fetch('/api/encrypt', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: newvalue.Password }),
+      })
+      .then(res => res.json())
+      .then(data => data.encPassword);
+      newvalue.Password = encpassword;
+
       const result = await addDocExportOutput("DocManagement", newvalue);
       toast.success(
         `Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`,
-        { duration: 5000 }
+        { duration: 9000 }
       );
       //form.reset();
     } catch (error) {

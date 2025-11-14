@@ -28,3 +28,13 @@ export interface IapiUrl {
 }
 
 export type IapiInfo<T> = IErrorResponse & IapiUrl & Partial<T>;
+
+export interface IApiTokenParams {
+  Url: string;
+  Method: string;
+  ContentType: string;
+  GrantType: string;
+  ClientId: string;
+  Scope: string;
+  ClientSecret: string;
+}
