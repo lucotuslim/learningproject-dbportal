@@ -39,7 +39,8 @@ export default function SubmitForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      env: DocumentExtractionTasksSetting?.[0]?.env ?? "",
+      // show the placeholder by default so user must pick an environment
+      env: "",
       Namespace: "",
       Filename: "",
       SftpUser: "",
@@ -140,7 +141,7 @@ export default function SubmitForm() {
               className="w-full rounded-md border px-3 py-2"
               {...form.register("env")}
             >
-              <option value="">Select environment</option>
+              <option value="">Select Environment</option>
               {DocumentExtractionTasksSetting.map((item) => (
                 <option key={item.env} value={item.env}>
                   {item.env}
