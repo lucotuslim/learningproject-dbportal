@@ -30,8 +30,6 @@ export const AppConfig = {
       url: "/appconfiguration/controldb",
       icon: SquareTerminal
     },
-
-
     {
       title: "Client Info",
       url: "/appconfiguration/clientinfo",
@@ -96,3 +94,21 @@ export const AppConfig = {
     },
   ],
 }
+
+export const DocumentExtractionTasksSetting = [
+  {
+    env: "Test", 
+  },
+  {
+    env: "US", 
+  },
+  {
+    env: "Canada", 
+  },
+  {
+    env: "Europe", 
+  },
+  {
+    env: "Australia", 
+  }
+]

@@ -11,6 +11,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner"
 import { addDocExportOutput, fetchNamespace, fetchDocuments, submitBulkExport } from "./lib";
 import { getApiToken } from "@/lib/utils";
+import {DocumentExtractionTasksSetting} from "@/config/appsetting";
 
 // [ExportGuid] [nvarchar](100) NULL,
 // [Filename] [nvarchar](100) NULL,
@@ -38,7 +39,7 @@ export default function SubmitForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      env: "",
+      env: DocumentExtractionTasksSetting?.[0]?.env ?? "",
       Namespace: "",
       Filename: "",
       SftpUser: "",
@@ -134,7 +135,18 @@ export default function SubmitForm() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="env">Environment</Label>
-            <Input id="env" placeholder="Enter Environment" {...form.register("env")} />
+            <select
+              id="env"
+              className="w-full rounded-md border px-3 py-2"
+              {...form.register("env")}
+            >
+              <option value="">Select environment</option>
+              {DocumentExtractionTasksSetting.map((item) => (
+                <option key={item.env} value={item.env}>
+                  {item.env}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div>
