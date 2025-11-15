@@ -12,6 +12,8 @@ import { toast } from "sonner"
 import { addDocExportOutput, fetchNamespace, fetchDocuments, submitBulkExport } from "./lib";
 import { getApiToken } from "@/lib/utils";
 import {DocumentExtractionTasksSetting} from "@/config/appsetting";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Controller } from "react-hook-form";
 
 // [ExportGuid] [nvarchar](100) NULL,
 // [Filename] [nvarchar](100) NULL,
@@ -136,18 +138,32 @@ export default function SubmitForm() {
         <CardContent className="space-y-4">
           <div>
             <Label htmlFor="env">Environment</Label>
-            <select
-              id="env"
-              className="w-full rounded-md border px-3 py-2"
-              {...form.register("env")}
-            >
-              <option value="">Select Environment</option>
+
+
+
+    <Controller
+      control={form.control}
+      name="env"
+      render={({ field }) => (
+        <Select onValueChange={field.onChange} value={field.value}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Select Environment" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Environments</SelectLabel>
               {DocumentExtractionTasksSetting.map((item) => (
-                <option key={item.env} value={item.env}>
+                <SelectItem key={item.env} value={item.env}>
                   {item.env}
-                </option>
+                </SelectItem>
               ))}
-            </select>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      )}
+    />
+
+
           </div>
 
           <div>
