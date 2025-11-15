@@ -4,6 +4,71 @@ import {ApiInterface} from "@/interfaces/generic";
 import {IApiTokenParams} from "@/interfaces/generic";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
+// safeMsNodeSqlQuery.ts (paste into your helper or route)
+import util from "util";
+
+export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
+  // require hidden so bundlers won't try to include native binding where not available
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const msnodesqlv8 = eval("require")("msnodesqlv8");
+  const queryAsync = util.promisify(msnodesqlv8.query);
+
+  return new Promise<any>((resolve, reject) => {
+    let finished = false;
+
+    // Convert any unexpected global exceptions/rejections during this call into a rejection
+    const onGlobalErr = (err: any) => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      // normalize
+      const e = err instanceof Error ? err : new Error(String(err));
+      return reject(e);
+    };
+
+    // Setup temporary listeners
+    process.once("uncaughtException", onGlobalErr);
+    process.once("unhandledRejection", onGlobalErr);
+
+    // JS-level timeout guard (ensures route responds)
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      return reject(new Error("msnodesqlv8 query timed out"));
+    }, timeoutMs);
+
+    function cleanup() {
+      clearTimeout(timer);
+      process.removeListener("uncaughtException", onGlobalErr);
+      process.removeListener("unhandledRejection", onGlobalErr);
+    }
+
+    // Now call the driver. It may synchronously throw — catch that.
+    try {
+      queryAsync(connStr, sqlText)
+        .then((rows: any) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          resolve(rows);
+        })
+        .catch((err: any) => {
+          if (finished) return;
+          finished = true;
+          cleanup();
+          reject(err);
+        });
+    } catch (err) {
+      // synchronous thrown error (e.g., "Connection is not open")
+      if (finished) return;
+      finished = true;
+      cleanup();
+      reject(err instanceof Error ? err : new Error(String(err)));
+    }
+  });
+}
+
 interface PushResponse {
   url_token: string;
   payload: string;

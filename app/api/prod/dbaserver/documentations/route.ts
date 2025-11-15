@@ -85,7 +85,7 @@ const resolvers = {
 
   Mutation: {
     addDocExportOutput: async (_: any, { db, input }: { db: string; input: Record<string, any> }) => {
-      const pool = await getConnection();
+      const pool = await getDbaServerPool();
 
       // Build dynamic column and parameter lists
       const columns = Object.keys(input);
@@ -102,8 +102,9 @@ const resolvers = {
         VALUES (${params.join(",")})
       `;
       console.log(sql);
-      const result = await request.query(sql);
+      const result = await getDbaserverData(sql);
 
+      
       // normalize returned row
       return normalizeRecord(result.recordset[0]);
     },
