@@ -46,7 +46,7 @@ export function ListExtraction() {
     const [error, setError] = React.useState<string | null>(null)
 
     React.useEffect(() => {
-        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? "http://localhost:3001/api/prod/dbaserver/documentations";
+        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
         const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy } }`;
         const variables = { db: "DocumentManagement" };
 
