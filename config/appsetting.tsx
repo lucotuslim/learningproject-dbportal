@@ -142,7 +142,6 @@ export const DocumentExtractionTasksSetting = [
   },
   {
     env: "Canada",
-    
         "GetDocApiToken": {
             "Url": "https://dfid.dayforcehcm.com/connect/token",
             "Method": "POST",
