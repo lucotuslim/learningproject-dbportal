@@ -2,28 +2,25 @@
 
 import { useState } from "react";
 import { z } from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
-import { toast } from "sonner"
+import { toast } from "sonner";
 import { addDocExportOutput, fetchNamespace, fetchDocuments, submitBulkExport } from "./lib";
 import { getApiToken } from "@/lib/utils";
-import {DocumentExtractionTasksSetting} from "@/config/appsetting";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Controller } from "react-hook-form";
-
-// [ExportGuid] [nvarchar](100) NULL,
-// [Filename] [nvarchar](100) NULL,
-// [Password] [nvarchar](100) NULL,
-// [SftpUser] [nvarchar](100) NULL,
-// [sftppassword] [nvarchar](100) NULL,
-// [ContainerName] [nvarchar](100) NULL,
-// [Namespace] [nvarchar](100) NULL,
-// [CreatedBy] [nvarchar](100) NULL,
-// [env] [varchar](50) NULL
+import { DocumentExtractionTasksSetting } from "@/config/appsetting";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -41,7 +38,6 @@ export default function SubmitForm() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      // show the placeholder by default so user must pick an environment
       env: "",
       Namespace: "",
       Filename: "",
@@ -50,16 +46,21 @@ export default function SubmitForm() {
     },
   });
 
+  const {
+    register,
+    control,
+    handleSubmit,
+    formState: { errors },
+    // reset,
+  } = form;
+
   const onSubmit = async (values: FormValues) => {
-   
     setIsSubmitting(true);
     try {
       const namespace = await fetchNamespace("ServerInventory", values.Namespace);
-      console.log("Fetched Namespace:", JSON.stringify(namespace));
+      if (!namespace) throw new Error("Namespace not found");
       const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
-      console.log("Fetched Documents:", JSON.stringify(documents));
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
-      console.log("Container Name:", containername);
       const token = await getApiToken({
         Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
         Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
@@ -67,9 +68,8 @@ export default function SubmitForm() {
         GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
         ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
         Scope: process.env.NEXT_PUBLIC_DocApiScope!,
-        ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!
+        ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
       });
-      console.log("Fetched API Token:", token.access_token);
       const submitBulkExportres = await submitBulkExport({
         Url: process.env.NEXT_PUBLIC_DocSubmitBulkExportUrl!,
         Method: process.env.NEXT_PUBLIC_DocSubmitBulkExportMethod!,
@@ -80,123 +80,131 @@ export default function SubmitForm() {
         ZipName: values.Filename,
         SftpUsername: values.SftpUser,
         sftppassword: values.sftppassword,
-        DocumentsGUID: documents
+        DocumentsGUID: documents,
       });
-      console.log("Submitted Bulk Export:", JSON.stringify(submitBulkExportres));
 
-      // need to call before that
-      const newvalue = {
+      const newvalue: any = {
         ...values,
         ExportGuid: submitBulkExportres["Export GUID"],
         Filename: submitBulkExportres["Export File Name"],
         Password: submitBulkExportres["Password"],
-        ContainerName: containername
-      }
+        ContainerName: containername,
+      };
 
-      console.log(JSON.stringify(newvalue));
-      //const encsftppassword = encryptString(newvalue.sftppassword); 
-      const encsftppassword = await fetch('/api/encrypt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const encsftppassword = await fetch("/api/encrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: newvalue.sftppassword }),
       })
-      .then(res => res.json())
-      .then(data => data.encPassword);
+        .then((res) => res.json())
+        .then((data) => data.encPassword);
       newvalue.sftppassword = encsftppassword;
-      
-      //const encpassword = encryptString(newvalue.Password);
-      const encpassword = await fetch('/api/encrypt', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+
+      const encpassword = await fetch("/api/encrypt", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ password: newvalue.Password }),
       })
-      .then(res => res.json())
-      .then(data => data.encPassword);
+        .then((res) => res.json())
+        .then((data) => data.encPassword);
       newvalue.Password = encpassword;
 
       const result = await addDocExportOutput("DocManagement", newvalue);
-      toast.success(
-        `Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`,
-        { duration: 9000 }
-      );
-      //form.reset();
+      toast.success(`Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`, {
+        duration: 9000,
+      });
+      // reset(); // enable if you want to clear form after success
     } catch (error) {
       console.error((error as Error).message);
-      toast.error((error as Error).message);
+      toast.error(`Submission failed: ${(error as Error).message}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="flex gap-6 m-6">
-      <form onSubmit={form.handleSubmit(onSubmit)}>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="env">Environment</Label>
+    // center the form and keep a consistent max width so inputs + button match
+    <div className="flex justify-center p-6">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="w-full max-w-md rounded-lg shadow-sm"
+      >
+        {/* disable form controls while submitting */}
+        <fieldset disabled={isSubmitting} className="space-y-4">
+          <CardContent className="space-y-4 p-6">
+            {/* Environment select */}
+            <div>
+              <Label htmlFor="env">Environment</Label>
+              <Controller
+                control={control}
+                name="env"
+                render={({ field }) => (
+                  <Select
+                    value={field.value as string}
+                    onValueChange={(val: string) => field.onChange(val)} // ensure we pass a string
+                  >
+                    <SelectTrigger className="w-full mt-1">            {/* put className here */}
+                      <SelectValue placeholder="Select Environment" />
+                    </SelectTrigger>
 
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Environments</SelectLabel>
+                        {DocumentExtractionTasksSetting.map((item) => (
+                          <SelectItem key={item.env} value={item.env}>
+                            {item.env}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
 
+              {errors.env && <p className="text-sm text-red-600 mt-1">{errors.env.message}</p>}
+            </div>
 
-    <Controller
-      control={form.control}
-      name="env"
-      render={({ field }) => (
-        <Select onValueChange={field.onChange} value={field.value}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select Environment" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectLabel>Environments</SelectLabel>
-              {DocumentExtractionTasksSetting.map((item) => (
-                <SelectItem key={item.env} value={item.env}>
-                  {item.env}
-                </SelectItem>
-              ))}
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-      )}
-    />
+            {/* Namespace */}
+            <div>
+              <Label htmlFor="Namespace">Namespace</Label>
+              <Input id="Namespace" placeholder="Enter namespace" {...register("Namespace")} className="w-full mt-1" />
+              {errors.Namespace && <p className="text-sm text-red-600 mt-1">{errors.Namespace.message}</p>}
+            </div>
 
+            {/* Filename */}
+            <div>
+              <Label htmlFor="Filename">Filename</Label>
+              <Input id="Filename" placeholder="Enter Zip filename" {...register("Filename")} className="w-full mt-1" />
+              {errors.Filename && <p className="text-sm text-red-600 mt-1">{errors.Filename.message}</p>}
+            </div>
 
-          </div>
+            {/* SFTP Username */}
+            <div>
+              <Label htmlFor="SftpUser">SFTP Username</Label>
+              <Input id="SftpUser" placeholder="Enter SFTP username" {...register("SftpUser")} className="w-full mt-1" />
+              {errors.SftpUser && <p className="text-sm text-red-600 mt-1">{errors.SftpUser.message}</p>}
+            </div>
 
-          <div>
-            <Label htmlFor="Namespace">Namespace</Label>
-            <Input id="Namespace" placeholder="Enter namespace" {...form.register("Namespace")} />
-          </div>
+            {/* SFTP Password */}
+            <div>
+              <Label htmlFor="SftpPassword">SFTP Password</Label>
+              <Input
+                id="SftpPassword"
+                type="password"
+                placeholder="Enter SFTP password"
+                {...register("sftppassword")}
+                className="w-full mt-1"
+              />
+              {errors.sftppassword && <p className="text-sm text-red-600 mt-1">{errors.sftppassword.message}</p>}
+            </div>
+          </CardContent>
 
-          <div>
-            <Label htmlFor="Filename">Filename</Label>
-            <Input id="Filename" placeholder="Enter Zip filename" {...form.register("Filename")} />
-          </div>
-
-          <div>
-            <Label htmlFor="SftpUser">SFTP Username</Label>
-            <Input id="SftpUser" placeholder="Enter SFTP username" {...form.register("SftpUser")} />
-          </div>
-
-          <div>
-            <Label htmlFor="SftpPassword">SFTP Password</Label>
-            <Input
-              id="SftpPassword"
-              type="password"
-              placeholder="Enter SFTP password"
-              {...form.register("sftppassword")}
-            />
-          </div>
-        </CardContent>
-
-        <CardFooter>
-          <Button type="submit" disabled={isSubmitting} className="w-full">
-            {isSubmitting ? "Submitting..." : "Submit"}
-          </Button>
-        </CardFooter>
+          <CardFooter className="p-4">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </Button>
+          </CardFooter>
+        </fieldset>
       </form>
     </div>
   );

@@ -49,7 +49,7 @@ export const AppConfig = {
       url: "/managements/servers",
       icon: ServerCog
     },
-        {
+    {
       name: "Databases",
       url: "/managements/databases",
       icon: DatabaseIcon
@@ -97,18 +97,111 @@ export const AppConfig = {
 
 export const DocumentExtractionTasksSetting = [
   {
-    env: "Test", 
+    env: "Test",
+
+    "GetDocApiToken": {
+      "Url": "https://dfidconfig.np.dayforcehcm.com/connect/token",
+      "Method": "POST",
+      "ContentType": "application/x-www-form-urlencoded",
+      "GrantType": "client_credentials",
+      "ClientSecret": "doc-api-test-clientsecret"
+    },
+    "SendDocBulkExport": {
+      "Url": "https://docmgmt-docmgmtservice-usconf.np.dayforcehcm.com/BulkExport",
+      "Method": "POST",
+      "ContentType": "application/json",
+      "sftpHostName": "ftstest01.dayforcehcm.com"
+    },
+    "GetDocBulkExportStatus": {
+      "Url": "https://docmgmt-docmgmtservice-usconf.np.dayforcehcm.com/File/GetBulkExportStatus",
+      "Method": "GET",
+      "ContentType": "application/json"
+    }
+  },
+
+  {
+    env: "US",
+    "GetDocApiToken": {
+            "Url": "https://dfid.dayforcehcm.com/connect/token",
+            "Method": "POST",
+            "ContentType": "application/x-www-form-urlencoded",
+            "GrantType": "client_credentials",
+            "ClientSecret": "doc-api-prod-clientsecret"
+        },
+        "SendDocBulkExport": {
+            "Url": "https://docmgmt-docmgmtservice-us.dayforcehcm.com/BulkExport",
+            "Method": "POST",
+            "ContentType": "application/json",
+            "sftpHostName": "fts01.dayforcehcm.com"
+        },
+        "GetDocBulkExportStatus": {
+            "Url": "https://docmgmt-docmgmtservice-us.dayforcehcm.com/File/GetBulkExportStatus",
+            "Method": "GET",
+            "ContentType": "application/json"
+        }
   },
   {
-    env: "US", 
+    env: "Canada",
+    
+        "GetDocApiToken": {
+            "Url": "https://dfid.dayforcehcm.com/connect/token",
+            "Method": "POST",
+            "ContentType": "application/x-www-form-urlencoded",
+            "GrantType": "client_credentials",
+            "ClientSecret": "doc-api-prod-clientsecret"
+        },
+        "SendDocBulkExport": {
+            "Url": "https://docmgmt-docmgmtservice-can.dayforcehcm.com/BulkExport",
+            "Method": "POST",
+            "ContentType": "application/json",
+            "sftpHostName": "canfts02.dayforcehcm.com"
+        },
+        "GetDocBulkExportStatus": {
+            "Url": "https://docmgmt-docmgmtservice-can.dayforcehcm.com/File/GetBulkExportStatus",
+            "Method": "GET",
+            "ContentType": "application/json"
+        }
   },
   {
-    env: "Canada", 
+    env: "Europe",
+    "GetDocApiToken": {
+            "Url": "https://dfid.dayforcehcm.com/connect/token",
+            "Method": "POST",
+            "ContentType": "application/x-www-form-urlencoded",
+            "GrantType": "client_credentials",
+            "ClientSecret": "doc-api-prod-clientsecret"
+        },
+        "SendDocBulkExport": {
+            "Url": "https://docmgmt-docmgmtservice-eur.dayforcehcm.com/BulkExport",
+            "Method": "POST",
+            "ContentType": "application/json",
+            "sftpHostName": "eurftsw.dayforcehcm.com"
+        },
+        "GetDocBulkExportStatus": {
+            "Url": "https://docmgmt-docmgmtservice-eur.dayforcehcm.com/File/GetBulkExportStatus",
+            "Method": "GET",
+            "ContentType": "application/json"
+        }
   },
   {
-    env: "Europe", 
-  },
-  {
-    env: "Australia", 
+    env: "Australia",
+    "GetDocApiToken": {
+            "Url": "https://dfid.dayforcehcm.com/connect/token",
+            "Method": "POST",
+            "ContentType": "application/x-www-form-urlencoded",
+            "GrantType": "client_credentials",
+            "ClientSecret": "doc-api-prod-clientsecret"
+        },
+        "SendDocBulkExport": {
+            "Url": "https://docmgmt-docmgmtservice-aus.dayforcehcm.com/BulkExport",
+            "Method": "POST",
+            "ContentType": "application/json",
+            "sftpHostName": "ausfts02.dayforcehcm.com"
+        },
+        "GetDocBulkExportStatus": {
+            "Url": "https://docmgmt-docmgmtservice-aus.dayforcehcm.com/File/GetBulkExportStatus",
+            "Method": "GET",
+            "ContentType": "application/json"
+        }
   }
 ]
