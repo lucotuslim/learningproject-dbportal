@@ -215,7 +215,6 @@ export async function fetchNamespace(db: string, namespace: string) {
         Namespace
         ConstringDatabaseName
         ConstringServerName
-        CreatedDate
       }
     }
   `;

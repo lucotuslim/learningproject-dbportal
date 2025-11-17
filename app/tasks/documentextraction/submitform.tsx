@@ -10,7 +10,8 @@ import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { addDocExportOutput, fetchNamespace, fetchDocuments, submitBulkExport } from "./lib";
-import { getApiToken } from "@/lib/utils";
+import {TokenResponse} from "@/lib//utils"
+
 import { DocumentExtractionTasksSetting } from "@/config/appsetting";
 import {
   Select,
@@ -59,24 +60,29 @@ export default function SubmitForm() {
     setIsSubmitting(true);
     try {
       const namespace = await fetchNamespace("ServerInventory", values.Namespace);
+      console.log(JSON.stringify(namespace));
       if (!namespace) throw new Error("Namespace not found");
       const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
-      const token = await getApiToken({
-        //Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
-        // Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
-        // ContentType: process.env.NEXT_PUBLIC_DocApiTokenContentType!,
-        // GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
-        // ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-        // Scope: process.env.NEXT_PUBLIC_DocApiScope!,
-        Url: selectedEnvConfig!.GetDocApiToken.Url,
-        Method: selectedEnvConfig!.GetDocApiToken.Method,
-        ContentType: selectedEnvConfig!.GetDocApiToken.ContentType,
-        GrantType: selectedEnvConfig!.GetDocApiToken.GrantType,
-        ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-        Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
-        ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
-      });
+
+
+      // const token = await getApiToken({
+      //   Url: selectedEnvConfig!.GetDocApiToken.Url,
+      //   Method: selectedEnvConfig!.GetDocApiToken.Method,
+      //   ContentType: selectedEnvConfig!.GetDocApiToken.ContentType,
+      //   GrantType: selectedEnvConfig!.GetDocApiToken.GrantType,
+      //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+      //   Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
+      //   ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
+      // });
+
+      const res = await fetch("/api/getapitoken", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ env: values.env }),
+      })      
+      const token =  await res.json() as TokenResponse
+
       const submitBulkExportres = await submitBulkExport({
         Url: selectedEnvConfig!.SendDocBulkExport.Url,
         Method: selectedEnvConfig!.SendDocBulkExport.Method,

@@ -3,7 +3,6 @@ import { twMerge } from "tailwind-merge";
 import {ApiInterface} from "@/interfaces/generic";
 import {IApiTokenParams} from "@/interfaces/generic";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
 import util from "util";
 
@@ -143,6 +142,12 @@ export function decryptString(encryptedBase64: string, key: Buffer): string {
   return decrypted;
 }
 
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  scope?: string;
+}
 
 export async function getApiToken({
   Url,
@@ -152,7 +157,7 @@ export async function getApiToken({
   ClientId,
   Scope,
   ClientSecret,
-}: IApiTokenParams): Promise<any> {
+}: IApiTokenParams): Promise<TokenResponse> {
   try {
 
     // 🧠 Validate required params
