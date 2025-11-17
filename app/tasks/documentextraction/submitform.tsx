@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { IDocumentConfig } from "@/interfaces/documentextraction"
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -62,19 +63,25 @@ export default function SubmitForm() {
       const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
       const token = await getApiToken({
-        Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
-        Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
-        ContentType: process.env.NEXT_PUBLIC_DocApiTokenContentType!,
-        GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
+        //Url: process.env.NEXT_PUBLIC_DocApiTokenUrl!,
+        // Method: process.env.NEXT_PUBLIC_DocApiTokenMethod!,
+        // ContentType: process.env.NEXT_PUBLIC_DocApiTokenContentType!,
+        // GrantType: process.env.NEXT_PUBLIC_DocApiGrantType!,
+        // ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+        // Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+        Url: selectedEnvConfig!.GetDocApiToken.Url,
+        Method: selectedEnvConfig!.GetDocApiToken.Method,
+        ContentType: selectedEnvConfig!.GetDocApiToken.ContentType,
+        GrantType: selectedEnvConfig!.GetDocApiToken.GrantType,
         ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-        Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+        Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
         ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
       });
       const submitBulkExportres = await submitBulkExport({
-        Url: process.env.NEXT_PUBLIC_DocSubmitBulkExportUrl!,
-        Method: process.env.NEXT_PUBLIC_DocSubmitBulkExportMethod!,
-        sftpHostName: process.env.NEXT_PUBLIC_DocSubmitBulkExportHostName!,
-        ContentType: process.env.NEXT_PUBLIC_DocSubmitBulkExportContentType!,
+        Url: selectedEnvConfig!.SendDocBulkExport.Url,
+        Method: selectedEnvConfig!.SendDocBulkExport.Method,
+        sftpHostName: selectedEnvConfig!.SendDocBulkExport.sftpHostName,
+        ContentType: selectedEnvConfig!.SendDocBulkExport.ContentType,
         Token: token.access_token,
         ContainerName: containername,
         ZipName: values.Filename,
@@ -122,6 +129,8 @@ export default function SubmitForm() {
     }
   };
 
+  const [selectedEnvConfig, setSelectedEnvConfig] = useState<IDocumentConfig | null>(null);
+
   return (
     // center the form and keep a consistent max width so inputs + button match
     <div className="flex justify-center p-6">
@@ -140,13 +149,17 @@ export default function SubmitForm() {
                 name="env"
                 render={({ field }) => (
                   <Select
-                    value={field.value as string}
-                    onValueChange={(val: string) => field.onChange(val)} // ensure we pass a string
+                    value={field.value ?? ""}
+                    onValueChange={(val: string) => {
+                      field.onChange(val); // updates form value
+                      // find and store the config for that environment
+                      const envConfig = DocumentExtractionTasksSetting.find((item) => item.env === val);
+                      setSelectedEnvConfig(envConfig ?? null);
+                    }}
                   >
                     <SelectTrigger className="w-full mt-1">            {/* put className here */}
                       <SelectValue placeholder="Select Environment" />
                     </SelectTrigger>
-
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Environments</SelectLabel>
