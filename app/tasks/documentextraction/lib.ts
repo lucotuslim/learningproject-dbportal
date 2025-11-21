@@ -192,7 +192,7 @@ export async function submitBulkExport(
     sftppassword: submitBulkExportParams.sftppassword,
     sftpHostName: submitBulkExportParams.sftpHostName,
   };
-
+  console.log(JSON.stringify(submitBulkExportParams))
   const response = await fetch(submitBulkExportParams.Url, {
     method: submitBulkExportParams.Method,
     headers: headers,
@@ -253,6 +253,8 @@ query Query($servername: String!, $db: String!) {
     }
   );
   const data = await res.json();
+  console.log (JSON.stringify(data));
+
   if (data.errors) {
     console.error(data.errors);
     throw new Error(data.errors[0].message);

@@ -65,7 +65,6 @@ export default function SubmitForm() {
       const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
 
-
       // const token = await getApiToken({
       //   Url: selectedEnvConfig!.GetDocApiToken.Url,
       //   Method: selectedEnvConfig!.GetDocApiToken.Method,

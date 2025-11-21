@@ -30,12 +30,13 @@ const resolvers = {
         // const result = await request.execute(" dbo.GetDocumentListAll @IsJson  = 0");
 //         const result = await request.query(`
 //   EXEC GetDocumentListAll @IsJson = 0;
-// `);
-          const data = await getClientData(servername, db, `EXEC GetDocumentListAll @IsJson = 0;`);
+// `);   "EXEC dbo.MyStoredProcedure @param1 = 'foo', @param2 = 123",
+
+          const data = await getClientData(servername, db, "exec dbo.GetDocumentListAll @IsJson  = 0;"
+            );
+
         // Return only DocumentGUID column
-        return data.map((row: any) => ({
-          DocumentGUID: row.DocumentGUID,
-        }));
+        return data
       } catch (err) {
         console.error("SQL error:", err);
         throw err;

@@ -43,10 +43,12 @@ export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeo
       process.removeListener("unhandledRejection", onGlobalErr);
     }
 
+    console.log (sqlText);
     // Now call the driver. It may synchronously throw — catch that.
     try {
       queryAsync(connStr, sqlText)
         .then((rows: any) => {
+          console.log(rows);
           if (finished) return;
           finished = true;
           cleanup();

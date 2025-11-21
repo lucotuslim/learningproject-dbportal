@@ -56,7 +56,12 @@ export async function getClientData(
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
 
   try {
-    const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
+    const rows = await safeMsNodeSqlQuery(conn, `
+      SET NOCOUNT ON;
+      ${sqlText}
+      `, 
+      QUERY_TIMEOUT_MS);
+    console.log (rows)
     return rows;
   } catch (err) {
     // log and rethrow so route returns a 504/500
