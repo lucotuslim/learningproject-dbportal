@@ -1,6 +1,6 @@
+'use server';
 
 import { getApiToken } from "@/lib/utils";
-
 
 interface IsubmitBulkExportParams {
   Url: string;

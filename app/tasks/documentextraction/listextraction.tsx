@@ -81,7 +81,6 @@ export function ListExtraction() {
                     if (mounted) setLoading(false)
                 }
             })()
-
         return () => {
             mounted = false
         }

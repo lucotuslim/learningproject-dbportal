@@ -85,28 +85,38 @@ const resolvers = {
 
   Mutation: {
     addDocExportOutput: async (_: any, { db, input }: { db: string; input: Record<string, any> }) => {
-      const pool = await getDbaServerPool();
+      const formatValue = (val: any): string => {
+      if (val === null || val === undefined) return 'NULL';
+      if (typeof val === 'number' || typeof val === 'boolean') return val.toString();
+      if (val instanceof Date) return `'${val.toISOString()}'`;
+      // escape single quotes inside strings
+      return `'${String(val).replace(/'/g, "''")}'`;
+    };
 
-      // Build dynamic column and parameter lists
-      const columns = Object.keys(input);
-      const params = columns.map((col) => `@${col}`);
+    // build column and value lists
+    const columns = Object.keys(input).map(c => `[${c}]`);
+    const values = Object.keys(input).map(c => formatValue(input[c]));
 
-      const request = pool.request();
-      columns.forEach((col) => {
-        request.input(col, input[col]);
-      });
 
-      const sql = `
-        INSERT INTO [dbo].[DocExportOutput] (${columns.join(",")})
-        OUTPUT INSERTED.*
-        VALUES (${params.join(",")})
-      `;
-      console.log(sql);
-      const result = await getDbaserverData(sql);
+      // const request = pool.request();
+      // columns.forEach((col) => {
+      //   request.input(col, input[col]);
+      // });
+    const sql = `
+      INSERT INTO [dbo].[DocExportOutput] (${columns.join(',')})
+      OUTPUT INSERTED.ExportGuid, INSERTED.Filename,  INSERTED.ContainerName, INSERTED.CreatedBy, INSERTED.Namespace
+      VALUES (${values.join(',')})
+    `;
 
+//      console.log(sql);
       
+      const result = await getDbaserverData(db,sql)
+           
       // normalize returned row
-      return normalizeRecord(result.recordset[0]);
+      //return normalizeRecord(result);
+      console.log(result)
+      return result[0]
+      //return (result);
     },
   },
 };

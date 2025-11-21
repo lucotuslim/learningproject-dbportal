@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -75,25 +73,51 @@ export default function SubmitForm() {
       //   ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
       // });
 
-      const res = await fetch("/api/getapitoken", {
+      const tokenres = await fetch("/api/getapitoken", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ env: values.env }),
       })      
-      const token =  await res.json() as TokenResponse
+      const token =  await tokenres.json() as TokenResponse
 
-      const submitBulkExportres = await submitBulkExport({
-        Url: selectedEnvConfig!.SendDocBulkExport.Url,
-        Method: selectedEnvConfig!.SendDocBulkExport.Method,
-        sftpHostName: selectedEnvConfig!.SendDocBulkExport.sftpHostName,
-        ContentType: selectedEnvConfig!.SendDocBulkExport.ContentType,
-        Token: token.access_token,
-        ContainerName: containername,
-        ZipName: values.Filename,
-        SftpUsername: values.SftpUser,
-        sftppassword: values.sftppassword,
-        DocumentsGUID: documents,
-      });
+      // const submitBulkExportres = await submitBulkExport({
+      //   Url: selectedEnvConfig!.SendDocBulkExport.Url,
+      //   Method: selectedEnvConfig!.SendDocBulkExport.Method,
+      //   sftpHostName: selectedEnvConfig!.SendDocBulkExport.sftpHostName,
+      //   ContentType: selectedEnvConfig!.SendDocBulkExport.ContentType,
+      //   Token: token.access_token,
+      //   ContainerName: containername,
+      //   ZipName: values.Filename,
+      //   SftpUsername: values.SftpUser,
+      //   sftppassword: values.sftppassword,
+      //   DocumentsGUID: documents,
+      // });
+      const submitBulkExportParams = {
+  Url: selectedEnvConfig!.SendDocBulkExport.Url,
+  Method: selectedEnvConfig!.SendDocBulkExport.Method,
+  sftpHostName: selectedEnvConfig!.SendDocBulkExport.sftpHostName,
+  ContentType: selectedEnvConfig!.SendDocBulkExport.ContentType,
+  Token: token.access_token,
+  ContainerName: containername,
+  ZipName: values.Filename,
+  SftpUsername: values.SftpUser,
+  sftppassword: values.sftppassword,
+  DocumentsGUID: documents, // large array OK for API route
+};
+
+const bulksubmitres = await fetch('/api/documentextraction/submitBulkExport', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(submitBulkExportParams),
+});
+
+// Parse the JSON response
+if (!bulksubmitres.ok) {
+  const errText = await bulksubmitres.text();
+  throw new Error(`submitBulkExport failed: ${bulksubmitres.status} ${bulksubmitres.statusText} — ${errText}`);
+}
+
+const submitBulkExportres = await bulksubmitres.json(); 
 
       const newvalue: any = {
         ...values,
@@ -121,7 +145,7 @@ export default function SubmitForm() {
         .then((data) => data.encPassword);
       newvalue.Password = encpassword;
 
-      const result = await addDocExportOutput("DocManagement", newvalue);
+      const result = await addDocExportOutput("DocumentManagement", newvalue);
       toast.success(`Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`, {
         duration: 9000,
       });

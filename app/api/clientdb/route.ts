@@ -61,7 +61,7 @@ export async function getClientData(
       ${sqlText}
       `, 
       QUERY_TIMEOUT_MS);
-    console.log (rows)
+    //console.log (rows)
     return rows;
   } catch (err) {
     // log and rethrow so route returns a 504/500
