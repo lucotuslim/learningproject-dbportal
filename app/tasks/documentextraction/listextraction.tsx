@@ -1,9 +1,9 @@
 "use client"
+import {DocumentExtractionTasksSetting} from "@/config/appsetting"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./clientlib"
 import { toast } from "sonner"
-import { createPush } from "@/lib/utils"
-
+import { createPush, formatDateTime } from "@/lib/utils"
 import * as React from "react"
 import {
     ColumnDef,
@@ -60,11 +60,8 @@ export function ListExtraction() {
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({ query, variables }),
                     })
-
                     const json = await res.json().catch(() => null)
-
                     if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
-
                     if (json?.errors?.length) {
                         const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ")
                         throw new Error(`GraphQL error: ${msg}`)
@@ -114,10 +111,49 @@ export function ListExtraction() {
             accessorKey: "CreatedBy",
             header: "Created By"
         },
-                {
+
+        {
             accessorKey: "CreatedDate",
-            header: "Create Date"
+            id: "CreatedDate",
+            header: ({ column }) => {
+                return (
+                    <button
+                        className="flex items-center gap-2"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                    >
+                        Create Date
+                        <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                        {/* show direction if sorted */}
+                        {column.getIsSorted() === "asc" ? (
+                            <span className="ml-1 text-sm">▲</span>
+                        ) : column.getIsSorted() === "desc" ? (
+                            <span className="ml-1 text-sm">▼</span>
+                        ) : null}
+                    </button>
+                );
+            },
+            // return a Date object so sorting compares timestamps reliably
+            accessorFn: (row: any) => {
+                const v = row.CreatedDate ?? row.createdDate ?? row.Created_Date ?? null;
+                if (!v) return null;
+                // if already a Date, return it; else parse
+                return v instanceof Date ? v : new Date(v);
+            },
+            // tell table how to compare two accessor values
+            sortingFn: (rowA, rowB, columnId) => {
+                const a = rowA.getValue(columnId) as Date | null;
+                const b = rowB.getValue(columnId) as Date | null;
+                const ta = a ? a.getTime() : -Infinity;
+                const tb = b ? b.getTime() : -Infinity;
+                return ta === tb ? 0 : ta > tb ? 1 : -1;
+            },
+            enableSorting: true,
+            cell: ({ getValue }) => {
+                const value = getValue() as Date | string | null;
+                return formatDateTime(value ?? null);
+            },
         },
+
         {
             id: "actions",
             enableHiding: false,
@@ -189,7 +225,7 @@ SFTP Password: ${decsftppassword}
                                         });
                                         const json1 = await res1.json();
                                         const decPasswordpusher = await createPush(json1?.decPassword);
-                                        console.log(decPasswordpusher)
+                                        //console.log(decPasswordpusher)
                                         // Fetch and parse decrypted SFTP password
                                         const res2 = await fetch('/api/decrypt', {
                                             method: 'POST',
@@ -200,13 +236,21 @@ SFTP Password: ${decsftppassword}
                                         });
                                         const json2 = await res2.json();
                                         const decsftppasswordpusher = await createPush(json2?.decPassword);
-                                        console.log(decsftppasswordpusher)
+                                        //console.log(decsftppasswordpusher)
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");
 
+                                        const envConfig = DocumentExtractionTasksSetting.find((item) => item.env === document.env);
+
                                         // Wait a bit for the new tab to load, then send data
                                         setTimeout(() => {
-                                            newTab?.postMessage({ type: "RESULT_DATA", payload: { decPassword: decPasswordpusher, decSftpPassword: decsftppasswordpusher } }, "*");
+                                            newTab?.postMessage({ type: "RESULT_DATA", payload: {
+                                                
+                                                Filename: document.Filename , 
+                                                 decPassword: decPasswordpusher, 
+                                                 sftpHostName: envConfig?.SendDocBulkExport.sftpHostName,
+                                                 SftpUser: document.SftpUser , 
+                                                 decSftpPassword: decsftppasswordpusher } }, "*");
                                         }, 500);
 
 
@@ -293,10 +337,8 @@ SFTP Password: ${decsftppassword}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-
             {loading && <div className="p-4">Loading...</div>}
             {error && <div className="p-4 text-red-600">Error: {error}</div>}
-
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
@@ -348,7 +390,6 @@ SFTP Password: ${decsftppassword}
                 </Table>
             </div>
             <div className="flex items-center justify-end space-x-2 py-4">
-
                 <div className="space-x-2">
                     <Button
                         variant="outline"

@@ -6,6 +6,22 @@ import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
 import util from "util";
 
+export function formatDateTime(value?: string | Date | null): string {
+  if (!value) return "";
+  const date = new Date(value);
+
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = date.toLocaleString("en-US", { month: "short" }); // "Nov"
+  const year = date.getFullYear();
+
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+}
+
+
 export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
   // require hidden so bundlers won't try to include native binding where not available
   // eslint-disable-next-line @typescript-eslint/no-var-requires
@@ -43,12 +59,12 @@ export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeo
       process.removeListener("unhandledRejection", onGlobalErr);
     }
 
-    console.log (sqlText);
+     //console.log (sqlText);
     // Now call the driver. It may synchronously throw — catch that.
     try {
       queryAsync(connStr, sqlText)
         .then((rows: any) => {
-          console.log(rows);
+        //  console.log(rows);
           if (finished) return;
           finished = true;
           cleanup();

@@ -117,7 +117,7 @@ const resolvers = {
            
       // normalize returned row
       //return normalizeRecord(result);
-      console.log(result)
+      //console.log(result)
       return result[0]
       //return (result);
     },
