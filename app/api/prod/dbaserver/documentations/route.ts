@@ -6,6 +6,7 @@ import {getDbaserverData} from "@/app/api/dbaserver/route"
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
+  scalar DateTime
 
   type DocExportOutput {
     env: String
@@ -17,6 +18,7 @@ const typeDefs = `#graphql
     ContainerName: String
     Namespace: String
     CreatedBy: String
+    CreatedDate: DateTime
   }
 
   type Query {
@@ -54,6 +56,7 @@ function normalizeRecord(row: any) {
     ContainerName: row.ContainerName ?? row.ContainerName,
     Namespace: row.Namespace ?? row.Namespace,
     CreatedBy: row.CreatedBy ?? row.CreatedBy,
+    CreatedDate : row.CreatedDate ?? row.CreatedDate
   };
 }
 

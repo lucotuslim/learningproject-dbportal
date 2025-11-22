@@ -1,9 +1,8 @@
 "use client"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import { checkexportStatus } from "./lib"
+import { checkexportStatus } from "./clientlib"
 import { toast } from "sonner"
 import { createPush } from "@/lib/utils"
-import {getClientData} from "@/app/api/clientdb/route"
 
 import * as React from "react"
 import {
@@ -47,7 +46,7 @@ export function ListExtraction() {
 
     React.useEffect(() => {
         const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
-        const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy } }`;
+        const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
         const variables = { db: "DocumentManagement" };
 
         let mounted = true
@@ -114,6 +113,10 @@ export function ListExtraction() {
         {
             accessorKey: "CreatedBy",
             header: "Created By"
+        },
+                {
+            accessorKey: "CreatedDate",
+            header: "Create Date"
         },
         {
             id: "actions",
