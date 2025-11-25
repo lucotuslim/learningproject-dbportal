@@ -1,6 +1,56 @@
 'use server';
-
 import { getApiToken } from "@/lib/utils";
+import {DocumentExtractionTasksSetting} from "@/config/appsetting"
+
+export async function checkexportStatus(
+  env: string,
+  Namespace: string,
+  ExportGuid: string
+) {
+  const currentconfig = DocumentExtractionTasksSetting.find( (e)  => e.env===env)
+  const namespace = await fetchNamespace("ServerInventory", Namespace);
+  const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
+  if (!currentconfig) {return}
+  const token = await getApiToken({
+    Url: currentconfig.GetDocApiToken.Url,
+    Method: currentconfig.GetDocApiToken.Method,
+    ContentType: currentconfig.GetDocApiToken.ContentType,
+    GrantType: currentconfig.GetDocApiToken.GrantType,
+    ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+    Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+    ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
+  });
+
+//     console.log (   ({
+//     Url: process.env.NEXT_PUBLIC_GetDocBulkExportStatusUrl!,
+//     Method: process.env.NEXT_PUBLIC_GetDocBulkExportStatusMethod!,
+//     Token: token.access_token,
+//     ContainerName: ContainerName,
+//     ContentType: process.env.NEXT_PUBLIC_GetDocBulkExportStatusContentType!,
+//     ExportGuid: ExportGuid,
+//   })
+//  ) 
+const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
+    Url: currentconfig.GetDocBulkExportStatus.Url,
+    Method: currentconfig.GetDocBulkExportStatus.Method,
+    Token: token.access_token,
+    ContainerName: ContainerName,
+    ContentType: currentconfig.GetDocBulkExportStatus.ContentType,
+    ExportGuid: ExportGuid,
+  }); 
+  
+    console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
+    console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
+return getDocBulkExportStatusReport ;
+    // Open new tab for result page
+    //const newTab = window.open("./documentextraction/report", "_blank");
+
+    // Wait a bit for the new tab to load, then send data
+    // setTimeout(() => {
+    //   newTab?.postMessage({ type: "RESULT_DATA", payload: getDocBulkExportStatusReport }, "*");
+    // }, 500);
+  }
+
 
 interface IsubmitBulkExportParams {
   Url: string;
@@ -107,8 +157,8 @@ export async function GetDocBulkExportStatusReport(
     const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
 //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
 
-    const exportStatus = BulkExportStatusRes.ExportStatus ?? {};
-    const failedDocuments = BulkExportStatusRes.FailedDocuments ?? [];
+    const exportStatus = BulkExportStatusRes.apiResult.exportStatus ?? {};
+    const failedDocuments = BulkExportStatusRes.apiResult.exportStatus.failedDocuments ?? [];
 
     const ExportStatus: ExportStatus = {
       exportComment: exportStatus.exportComment,
@@ -123,7 +173,6 @@ export async function GetDocBulkExportStatusReport(
     throw new Error(`GetDocBulkExportStatusReport: ${error.message || error}`);
   }
 }
-
 
 export async function submitBulkExport(
   submitBulkExportParams: IsubmitBulkExportParams

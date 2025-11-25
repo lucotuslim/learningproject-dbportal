@@ -1,7 +1,7 @@
 "use client"
-import {DocumentExtractionTasksSetting} from "@/config/appsetting"
+import { DocumentExtractionTasksSetting } from "@/config/appsetting"
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import { checkexportStatus } from "./clientlib"
+import { checkexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
 import * as React from "react"
@@ -169,7 +169,23 @@ export function ListExtraction() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => checkexportStatus(document.env, document.Namespace, document.ExportGuid)}>
+                            <DropdownMenuItem onClick={async () => {
+                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid);
+                                const newTab = window.open("./documentextraction/report", "_blank");
+                                // small fallback: wait until popup exists
+                                const postPayload = () => {
+                                    try {
+                                        newTab?.postMessage({ type: "RESULT_DATA", payload }, "*");
+                                    } catch (err) {
+                                        console.error("postMessage failed:", err);
+                                    }
+                                };
+                                // attempt immediate post then retry once after a short delay
+                                postPayload();
+                                setTimeout(postPayload, 500);
+                            }
+                            }
+                            >
                                 Check Export Status
                             </DropdownMenuItem>
 
@@ -244,13 +260,16 @@ SFTP Password: ${decsftppassword}
 
                                         // Wait a bit for the new tab to load, then send data
                                         setTimeout(() => {
-                                            newTab?.postMessage({ type: "RESULT_DATA", payload: {
-                                                
-                                                Filename: document.Filename , 
-                                                 decPassword: decPasswordpusher, 
-                                                 sftpHostName: envConfig?.SendDocBulkExport.sftpHostName,
-                                                 SftpUser: document.SftpUser , 
-                                                 decSftpPassword: decsftppasswordpusher } }, "*");
+                                            newTab?.postMessage({
+                                                type: "RESULT_DATA", payload: {
+
+                                                    Filename: document.Filename,
+                                                    decPassword: decPasswordpusher,
+                                                    sftpHostName: envConfig?.SendDocBulkExport.sftpHostName,
+                                                    SftpUser: document.SftpUser,
+                                                    decSftpPassword: decsftppasswordpusher
+                                                }
+                                            }, "*");
                                         }, 500);
 
 
