@@ -9,7 +9,7 @@ import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { addDocExportOutput, fetchNamespace, fetchDocuments } from "./serverlib";
 import {TokenResponse} from "@/lib//utils"
-
+import {encryptString} from "@/lib/serverutils"
 import { DocumentExtractionTasksSetting } from "@/config/appsetting";
 import {
   Select,
@@ -128,22 +128,24 @@ const submitBulkExportres = await bulksubmitres.json();
         ContainerName: containername,
       };
 
-      const encsftppassword = await fetch("/api/encrypt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newvalue.sftppassword }),
-      })
-        .then((res) => res.json())
-        .then((data) => data.encPassword);
+      // const encsftppassword = await fetch("/api/encrypt", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ password: newvalue.sftppassword }),
+      // })
+      //   .then((res) => res.json())
+      //   .then((data) => data.encPassword);
+      const encsftppassword = await encryptString(newvalue.sftppassword);
       newvalue.sftppassword = encsftppassword;
 
-      const encpassword = await fetch("/api/encrypt", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: newvalue.Password }),
-      })
-        .then((res) => res.json())
-        .then((data) => data.encPassword);
+      // const encpassword = await fetch("/api/encrypt", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ password: newvalue.Password }),
+      // })
+      //   .then((res) => res.json())
+      //   .then((data) => data.encPassword);
+      const encpassword =  await encryptString( newvalue.Password);
       newvalue.Password = encpassword;
 
       const result = await addDocExportOutput("DocumentManagement", newvalue);

@@ -126,39 +126,39 @@ export async function ApiRequest<T>(
   return await response.json();
 }
 
-export function encryptString(plainText: string, key: Buffer): string {
-  if (![16, 32].includes(key.length)) {
-    throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
-  }
+// export function encryptString(plainText: string, key: Buffer): string {
+//   if (![16, 32].includes(key.length)) {
+//     throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
+//   }
 
-  const iv = randomBytes(16); // PowerShell uses 16-byte IV for AES-CBC
-  const cipher = createCipheriv(`aes-${key.length * 8}-cbc`, key, iv);
-  let encrypted = cipher.update(plainText, "utf8", "base64");
-  encrypted += cipher.final("base64");
+//   const iv = randomBytes(16); // PowerShell uses 16-byte IV for AES-CBC
+//   const cipher = createCipheriv(`aes-${key.length * 8}-cbc`, key, iv);
+//   let encrypted = cipher.update(plainText, "utf8", "base64");
+//   encrypted += cipher.final("base64");
 
-  // PowerShell prepends the IV (base64 encoded)
-  const fullCipher = Buffer.concat([iv, Buffer.from(encrypted, "base64")]);
-  return fullCipher.toString("base64");
-}
+//   // PowerShell prepends the IV (base64 encoded)
+//   const fullCipher = Buffer.concat([iv, Buffer.from(encrypted, "base64")]);
+//   return fullCipher.toString("base64");
+// }
 
 /**
  * Decrypt a Base64 ciphertext encrypted with PowerShell's ConvertFrom-SecureString -Key
  */
-export function decryptString(encryptedBase64: string, key: Buffer): string {
-  if (![16, 32].includes(key.length)) {
-    throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
-  }
+// export function decryptString(encryptedBase64: string, key: Buffer): string {
+//   if (![16, 32].includes(key.length)) {
+//     throw new Error("Key must be 16 or 32 bytes (AES-128 or AES-256).");
+//   }
 
-  const fullCipher = Buffer.from(encryptedBase64, "base64");
-  const iv = fullCipher.subarray(0, 16);
-  const encrypted = fullCipher.subarray(16);
+//   const fullCipher = Buffer.from(encryptedBase64, "base64");
+//   const iv = fullCipher.subarray(0, 16);
+//   const encrypted = fullCipher.subarray(16);
 
-  const decipher = createDecipheriv(`aes-${key.length * 8}-cbc`, key, iv);
-  let decrypted = decipher.update(encrypted, undefined, "utf8");
-  decrypted += decipher.final("utf8");
+//   const decipher = createDecipheriv(`aes-${key.length * 8}-cbc`, key, iv);
+//   let decrypted = decipher.update(encrypted, undefined, "utf8");
+//   decrypted += decipher.final("utf8");
 
-  return decrypted;
-}
+//   return decrypted;
+// }
 
 export interface TokenResponse {
   access_token: string;

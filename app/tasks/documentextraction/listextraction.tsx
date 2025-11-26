@@ -4,6 +4,7 @@ import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
+import {decryptString} from "@/lib/serverutils"
 import * as React from "react"
 import {
     ColumnDef,
@@ -197,27 +198,27 @@ export function ListExtraction() {
                                     // }
                                     try {
                                         // Fetch and parse decrypted file password
-                                        const res1 = await fetch('/api/decrypt', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ encpassword: document.Password }),
-                                        });
-                                        const json1 = await res1.json();
-                                        const decPassword = json1?.decPassword;
+                                        // const res1 = await fetch('/api/decrypt', {
+                                        //     method: 'POST',
+                                        //     headers: {
+                                        //         'Content-Type': 'application/json',
+                                        //     },
+                                        //     body: JSON.stringify({ encpassword: document.Password }),
+                                        // });
+                                        const decPassword = await decryptString(document.Password)
+                                        //const json1 = await res1.json();
+                                        //const decPassword = json1?.decPassword;
 
                                         // Fetch and parse decrypted SFTP password
-                                        const res2 = await fetch('/api/decrypt', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ encpassword: document.sftppassword }),
-                                        });
-                                        const json2 = await res2.json();
-                                        const decsftppassword = json2?.decPassword;
-
+                                        // const res2 = await fetch('/api/decrypt', {
+                                        //     method: 'POST',
+                                        //     headers: {
+                                        //         'Content-Type': 'application/json',
+                                        //     },
+                                        //     body: JSON.stringify({ encpassword: document.sftppassword }),
+                                        // });
+                                        // const json2 = await res2.json();
+                                        const decsftppassword = await decryptString(document.sftppassword)
                                         toast.success(`Decrypted File Password: ${decPassword} 
 SFTP Password: ${decsftppassword}
                                             `, { duration: 10000 });
@@ -232,26 +233,28 @@ SFTP Password: ${decsftppassword}
                             <DropdownMenuItem
                                 onClick={async () => {
                                     try {
-                                        const res1 = await fetch('/api/decrypt', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ encpassword: document.Password }),
-                                        });
-                                        const json1 = await res1.json();
-                                        const decPasswordpusher = await createPush(json1?.decPassword);
+                                        // const res1 = await fetch('/api/decrypt', {
+                                        //     method: 'POST',
+                                        //     headers: {
+                                        //         'Content-Type': 'application/json',
+                                        //     },
+                                        //     body: JSON.stringify({ encpassword: document.Password }),
+                                        // });
+                                        // const json1 = await res1.json();
+                                        const respassword = await decryptString(document.Password);
+                                        const decPasswordpusher = await createPush(respassword);
                                         //console.log(decPasswordpusher)
                                         // Fetch and parse decrypted SFTP password
-                                        const res2 = await fetch('/api/decrypt', {
-                                            method: 'POST',
-                                            headers: {
-                                                'Content-Type': 'application/json',
-                                            },
-                                            body: JSON.stringify({ encpassword: document.sftppassword }),
-                                        });
-                                        const json2 = await res2.json();
-                                        const decsftppasswordpusher = await createPush(json2?.decPassword);
+                                        // const res2 = await fetch('/api/decrypt', {
+                                        //     method: 'POST',
+                                        //     headers: {
+                                        //         'Content-Type': 'application/json',
+                                        //     },
+                                        //     body: JSON.stringify({ encpassword: document.sftppassword }),
+                                        // });
+                                        // const json2 = await res2.json();
+                                        const resdecsftppasswordpusher = await decryptString(document.sftppassword)
+                                        const decsftppasswordpusher = await createPush(resdecsftppasswordpusher);
                                         //console.log(decsftppasswordpusher)
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");
