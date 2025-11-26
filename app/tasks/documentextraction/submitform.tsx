@@ -70,7 +70,7 @@ export default function SubmitForm() {
       //   GrantType: selectedEnvConfig!.GetDocApiToken.GrantType,
       //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
       //   Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
-      //   ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret!,
+      //   ClientSecret: process.env.DocApiClientSecret!,
       // });
 
       const tokenres = await fetch("/api/getapitoken", {

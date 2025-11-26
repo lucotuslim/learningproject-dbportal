@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       GrantType: envConfig.GetDocApiToken.GrantType,
       ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
       Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
-      ClientSecret: process.env.NEXT_PUBLIC_DocApiClientSecret! // server env var, not client
+      ClientSecret: process.env.DocApiClientSecret! // server env var, not client
     });
 
     return NextResponse.json(token, { status: 200 });
