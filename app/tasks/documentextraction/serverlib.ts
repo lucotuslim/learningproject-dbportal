@@ -199,7 +199,7 @@ export async function submitBulkExport(
     method: submitBulkExportParams.Method,
     headers: headers,
     body: JSON.stringify({
-      DocumentsGUID: submitBulkExportParams.DocumentsGUID,
+      Data: submitBulkExportParams.DocumentsGUID,
     }),
   });
 
