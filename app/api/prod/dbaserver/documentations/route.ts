@@ -1,13 +1,13 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
+import graphqlFields from "graphql-fields";
 import { NextRequest } from "next/server";
-import { getDbaServerPool } from "@/lib/dbaserver";
+//import { getDbaServerPool } from "@/lib/dbaserver";
 import {getDbaserverData} from "@/app/api/dbaserver/route"
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
   scalar DateTime
-
   type DocExportOutput {
     env: String
     ExportGuid: String
@@ -24,19 +24,18 @@ const typeDefs = `#graphql
   type Query {
     _empty: String
     docExportOutputs(db: String!): [DocExportOutput!]!
-    docExports: [DocExportOutput!]!          # convenience no-arg query for clients
   }
 
   input DocExportOutputInput {
   env: String
   ExportGuid: String
-    Filename: String
-    Password: String
-    SftpUser: String
-    sftppassword: String
-    ContainerName: String
-    Namespace: String
-    CreatedBy: String
+  Filename: String
+  Password: String
+  SftpUser: String
+  sftppassword: String
+  ContainerName: String
+  Namespace: String
+  CreatedBy: String
   }
 
   type Mutation {
@@ -64,26 +63,18 @@ function normalizeRecord(row: any) {
 const resolvers = {
   Query: {
     // query that requires explicit db param
-    docExportOutputs: async (_: any, { db }: { db: string }) => {
+    docExportOutputs: async (_: any, { db }: { db: string },__: any, info: any) => {
+      const fields = Object.keys(graphqlFields(info));
       // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
       //   SELECT * FROM [dbo].[DocExportOutput]
       // `);
+      const sqlColumns = fields.map(f => `[${f}]`).join(", ");
       const result = await getDbaserverData(db, `
-        SELECT * FROM [dbo].[DocExportOutput]
+        SELECT ${sqlColumns} FROM [dbo].[DocExportOutput]
       `);
       return result.map(normalizeRecord);
     },
-
-    // // convenience no-arg query that uses env default DB
-    // docExports: async () => {
-    //   const db = process.env.DOCEXPORT_DB || process.env.DEFAULT_DB || "master";
-    //   const pool = await getDbaServerPool(db);
-    //   const result = await pool.request().query(`
-    //     SELECT * FROM [dbo].[DocExportOutput]
-    //   `);
-    //   return result.recordset.map(normalizeRecord);
-    // }
   },
 
   Mutation: {
@@ -92,42 +83,23 @@ const resolvers = {
       if (val === null || val === undefined) return 'NULL';
       if (typeof val === 'number' || typeof val === 'boolean') return val.toString();
       if (val instanceof Date) return `'${val.toISOString()}'`;
-      // escape single quotes inside strings
       return `'${String(val).replace(/'/g, "''")}'`;
     };
-
-    // build column and value lists
     const columns = Object.keys(input).map(c => `[${c}]`);
     const values = Object.keys(input).map(c => formatValue(input[c]));
-
-
-      // const request = pool.request();
-      // columns.forEach((col) => {
-      //   request.input(col, input[col]);
-      // });
     const sql = `
       INSERT INTO [dbo].[DocExportOutput] (${columns.join(',')})
       OUTPUT INSERTED.ExportGuid, INSERTED.Filename,  INSERTED.ContainerName, INSERTED.CreatedBy, INSERTED.Namespace
       VALUES (${values.join(',')})
     `;
-
-//      console.log(sql);
-      
       const result = await getDbaserverData(db,sql)
-           
-      // normalize returned row
-      //return normalizeRecord(result);
-      //console.log(result)
       return result[0]
-      //return (result);
     },
   },
 };
 
-// 🧠 Apollo Server
 const server = new ApolloServer({ typeDefs, resolvers });
 
-// 🧠 Next.js Route Handler
 const handler = startServerAndCreateNextHandler<NextRequest>(server);
 export const GET = handler;
 export const POST = handler;

@@ -31,10 +31,8 @@ const resolvers = {
 //         const result = await request.query(`
 //   EXEC GetDocumentListAll @IsJson = 0;
 // `);   "EXEC dbo.MyStoredProcedure @param1 = 'foo', @param2 = 123",
-
           const data = await getClientData(servername, db, "exec dbo.GetDocumentListAll @IsJson  = 0;"
             );
-
         // Return only DocumentGUID column
         return data
       } catch (err) {

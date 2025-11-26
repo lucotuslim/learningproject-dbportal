@@ -9,7 +9,7 @@ export async function getDbaserverData(
 ) {
   const serverName = process.env.DB_SERVER!;
   const hasSqlLogin = Boolean(process.env.DB_USER);
-
+  console.log (sqlText)
   // --- Case 1: Use SQL Auth via mssql ---
   if (hasSqlLogin) {
     const config: sql.config = {

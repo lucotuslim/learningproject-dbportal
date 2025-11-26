@@ -1,6 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
+import graphqlFields from "graphql-fields";
 // import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
 import {getDbaserverData} from "@/app/api/dbaserver/route"
 
@@ -31,7 +32,6 @@ const typeDefs = `#graphql
   }
 `;
 
-// 🧠 Resolvers
 const resolvers = {
   Query: {
     // Fetch all namespaces
@@ -58,8 +58,9 @@ const resolvers = {
     },
 
     // Fetch a single namespace by ClientID
-    namespace: async (_: any, { db, namespace }: { db: string; namespace: string }) => {
+    namespace: async (_: any, { db, namespace }: { db: string; namespace: string },__: any, info: any) => {
       console.log ("Fetching namespace:", namespace, "from db:", db);
+      const fields = Object.keys(graphqlFields(info));
   //       const pool = await getDbaServerPool(db);
   // const result = await pool
   //   .request()
@@ -74,18 +75,16 @@ const resolvers = {
   //     FROM Vw_MonolithConnectionStrings_Prod_Env
   //     WHERE Namespace = @Namespace
   //   `);
+  const sqlColumns = fields.map(f => `[${f}]`).join(", ");
   const result = await getDbaserverData(db, 
     `
     SELECT 
-         ClientID, 
-         Namespace, 
-         ConstringDatabaseName, 
-         ConstringServerName
+         ${sqlColumns}
        FROM Vw_MonolithConnectionStrings_Prod_Env
        WHERE Namespace = '${namespace}'
     `
   )
-  console.log (JSON.stringify(result));
+ // console.log (JSON.stringify(result));
       return result[0] || null;
     },
   },
