@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar"
 import {AppConfig} from "@/config/appsetting";
 import { NavManagements } from "./nav-managements"
+import { NavTasks } from "./nav-tasks";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
@@ -25,7 +26,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavConfiguration items={AppConfig.navConfiguration} />
         <NavManagements managements={AppConfig.NavManagements} />
-        {/* <NavProjects projects={AppConfig.projects} /> */}
+        <NavTasks tasks={AppConfig.tasks} />
       </SidebarContent>
       <SidebarFooter>
         {/* <NavUser user={AppConfig.user} /> */}
