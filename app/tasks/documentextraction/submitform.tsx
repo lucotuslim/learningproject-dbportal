@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { IDocumentConfig } from "@/interfaces/documentextraction"
+import {chunkArray} from '@/lib/serverutils'
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -60,7 +61,7 @@ export default function SubmitForm() {
       const namespace = await fetchNamespace("ServerInventory", values.Namespace);
       console.log(JSON.stringify(namespace));
       if (!namespace) throw new Error("Namespace not found");
-      const documents = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
+      const documents : {DocumentGUID: string}[]= await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
 
       // const token = await getApiToken({
@@ -80,18 +81,12 @@ export default function SubmitForm() {
       })      
       const token =  await tokenres.json() as TokenResponse
 
-      // const submitBulkExportres = await submitBulkExport({
-      //   Url: selectedEnvConfig!.SendDocBulkExport.Url,
-      //   Method: selectedEnvConfig!.SendDocBulkExport.Method,
-      //   sftpHostName: selectedEnvConfig!.SendDocBulkExport.sftpHostName,
-      //   ContentType: selectedEnvConfig!.SendDocBulkExport.ContentType,
-      //   Token: token.access_token,
-      //   ContainerName: containername,
-      //   ZipName: values.Filename,
-      //   SftpUsername: values.SftpUser,
-      //   sftppassword: values.sftppassword,
-      //   DocumentsGUID: documents,
-      // });
+const BATCH_SIZE = 50000;
+const batches = await chunkArray(documents, BATCH_SIZE);
+
+for (let i = 0; i <  batches.length; i++) {
+  const batch = batches[i];
+
       const submitBulkExportParams = {
   Url: selectedEnvConfig!.SendDocBulkExport.Url,
   Method: selectedEnvConfig!.SendDocBulkExport.Method,
@@ -102,7 +97,8 @@ export default function SubmitForm() {
   ZipName: values.Filename,
   SftpUsername: values.SftpUser,
   sftppassword: values.sftppassword,
-  DocumentsGUID: documents, // large array OK for API route
+  DocumentsGUID: batch
+//  DocumentsGUID: documents, // large array OK for API route
 };
 
 const bulksubmitres = await fetch('/api/documentextraction/submitBulkExport', {
@@ -119,7 +115,6 @@ if (!bulksubmitres.ok) {
 }
 
 const submitBulkExportres = await bulksubmitres.json(); 
-
       const newvalue: any = {
         ...values,
         ExportGuid: submitBulkExportres["Export GUID"],
@@ -128,23 +123,9 @@ const submitBulkExportres = await bulksubmitres.json();
         ContainerName: containername,
       };
 
-      // const encsftppassword = await fetch("/api/encrypt", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ password: newvalue.sftppassword }),
-      // })
-      //   .then((res) => res.json())
-      //   .then((data) => data.encPassword);
       const encsftppassword = await encryptString(newvalue.sftppassword);
       newvalue.sftppassword = encsftppassword;
 
-      // const encpassword = await fetch("/api/encrypt", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ password: newvalue.Password }),
-      // })
-      //   .then((res) => res.json())
-      //   .then((data) => data.encPassword);
       const encpassword =  await encryptString( newvalue.Password);
       newvalue.Password = encpassword;
 
@@ -152,6 +133,7 @@ const submitBulkExportres = await bulksubmitres.json();
       toast.success(`Export created Guid: ${result.ExportGuid} Namespace: ${result.Namespace}`, {
         duration: 9000,
       });
+    }
       // reset(); // enable if you want to clear form after success
     } catch (error) {
       console.error((error as Error).message);

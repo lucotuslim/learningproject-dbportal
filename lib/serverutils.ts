@@ -1,6 +1,14 @@
 'use server'
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 
+export async function  chunkArray<T>(arr: T[], size: number): Promise<T[][]> {
+  const result: T[][] = [];
+  for (let i = 0; i < arr.length; i += size) {
+    result.push(arr.slice(i, i + size));
+  }
+  return result;
+}
+
 export async function decryptString(encryptedBase64: string): Promise<string> {
   const keyString = process.env.ENCRYPTION_KEY;
   const key = Buffer.from(keyString!.split(",").map(Number));

@@ -30,9 +30,13 @@ export async function POST(req: Request) {
     });
 
     // Forward the request to the configured endpoint
+//    const top100Guids = body.DocumentsGUID.slice(0, 10);
+
     const response = await fetch(body.Url, {
       method: body.Method,
       headers,
+      //body: JSON.stringify({Data: body.DocumentsGUID }),
+  //    body: JSON.stringify({Data: top100Guids }),
       body: JSON.stringify({Data: body.DocumentsGUID }),
       // optional: no-store to avoid Next caching
       cache: 'no-store',
