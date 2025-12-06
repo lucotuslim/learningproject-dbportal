@@ -93,7 +93,7 @@ export async function getDbaServerPool(dbName: string) {
     console.log(JSON.stringify(config));
     const pool = new sql.ConnectionPool(config);
     await pool.connect();
-    console.log(`Connected to server ${config.server} database ${dbName} (driver=${(config as any).driver ?? "tedious"})`);
+   // console.log(`Connected to server ${config.server} database ${dbName} (driver=${(config as any).driver ?? "tedious"})`);
     pools[poolKey] = pool;
     return pool;
   } catch (error) {

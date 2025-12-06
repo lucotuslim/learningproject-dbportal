@@ -63,7 +63,7 @@ function normalizeRecord(row: any) {
 const resolvers = {
   Query: {
     // query that requires explicit db param
-    docExportOutputs: async (_: any, { db }: { db: string },__: any, info: any) => {
+    docExportOutputs: async (_: unknown, { db }: { db: string },__: any, info: any) => {
       const fields = Object.keys(graphqlFields(info));
       // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
@@ -78,7 +78,7 @@ const resolvers = {
   },
 
   Mutation: {
-    addDocExportOutput: async (_: any, { db, input }: { db: string; input: Record<string, any> }) => {
+    addDocExportOutput: async (_: unknown, { db, input }: { db: string; input: Record<string, any> }) => {
       const formatValue = (val: any): string => {
       if (val === null || val === undefined) return 'NULL';
       if (typeof val === 'number' || typeof val === 'boolean') return val.toString();

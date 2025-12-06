@@ -64,16 +64,20 @@ export function ListExtraction() {
                     const json = await res.json().catch(() => null)
                     if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
                     if (json?.errors?.length) {
-                        const msg = json.errors.map((e: any) => e.message ?? JSON.stringify(e)).join("; ")
+                        const msg = json.errors.map((e: unknown) => {
+                            if (typeof e === "object" && e !== null && "message" in e) {
+                                return (e as { message?: string }).message ?? JSON.stringify(e);
+                            }
+                            return JSON.stringify(e);
+                        }).join("; ")
                         throw new Error(`GraphQL error: ${msg}`)
                     }
-
                     const items = json?.data?.docExportOutputs ?? []
 
                     if (mounted) setData(items)
-                } catch (err: any) {
+                } catch (err: unknown) {
                     console.error("Query failed:", err)
-                    if (mounted) setError(typeof err === "string" ? err : (err?.message ?? JSON.stringify(err)))
+                    if (mounted) setError(typeof err === "string" ? err : (err instanceof Error ? err.message : JSON.stringify(err)))
                 } finally {
                     if (mounted) setLoading(false)
                 }

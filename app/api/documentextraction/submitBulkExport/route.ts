@@ -64,8 +64,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(result);
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error('submitBulkExport route error', err);
-    return NextResponse.json({ error: err.message || 'Internal error' }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : 'unknown error' }, { status: 500 });
   }
 }

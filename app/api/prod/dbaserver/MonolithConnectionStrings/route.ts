@@ -2,6 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 import graphqlFields from "graphql-fields";
+import { GraphQLResolveInfo } from "graphql";
 // import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
 import {getDbaserverData} from "@/app/api/dbaserver/route"
 
@@ -35,7 +36,7 @@ const typeDefs = `#graphql
 const resolvers = {
   Query: {
     // Fetch all namespaces
-    namespaces: async (_: any, { db }: { db: string }) => {
+    namespaces: async (_: unknown, { db }: { db: string }) => {
       
       // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
@@ -56,9 +57,8 @@ const resolvers = {
       )
       return result.recordset;
     },
-
     // Fetch a single namespace by ClientID
-    namespace: async (_: any, { db, namespace }: { db: string; namespace: string },__: any, info: any) => {
+    namespace: async (_: unknown, { db, namespace }: { db: string; namespace: string },__: unknown, info: GraphQLResolveInfo) => {
       console.log ("Fetching namespace:", namespace, "from db:", db);
       const fields = Object.keys(graphqlFields(info));
   //       const pool = await getDbaServerPool(db);

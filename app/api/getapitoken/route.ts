@@ -24,8 +24,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json(token, { status: 200 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("get-doc-token error", err);
-    return NextResponse.json({ error: err.message ?? "unknown error" }, { status: 500 });
+    return NextResponse.json({ error: err instanceof Error ? err.message : "unknown error" }, { status: 500 });
   }
 }

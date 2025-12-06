@@ -33,7 +33,7 @@ export async function getClientData(
       const result = await pool.request().query(sqlText);
       await pool.close();
       return result.recordset;
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err);
       throw new Error(`mssql failed on ${serverName}/${dbName}: ${msg}`);
     }

@@ -18,7 +18,7 @@ const typeDefs = `#graphql
 const resolvers = {
   Query: {
     GetDocumentListAll: async (
-      _: any,
+      _: unknown,
       { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {

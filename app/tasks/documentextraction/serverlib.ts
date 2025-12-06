@@ -100,8 +100,8 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
     }
 
     return content;
-  } catch (error: any) {
-    return error.message || String(error);
+  } catch (error: unknown) {
+    return error instanceof Error ? error.message : String(error);
   }
 }
 
@@ -170,8 +170,8 @@ export async function GetDocBulkExportStatusReport(
     };
 
     return { ExportStatus, FailedDocuments: failedDocuments };
-  } catch (error: any) {
-    throw new Error(`GetDocBulkExportStatusReport: ${error.message || error}`);
+  } catch (error: unknown) {
+    throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
