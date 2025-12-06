@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import os from "os";
+//import { NextResponse } from "next/server";
+//import os from "os";
 import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
 
@@ -41,8 +41,8 @@ export async function getClientData(
 
   // Otherwise, fallback to msnodesqlv8 for trusted (Windows) connection.
   console.log("Falling back to msnodesqlv8 trusted connection...");
-  const util = await import("util");
-  const msnodesqlv8 = eval("require")("msnodesqlv8");
+  //const util = await import("util");
+  //const msnodesqlv8 = eval("require")("msnodesqlv8");
 
   const conn = `
     server=${serverName};

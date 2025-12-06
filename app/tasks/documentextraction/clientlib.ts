@@ -1,7 +1,7 @@
 'use client';
 
-import { getApiToken } from "@/lib/utils";
-import {fetchNamespace} from "./serverlib"
+// import { getApiToken } from "@/lib/utils";
+// import {fetchNamespace} from "./serverlib"
 
 
 // GetDocBulkExportStatus.ts
@@ -66,18 +66,18 @@ interface FailedDocument {
   [key: string]: any;
 }
 
-interface DocBulkExportStatusResponse {
-  apiResult?: {
-    exportStatus?: {
-      exportComment?: string;
-      totalDocumentsCount?: number;
-      processedDocumentPercentage?: number;
-      processedDocumentSuccessfulCount?: number;
-      processedDocumentFailedCount?: number;
-      failedDocuments?: FailedDocument[];
-    };
-  };
-}
+// interface DocBulkExportStatusResponse {
+//   apiResult?: {
+//     exportStatus?: {
+//       exportComment?: string;
+//       totalDocumentsCount?: number;
+//       processedDocumentPercentage?: number;
+//       processedDocumentSuccessfulCount?: number;
+//       processedDocumentFailedCount?: number;
+//       failedDocuments?: FailedDocument[];
+//     };
+//   };
+// }
 
 export async function GetDocBulkExportStatusReport(
   params: DocBulkExportStatusReportParams

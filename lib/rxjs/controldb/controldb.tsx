@@ -1,7 +1,7 @@
-import { catchError, forkJoin, from, map, mergeMap, Observable, of, tap } from "rxjs";
+import { catchError, forkJoin, map, Observable, of, tap } from "rxjs";
 import { IapiInfo } from "@/interfaces/generic";
-import {ApiRequestRxjs, getApiEndpoint} from '@/lib/rxjs/generic';
-import {ApiGetControlDbRxjs} from "../servers/servers";
+import {ApiRequestRxjs} from '@/lib/rxjs/generic';
+//import {ApiGetControlDbRxjs} from "../servers/servers";
 
 export function GetClientInfo<T>(apiControlDbUrls: { apiurl: string; apitype: string }[]): Observable<IapiInfo<T>[]> {
   return forkJoin(

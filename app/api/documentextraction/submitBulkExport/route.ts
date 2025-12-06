@@ -1,7 +1,7 @@
 // app/api/get-doc-token/route.ts
 import { NextResponse } from "next/server";
-import { DocumentExtractionTasksSetting } from "@/config/appsetting"; // must be server-importable
-import { env } from "process";
+//import { DocumentExtractionTasksSetting } from "@/config/appsetting"; // must be server-importable
+//import { env } from "process";
 
 export async function POST(req: Request) {
   try {

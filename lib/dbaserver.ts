@@ -1,6 +1,5 @@
 // db-dba-pool.ts
 import sql from "mssql";
-import os from "os";
 import type { config as SQLConfig } from "mssql";
 
 /**

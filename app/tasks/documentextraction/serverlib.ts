@@ -1,6 +1,7 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
-import {DocumentExtractionTasksSetting} from "@/config/appsetting"
+import {DocumentExtractionTasksSetting} from "@/config/appsetting";
+
 
 export async function checkexportStatus(
   env: string,
@@ -126,18 +127,18 @@ interface FailedDocument {
   [key: string]: any;
 }
 
-interface DocBulkExportStatusResponse {
-  apiResult?: {
-    exportStatus?: {
-      exportComment?: string;
-      totalDocumentsCount?: number;
-      processedDocumentPercentage?: number;
-      processedDocumentSuccessfulCount?: number;
-      processedDocumentFailedCount?: number;
-      failedDocuments?: FailedDocument[];
-    };
-  };
-}
+// interface DocBulkExportStatusResponse {
+//   apiResult?: {
+//     exportStatus?: {
+//       exportComment?: string;
+//       totalDocumentsCount?: number;
+//       processedDocumentPercentage?: number;
+//       processedDocumentSuccessfulCount?: number;
+//       processedDocumentFailedCount?: number;
+//       failedDocuments?: FailedDocument[];
+//     };
+//   };
+// }
 
 export async function GetDocBulkExportStatusReport(
   params: DocBulkExportStatusReportParams

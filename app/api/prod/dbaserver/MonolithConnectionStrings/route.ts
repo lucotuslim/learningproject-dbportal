@@ -22,14 +22,14 @@ const typeDefs = `#graphql
     namespace(db: String!, namespace: String!): Namespace
   }
 
-  type Mutation {
-    addNamespace(
-      db: String!,
-      Namespace: String!,
-      ConstringDatabaseName: String!,
-      ConstringServerName: String!
-    ): Namespace
-  }
+  // type Mutation {
+  //   addNamespace(
+  //     db: String!,
+  //     Namespace: String!,
+  //     ConstringDatabaseName: String!,
+  //     ConstringServerName: String!
+  //   ): Namespace
+  // }
 `;
 
 const resolvers = {
@@ -89,43 +89,43 @@ const resolvers = {
     },
   },
 
-  Mutation: {
-    addNamespace: async (
-      _: any,
-      {
-        db,
-        Namespace,
-        ConstringDatabaseName,
-        ConstringServerName,
-      }: {
-        db: string;
-        Namespace: string;
-        ConstringDatabaseName: string;
-        ConstringServerName: string;
-      }
-    ) => {
+  // Mutation: {
+  //   addNamespace: async (
+  //     _: any,
+  //     {
+  //       db,
+  //       Namespace,
+  //       ConstringDatabaseName,
+  //       ConstringServerName,
+  //     }: {
+  //       db: string;
+  //       Namespace: string;
+  //       ConstringDatabaseName: string;
+  //       ConstringServerName: string;
+  //     }
+  //   ) => {
       
-      // const pool = await getDbaServerPool(db);
-      // const result = await pool
-      //   .request()
-      //   .input("Namespace", Namespace)
-      //   .input("ConstringDatabaseName", ConstringDatabaseName)
-      //   .input("ConstringServerName", ConstringServerName)
-      //   .query(`
-      //     INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
-      //     OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
-      //     VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
-      //   `);
-      const result = await getDbaserverData(db,
-        `
-         --INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
-         --  OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
-         --  VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
-        `
-      )
-      return result.recordset[0];
-    },
-  },
+  //     // const pool = await getDbaServerPool(db);
+  //     // const result = await pool
+  //     //   .request()
+  //     //   .input("Namespace", Namespace)
+  //     //   .input("ConstringDatabaseName", ConstringDatabaseName)
+  //     //   .input("ConstringServerName", ConstringServerName)
+  //     //   .query(`
+  //     //     INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
+  //     //     OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
+  //     //     VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
+  //     //   `);
+  //     const result = await getDbaserverData(db,
+  //       `
+  //        --INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
+  //        --  OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
+  //        --  VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
+  //       `
+  //     )
+  //     return result.recordset[0];
+  //   },
+  // },
 };
 
 // 🧠 Apollo Server
