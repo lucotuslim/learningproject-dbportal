@@ -62,7 +62,8 @@ interface ExportStatus {
 }
 
 interface FailedDocument {
-  [key: string]: any;
+  documentId: string
+  reason: string
 }
 
 // interface DocBulkExportStatusResponse {

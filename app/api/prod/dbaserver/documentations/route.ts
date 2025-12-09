@@ -44,21 +44,21 @@ const typeDefs = `#graphql
   }
 `;
 
-// helper to normalize record fields
-function normalizeRecord(row: any) {
-  return {
-    env: row.env ?? row.env,
-    ExportGuid: row.ExportGuid ?? row.ExportGuid,
-    Filename: row.Filename ?? row.Filename,
-    Password: row.Password ?? row.Password,
-    SftpUser: row.SftpUser ?? row.SftpUser,
-    sftppassword: row.sftppassword ?? row.sftppassword,
-    ContainerName: row.ContainerName ?? row.ContainerName,
-    Namespace: row.Namespace ?? row.Namespace,
-    CreatedBy: row.CreatedBy ?? row.CreatedBy,
-    CreatedDate : row.CreatedDate ?? row.CreatedDate
-  };
-}
+// // helper to normalize record fields
+// function normalizeRecord(row: any) {
+//   return {
+//     env: row.env ?? row.env,
+//     ExportGuid: row.ExportGuid ?? row.ExportGuid,
+//     Filename: row.Filename ?? row.Filename,
+//     Password: row.Password ?? row.Password,
+//     SftpUser: row.SftpUser ?? row.SftpUser,
+//     sftppassword: row.sftppassword ?? row.sftppassword,
+//     ContainerName: row.ContainerName ?? row.ContainerName,
+//     Namespace: row.Namespace ?? row.Namespace,
+//     CreatedBy: row.CreatedBy ?? row.CreatedBy,
+//     CreatedDate : row.CreatedDate ?? row.CreatedDate
+//   };
+// }
 
 // 🧠 Resolvers
 const resolvers = {
@@ -74,7 +74,7 @@ const resolvers = {
       const result = await getDbaserverData(db, `
         SELECT ${sqlColumns} FROM [dbo].[DocExportOutput]
       `);
-      return result.map(normalizeRecord);
+      return result;
     },
   },
 

@@ -39,5 +39,7 @@ export interface ExportStatus {
 }
 
 export interface FailedDocument {
-  [key: string]: any;
+  documentId: string; 
+  reason: string;
+
 }
