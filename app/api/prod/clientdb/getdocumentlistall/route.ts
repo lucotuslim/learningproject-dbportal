@@ -1,7 +1,7 @@
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
-import { getClientPool } from "@/lib/clientdb";
+//import { getClientPool } from "@/lib/clientdb";
 import {getClientData} from "@/app/api/clientdb/route"
 
 // 🧠 GraphQL Schema Definition
@@ -18,7 +18,7 @@ const typeDefs = `#graphql
 const resolvers = {
   Query: {
     GetDocumentListAll: async (
-      _: any,
+      _: unknown,
       { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {

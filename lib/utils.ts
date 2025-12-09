@@ -2,7 +2,7 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import {ApiInterface} from "@/interfaces/generic";
 import {IApiTokenParams} from "@/interfaces/generic";
-import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+//import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
 import util from "util";
 
@@ -32,7 +32,7 @@ export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeo
     let finished = false;
 
     // Convert any unexpected global exceptions/rejections during this call into a rejection
-    const onGlobalErr = (err: any) => {
+    const onGlobalErr = (err: unknown) => {
       if (finished) return;
       finished = true;
       cleanup();
@@ -216,7 +216,8 @@ export async function getApiToken({
     }
 
     return await response.json();
-  } catch (err: any) {
-    throw new Error(`Get-DocApiToken: ${err.message}`);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`Get-DocApiToken: ${message}`);
   }
 }

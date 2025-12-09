@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import os from "os";
+// import { NextResponse } from "next/server";
+// import os from "os";
 import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
 
@@ -35,7 +35,7 @@ export async function getDbaserverData(
       const result = await pool.request().query(sqlText);
       await pool.close();
       return result.recordset;
-    } catch (err: any) {
+    } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err);
       throw new Error(`mssql failed on ${serverName}/${dbName}: ${msg}`);
     }

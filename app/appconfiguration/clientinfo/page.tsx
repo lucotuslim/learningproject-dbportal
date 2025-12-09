@@ -5,8 +5,8 @@ import { DataTable } from "./data-table";
 import { IapiUrl, IapiInfo } from "@/interfaces/generic";
 import { IClientInfo } from "@/interfaces/controldb";
 import { useObservable } from "rxjs-hooks";
-import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
-import {clientinfo, GetClientInfo} from "@/lib/rxjs/controldb/controldb";
+//import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
+import { GetClientInfo} from "@/lib/rxjs/controldb/controldb";
 
 const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url, apitype: "controldb" }))

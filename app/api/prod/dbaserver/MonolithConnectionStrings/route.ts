@@ -2,6 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 import graphqlFields from "graphql-fields";
+import { GraphQLResolveInfo } from "graphql";
 // import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
 import {getDbaserverData} from "@/app/api/dbaserver/route"
 
@@ -22,20 +23,20 @@ const typeDefs = `#graphql
     namespace(db: String!, namespace: String!): Namespace
   }
 
-  type Mutation {
-    addNamespace(
-      db: String!,
-      Namespace: String!,
-      ConstringDatabaseName: String!,
-      ConstringServerName: String!
-    ): Namespace
-  }
+  // type Mutation {
+  //   addNamespace(
+  //     db: String!,
+  //     Namespace: String!,
+  //     ConstringDatabaseName: String!,
+  //     ConstringServerName: String!
+  //   ): Namespace
+  // }
 `;
 
 const resolvers = {
   Query: {
     // Fetch all namespaces
-    namespaces: async (_: any, { db }: { db: string }) => {
+    namespaces: async (_: unknown, { db }: { db: string }) => {
       
       // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
@@ -56,9 +57,8 @@ const resolvers = {
       )
       return result.recordset;
     },
-
     // Fetch a single namespace by ClientID
-    namespace: async (_: any, { db, namespace }: { db: string; namespace: string },__: any, info: any) => {
+    namespace: async (_: unknown, { db, namespace }: { db: string; namespace: string },__: unknown, info: GraphQLResolveInfo) => {
       console.log ("Fetching namespace:", namespace, "from db:", db);
       const fields = Object.keys(graphqlFields(info));
   //       const pool = await getDbaServerPool(db);
@@ -89,43 +89,43 @@ const resolvers = {
     },
   },
 
-  Mutation: {
-    addNamespace: async (
-      _: any,
-      {
-        db,
-        Namespace,
-        ConstringDatabaseName,
-        ConstringServerName,
-      }: {
-        db: string;
-        Namespace: string;
-        ConstringDatabaseName: string;
-        ConstringServerName: string;
-      }
-    ) => {
+  // Mutation: {
+  //   addNamespace: async (
+  //     _: any,
+  //     {
+  //       db,
+  //       Namespace,
+  //       ConstringDatabaseName,
+  //       ConstringServerName,
+  //     }: {
+  //       db: string;
+  //       Namespace: string;
+  //       ConstringDatabaseName: string;
+  //       ConstringServerName: string;
+  //     }
+  //   ) => {
       
-      // const pool = await getDbaServerPool(db);
-      // const result = await pool
-      //   .request()
-      //   .input("Namespace", Namespace)
-      //   .input("ConstringDatabaseName", ConstringDatabaseName)
-      //   .input("ConstringServerName", ConstringServerName)
-      //   .query(`
-      //     INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
-      //     OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
-      //     VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
-      //   `);
-      const result = await getDbaserverData(db,
-        `
-         --INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
-         --  OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
-         --  VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
-        `
-      )
-      return result.recordset[0];
-    },
-  },
+  //     // const pool = await getDbaServerPool(db);
+  //     // const result = await pool
+  //     //   .request()
+  //     //   .input("Namespace", Namespace)
+  //     //   .input("ConstringDatabaseName", ConstringDatabaseName)
+  //     //   .input("ConstringServerName", ConstringServerName)
+  //     //   .query(`
+  //     //     INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
+  //     //     OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
+  //     //     VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
+  //     //   `);
+  //     const result = await getDbaserverData(db,
+  //       `
+  //        --INSERT INTO Vw_MonolithConnectionStrings_Prod_Env (Namespace, ConstringDatabaseName, ConstringServerName, CreatedDate)
+  //        --  OUTPUT INSERTED.ClientID, INSERTED.Namespace, INSERTED.ConstringDatabaseName, INSERTED.ConstringServerName, INSERTED.CreatedDate
+  //        --  VALUES (@Namespace, @ConstringDatabaseName, @ConstringServerName, GETDATE())
+  //       `
+  //     )
+  //     return result.recordset[0];
+  //   },
+  // },
 };
 
 // 🧠 Apollo Server

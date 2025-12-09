@@ -1,6 +1,7 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
-import {DocumentExtractionTasksSetting} from "@/config/appsetting"
+import {DocumentExtractionTasksSetting} from "@/config/appsetting";
+
 
 export async function checkexportStatus(
   env: string,
@@ -99,8 +100,8 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
     }
 
     return content;
-  } catch (error: any) {
-    return error.message || String(error);
+  } catch (error: unknown) {
+    return error instanceof Error ? error.message : String(error);
   }
 }
 
@@ -126,18 +127,18 @@ interface FailedDocument {
   [key: string]: any;
 }
 
-interface DocBulkExportStatusResponse {
-  apiResult?: {
-    exportStatus?: {
-      exportComment?: string;
-      totalDocumentsCount?: number;
-      processedDocumentPercentage?: number;
-      processedDocumentSuccessfulCount?: number;
-      processedDocumentFailedCount?: number;
-      failedDocuments?: FailedDocument[];
-    };
-  };
-}
+// interface DocBulkExportStatusResponse {
+//   apiResult?: {
+//     exportStatus?: {
+//       exportComment?: string;
+//       totalDocumentsCount?: number;
+//       processedDocumentPercentage?: number;
+//       processedDocumentSuccessfulCount?: number;
+//       processedDocumentFailedCount?: number;
+//       failedDocuments?: FailedDocument[];
+//     };
+//   };
+// }
 
 export async function GetDocBulkExportStatusReport(
   params: DocBulkExportStatusReportParams
@@ -169,8 +170,8 @@ export async function GetDocBulkExportStatusReport(
     };
 
     return { ExportStatus, FailedDocuments: failedDocuments };
-  } catch (error: any) {
-    throw new Error(`GetDocBulkExportStatusReport: ${error.message || error}`);
+  } catch (error: unknown) {
+    throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

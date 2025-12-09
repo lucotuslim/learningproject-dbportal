@@ -115,7 +115,7 @@ if (!bulksubmitres.ok) {
 }
 
 const submitBulkExportres = await bulksubmitres.json(); 
-      const newvalue: any = {
+      const newvalue = {
         ...values,
         ExportGuid: submitBulkExportres["Export GUID"],
         Filename: submitBulkExportres["Export File Name"],
