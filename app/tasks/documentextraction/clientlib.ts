@@ -2,69 +2,67 @@
 
 // import { getApiToken } from "@/lib/utils";
 // import {fetchNamespace} from "./serverlib"
-
-
 // GetDocBulkExportStatus.ts
 
-interface DocBulkExportStatusParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
+// interface DocBulkExportStatusParams {
+//   Url: string;
+//   Method: string;
+//   Token: string;
+//   ContainerName: string;
+//   ContentType: string;
+//   ExportGuid: string;
+// }
 
-export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
-  const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
+// export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
+//   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
-  try {
-    const headers = new Headers({
-      "Content-Type": ContentType,
-      "Authorization": `Bearer ${Token}`,
-      "ContainerName": ContainerName,
-      "exportGuid": ExportGuid
-    });
+//   try {
+//     const headers = new Headers({
+//       "Content-Type": ContentType,
+//       "Authorization": `Bearer ${Token}`,
+//       "ContainerName": ContainerName,
+//       "exportGuid": ExportGuid
+//     });
 
-    const response = await fetch(Url, {
-      method: Method,
-      headers
-    });
+//     const response = await fetch(Url, {
+//       method: Method,
+//       headers
+//     });
 
-    const content = await response.text();
+//     const content = await response.text();
 
-    if (!response.ok) {
-      // Mimic PowerShell’s catch: capture HTTP error body
-      throw new Error(content || `HTTP error: ${response.status}`);
-    }
+//     if (!response.ok) {
+//       // Mimic PowerShell’s catch: capture HTTP error body
+//       throw new Error(content || `HTTP error: ${response.status}`);
+//     }
 
-    return content;
-  } catch (error: unknown) {
-    return error instanceof Error ? error.message : String(error);
-  }
-}
+//     return content;
+//   } catch (error: unknown) {
+//     return error instanceof Error ? error.message : String(error);
+//   }
+// }
 
-interface DocBulkExportStatusReportParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
+// interface DocBulkExportStatusReportParams {
+//   Url: string;
+//   Method: string;
+//   Token: string;
+//   ContainerName: string;
+//   ContentType: string;
+//   ExportGuid: string;
+// }
 
-interface ExportStatus {
-  exportComment?: string;
-  totalDocumentsCount?: number;
-  processedDocumentPercentage?: string;
-  processedDocumentSuccessfulCount?: number;
-  processedDocumentFailedCount?: number;
-}
+// interface ExportStatus {
+//   exportComment?: string;
+//   totalDocumentsCount?: number;
+//   processedDocumentPercentage?: string;
+//   processedDocumentSuccessfulCount?: number;
+//   processedDocumentFailedCount?: number;
+// }
 
-interface FailedDocument {
-  documentId: string
-  reason: string
-}
+// interface FailedDocument {
+//   documentId: string
+//   reason: string
+// }
 
 // interface DocBulkExportStatusResponse {
 //   apiResult?: {
@@ -79,39 +77,39 @@ interface FailedDocument {
 //   };
 // }
 
-export async function GetDocBulkExportStatusReport(
-  params: DocBulkExportStatusReportParams
-): Promise<{ ExportStatus: ExportStatus; FailedDocuments: FailedDocument[] }> {
-  const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
+// export async function GetDocBulkExportStatusReport(
+//   params: DocBulkExportStatusReportParams
+// ): Promise<{ ExportStatus: ExportStatus; FailedDocuments: FailedDocument[] }> {
+//   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
-  try {
-    const BulkExportStatusResRaw = await GetDocBulkExportStatus({
-      Url,
-      Method,
-      Token,
-      ContainerName,
-      ContentType,
-      ExportGuid,
-    });
-    console.log ("Raw Response:", BulkExportStatusResRaw);
-    const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
-//    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
+//   try {
+//     const BulkExportStatusResRaw = await GetDocBulkExportStatus({
+//       Url,
+//       Method,
+//       Token,
+//       ContainerName,
+//       ContentType,
+//       ExportGuid,
+//     });
+//     console.log ("Raw Response:", BulkExportStatusResRaw);
+//     const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
+// //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
 
-    const exportStatus = BulkExportStatusRes.ExportStatus ?? {};
-    const failedDocuments = BulkExportStatusRes.FailedDocuments ?? [];
+//     const exportStatus = BulkExportStatusRes.ExportStatus ?? {};
+//     const failedDocuments = BulkExportStatusRes.FailedDocuments ?? [];
 
-    const ExportStatus: ExportStatus = {
-      exportComment: exportStatus.exportComment,
-      totalDocumentsCount: exportStatus.totalDocumentsCount,
-      processedDocumentPercentage: exportStatus.processedDocumentPercentage,
-      processedDocumentSuccessfulCount: exportStatus.processedDocumentSuccessfulCount,
-      processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
-    };
+//     const ExportStatus: ExportStatus = {
+//       exportComment: exportStatus.exportComment,
+//       totalDocumentsCount: exportStatus.totalDocumentsCount,
+//       processedDocumentPercentage: exportStatus.processedDocumentPercentage,
+//       processedDocumentSuccessfulCount: exportStatus.processedDocumentSuccessfulCount,
+//       processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
+//     };
 
-    return { ExportStatus, FailedDocuments: failedDocuments };
-  } catch (error: unknown) {
-    throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
-  }
-}
+//     return { ExportStatus, FailedDocuments: failedDocuments };
+//   } catch (error: unknown) {
+//     throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
+//   }
+// }
 
 

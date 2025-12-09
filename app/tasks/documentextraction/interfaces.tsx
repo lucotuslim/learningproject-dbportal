@@ -41,5 +41,4 @@ export interface ExportStatus {
 export interface FailedDocument {
   documentId: string; 
   reason: string;
-
 }

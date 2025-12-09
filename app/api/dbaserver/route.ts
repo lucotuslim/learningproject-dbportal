@@ -3,10 +3,10 @@
 import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
 
-export async function getDbaserverData(
+export async function getDbaserverData<T>(
   dbName: string,
   sqlText: string
-) {
+):Promise<T> {
   const serverName = process.env.DB_SERVER!;
   const hasSqlLogin = Boolean(process.env.DB_USER);
   console.log (sqlText)
@@ -34,7 +34,7 @@ export async function getDbaserverData(
       console.log(`Connected via mssql: ${serverName}/${dbName}`);
       const result = await pool.request().query(sqlText);
       await pool.close();
-      return result.recordset;
+      return result.recordset as T;
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : JSON.stringify(err);
       throw new Error(`mssql failed on ${serverName}/${dbName}: ${msg}`);
@@ -55,7 +55,7 @@ const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // qu
 
 try {
   const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
-  return rows;
+  return rows as T;
 } catch (err) {
   // log and rethrow so route returns a 504/500
   console.error("msnodesqlv8 safe query error:", err);
