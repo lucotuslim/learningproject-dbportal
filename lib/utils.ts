@@ -23,14 +23,11 @@ export function formatDateTime(value?: string | Date | null): string {
 
 
 export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
-  // require hidden so bundlers won't try to include native binding where not available
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const msnodesqlv8 = eval("require")("msnodesqlv8");
   const queryAsync = util.promisify(msnodesqlv8.query);
 
   return new Promise<any>((resolve, reject) => {
     let finished = false;
-
     // Convert any unexpected global exceptions/rejections during this call into a rejection
     const onGlobalErr = (err: unknown) => {
       if (finished) return;

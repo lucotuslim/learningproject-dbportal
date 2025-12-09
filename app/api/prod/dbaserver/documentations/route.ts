@@ -4,6 +4,7 @@ import graphqlFields from "graphql-fields";
 import { NextRequest } from "next/server";
 //import { getDbaServerPool } from "@/lib/dbaserver";
 import {getDbaserverData} from "@/app/api/dbaserver/route"
+import { GraphQLResolveInfo } from "graphql";
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -63,7 +64,7 @@ function normalizeRecord(row: any) {
 const resolvers = {
   Query: {
     // query that requires explicit db param
-    docExportOutputs: async (_: unknown, { db }: { db: string },__: any, info: any) => {
+    docExportOutputs: async (_: unknown, { db }: { db: string },__: unknown, info: GraphQLResolveInfo) => {
       const fields = Object.keys(graphqlFields(info));
       // const pool = await getDbaServerPool(db);
       // const result = await pool.request().query(`
@@ -78,13 +79,19 @@ const resolvers = {
   },
 
   Mutation: {
-    addDocExportOutput: async (_: unknown, { db, input }: { db: string; input: Record<string, any> }) => {
-      const formatValue = (val: any): string => {
-      if (val === null || val === undefined) return 'NULL';
-      if (typeof val === 'number' || typeof val === 'boolean') return val.toString();
-      if (val instanceof Date) return `'${val.toISOString()}'`;
+    addDocExportOutput: async (_: unknown, { db, input }: { db: string; input: Record<string, unknown> }) => {
+    const formatValue = (val: unknown): string => {
+      if (val === null || val === undefined) return "NULL";
+      if (typeof val === "number" || typeof val === "boolean") {
+        return val.toString();
+      }
+      if (val instanceof Date) {
+        return `'${val.toISOString()}'`;
+      }
+      // Treat all other values as strings
       return `'${String(val).replace(/'/g, "''")}'`;
     };
+
     const columns = Object.keys(input).map(c => `[${c}]`);
     const values = Object.keys(input).map(c => formatValue(input[c]));
     const sql = `

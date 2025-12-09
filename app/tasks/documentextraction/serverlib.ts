@@ -1,6 +1,7 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
 import {DocumentExtractionTasksSetting} from "@/config/appsetting";
+import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument, IsubmitBulkExportParams } from "./interfaces";
 
 
 export async function checkexportStatus(
@@ -53,29 +54,6 @@ return getDocBulkExportStatusReport ;
   }
 
 
-interface IsubmitBulkExportParams {
-  Url: string;
-  Method: string;
-  sftpHostName: string;
-  ContentType: string;
-  Token: string;
-  ContainerName: string;
-  ZipName: string;
-  SftpUsername: string;
-  sftppassword: string;
-  DocumentsGUID: string[];
-}
-
-
-interface DocBulkExportStatusParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
-
 export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
@@ -104,41 +82,6 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
     return error instanceof Error ? error.message : String(error);
   }
 }
-
-
-interface DocBulkExportStatusReportParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
-
-interface ExportStatus {
-  exportComment?: string;
-  totalDocumentsCount?: number;
-  processedDocumentPercentage?: string;
-  processedDocumentSuccessfulCount?: number;
-  processedDocumentFailedCount?: number;
-}
-
-interface FailedDocument {
-  [key: string]: any;
-}
-
-// interface DocBulkExportStatusResponse {
-//   apiResult?: {
-//     exportStatus?: {
-//       exportComment?: string;
-//       totalDocumentsCount?: number;
-//       processedDocumentPercentage?: number;
-//       processedDocumentSuccessfulCount?: number;
-//       processedDocumentFailedCount?: number;
-//       failedDocuments?: FailedDocument[];
-//     };
-//   };
-// }
 
 export async function GetDocBulkExportStatusReport(
   params: DocBulkExportStatusReportParams
@@ -178,13 +121,6 @@ export async function GetDocBulkExportStatusReport(
 export async function submitBulkExport(
   submitBulkExportParams: IsubmitBulkExportParams
 ): Promise<any> {
-  //  $DocBulkExportResponse= Send-DocBulkExport -Url $CurrentSendDocBulkExportConfig.Url `
-  // -Method $CurrentSendDocBulkExportConfig.Method `
-  // -sftpHostName $CurrentSendDocBulkExportConfig.sftpHostName `
-  // -ContentType $CurrentSendDocBulkExportConfig.ContentType `
-  // -Token $Token.access_token  -ContainerName $ContainerName `
-  // -ZipName $ZipName -SftpUsername $SftpUsername -SftpPassword $SftpPassword `
-  // -DocumentsGUID $Documents | ConvertFrom-Json
 
   const headers = {
     "Content-Type": submitBulkExportParams.ContentType,
