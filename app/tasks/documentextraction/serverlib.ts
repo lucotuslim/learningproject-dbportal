@@ -2,7 +2,7 @@
 import { getApiToken } from "@/lib/utils";
 import {DocumentExtractionTasksSetting} from "@/config/appsetting";
 import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument, IsubmitBulkExportParams } from "./interfaces";
-
+import {IDocBulkExportStatus} from "./interfaces"
 
 export async function checkexportStatus(
   env: string,
@@ -54,9 +54,9 @@ return getDocBulkExportStatusReport ;
   }
 
 
-export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
+export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): 
+Promise<IDocBulkExportStatus> {
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
-
   try {
     const headers = new Headers({
       "Content-Type": ContentType,
@@ -70,16 +70,21 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
       headers
     });
 
-    const content = await response.text();
+    const content :IDocBulkExportStatus=  await response.json()
 
     if (!response.ok) {
       // Mimic PowerShell’s catch: capture HTTP error body
-      throw new Error(content || `HTTP error: ${response.status}`);
+      return (  {  message: response.statusText, error: true })
+      //throw new Error(content || `HTTP error: ${response.status}`);
     }
 
-    return content;
+    return {...content ,
+      error: false , 
+      message: ""
+    }
   } catch (error: unknown) {
-    return error instanceof Error ? error.message : String(error);
+    return error instanceof Error ? {message: error.message, error : true } 
+      : {message: "", error : true } 
   }
 }
 
@@ -89,7 +94,7 @@ export async function GetDocBulkExportStatusReport(
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
   try {
-    const BulkExportStatusResRaw = await GetDocBulkExportStatus({
+    const BulkExportStatusRes = await GetDocBulkExportStatus({
       Url,
       Method,
       Token,
@@ -97,12 +102,12 @@ export async function GetDocBulkExportStatusReport(
       ContentType,
       ExportGuid,
     });
-    console.log ("Raw Response:", BulkExportStatusResRaw);
-    const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
+    console.log ("Raw Response:", BulkExportStatusRes);
+    //const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
 //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
-
-    const exportStatus = BulkExportStatusRes.apiResult.exportStatus ?? {};
-    const failedDocuments = BulkExportStatusRes.apiResult.exportStatus.failedDocuments ?? [];
+    if (BulkExportStatusRes.error !== true) {
+    const exportStatus = BulkExportStatusRes.apiResult!.exportStatus ?? {};
+    const failedDocuments = BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
 
     const ExportStatus: ExportStatus = {
       exportComment: exportStatus.exportComment,
@@ -113,6 +118,9 @@ export async function GetDocBulkExportStatusReport(
     };
 
     return { ExportStatus, FailedDocuments: failedDocuments };
+    } else { 
+      throw new Error(`GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`);  
+    }
   } catch (error: unknown) {
     throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
   }

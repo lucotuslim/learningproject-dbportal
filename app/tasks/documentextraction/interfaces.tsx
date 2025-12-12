@@ -20,7 +20,6 @@ export interface DocBulkExportStatusParams {
   ExportGuid: string;
 }
 
-
 export interface DocBulkExportStatusReportParams {
   Url: string;
   Method: string;
@@ -39,6 +38,28 @@ export interface ExportStatus {
 }
 
 export interface FailedDocument {
-  documentId: string; 
+  documentId: string;
   reason: string;
+}
+
+export interface IDocBulkExportStatus {
+  apiResult?: {
+    exportStatus: {
+  ExportGUID: string;
+  ContainerName:string;
+  ExportStatus	:string;
+  exportComment:string;
+  totalDocumentsCount	:number;
+  processedDocumentPercentage:string;
+  processedDocumentSuccessfulCount	:number;
+  processedDocumentFailedCount:number;
+  StartDateTime	:string;
+  EndDateTime:string;
+  TimeElapsed	:string;
+  ExportSteps:string;
+  failedDocuments	:FailedDocument[]
+  }
+  },
+  error: boolean; 
+  message: string;
 }
