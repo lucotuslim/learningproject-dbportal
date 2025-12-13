@@ -23,14 +23,11 @@ export function formatDateTime(value?: string | Date | null): string {
 
 
 export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
-  // require hidden so bundlers won't try to include native binding where not available
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const msnodesqlv8 = eval("require")("msnodesqlv8");
   const queryAsync = util.promisify(msnodesqlv8.query);
 
-  return new Promise<any>((resolve, reject) => {
+  return new Promise<unknown>((resolve, reject) => {
     let finished = false;
-
     // Convert any unexpected global exceptions/rejections during this call into a rejection
     const onGlobalErr = (err: unknown) => {
       if (finished) return;
@@ -63,14 +60,14 @@ export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeo
     // Now call the driver. It may synchronously throw — catch that.
     try {
       queryAsync(connStr, sqlText)
-        .then((rows: any) => {
+        .then((rows: unknown) => {
         //  console.log(rows);
           if (finished) return;
           finished = true;
           cleanup();
           resolve(rows);
         })
-        .catch((err: any) => {
+        .catch((err: unknown) => {
           if (finished) return;
           finished = true;
           cleanup();

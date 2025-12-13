@@ -1,7 +1,7 @@
 // app/api/graphql/route.ts
 import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
@@ -17,7 +17,7 @@ const resolvers = {
   },
 };
 
-let handler: any;
+let handler: ((req: NextRequest) => Promise<Response | NextResponse>) | null = null;
 
 export async function GET(req: NextRequest) {
   if (!handler) {

@@ -8,6 +8,7 @@ export interface IDocExportOutput {
   ContainerName: string
   Namespace: string
   CreatedBy: string
+  CreatedDate: Date
 }
 
 

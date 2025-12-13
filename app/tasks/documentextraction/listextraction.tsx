@@ -138,11 +138,11 @@ export function ListExtraction() {
                 );
             },
             // return a Date object so sorting compares timestamps reliably
-            accessorFn: (row: any) => {
-                const v = row.CreatedDate ?? row.createdDate ?? row.Created_Date ?? null;
+            accessorFn: (row) => {
+                const v = row.CreatedDate ?? null;
                 if (!v) return null;
                 // if already a Date, return it; else parse
-                return v instanceof Date ? v : new Date(v);
+                return v instanceof Date ? v : new Date(String(v));
             },
             // tell table how to compare two accessor values
             sortingFn: (rowA, rowB, columnId) => {

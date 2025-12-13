@@ -1,7 +1,8 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
 import {DocumentExtractionTasksSetting} from "@/config/appsetting";
-
+import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
+import {IDocBulkExportStatus} from "./interfaces"
 
 export async function checkexportStatus(
   env: string,
@@ -53,32 +54,9 @@ return getDocBulkExportStatusReport ;
   }
 
 
-interface IsubmitBulkExportParams {
-  Url: string;
-  Method: string;
-  sftpHostName: string;
-  ContentType: string;
-  Token: string;
-  ContainerName: string;
-  ZipName: string;
-  SftpUsername: string;
-  sftppassword: string;
-  DocumentsGUID: string[];
-}
-
-
-interface DocBulkExportStatusParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
-
-export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): Promise<any> {
+export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): 
+Promise<IDocBulkExportStatus> {
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
-
   try {
     const headers = new Headers({
       "Content-Type": ContentType,
@@ -92,53 +70,23 @@ export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams):
       headers
     });
 
-    const content = await response.text();
+    const content :IDocBulkExportStatus=  await response.json()
 
     if (!response.ok) {
       // Mimic PowerShell’s catch: capture HTTP error body
-      throw new Error(content || `HTTP error: ${response.status}`);
+      return (  {  message: response.statusText, error: true })
+      //throw new Error(content || `HTTP error: ${response.status}`);
     }
 
-    return content;
+    return {...content ,
+      error: false , 
+      message: ""
+    }
   } catch (error: unknown) {
-    return error instanceof Error ? error.message : String(error);
+    return error instanceof Error ? {message: error.message, error : true } 
+      : {message: "", error : true } 
   }
 }
-
-
-interface DocBulkExportStatusReportParams {
-  Url: string;
-  Method: string;
-  Token: string;
-  ContainerName: string;
-  ContentType: string;
-  ExportGuid: string;
-}
-
-interface ExportStatus {
-  exportComment?: string;
-  totalDocumentsCount?: number;
-  processedDocumentPercentage?: string;
-  processedDocumentSuccessfulCount?: number;
-  processedDocumentFailedCount?: number;
-}
-
-interface FailedDocument {
-  [key: string]: any;
-}
-
-// interface DocBulkExportStatusResponse {
-//   apiResult?: {
-//     exportStatus?: {
-//       exportComment?: string;
-//       totalDocumentsCount?: number;
-//       processedDocumentPercentage?: number;
-//       processedDocumentSuccessfulCount?: number;
-//       processedDocumentFailedCount?: number;
-//       failedDocuments?: FailedDocument[];
-//     };
-//   };
-// }
 
 export async function GetDocBulkExportStatusReport(
   params: DocBulkExportStatusReportParams
@@ -146,7 +94,7 @@ export async function GetDocBulkExportStatusReport(
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
 
   try {
-    const BulkExportStatusResRaw = await GetDocBulkExportStatus({
+    const BulkExportStatusRes = await GetDocBulkExportStatus({
       Url,
       Method,
       Token,
@@ -154,12 +102,12 @@ export async function GetDocBulkExportStatusReport(
       ContentType,
       ExportGuid,
     });
-    console.log ("Raw Response:", BulkExportStatusResRaw);
-    const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
+    console.log ("Raw Response:", BulkExportStatusRes);
+    //const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
 //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
-
-    const exportStatus = BulkExportStatusRes.apiResult.exportStatus ?? {};
-    const failedDocuments = BulkExportStatusRes.apiResult.exportStatus.failedDocuments ?? [];
+    if (BulkExportStatusRes.error !== true) {
+    const exportStatus = BulkExportStatusRes.apiResult!.exportStatus ?? {};
+    const failedDocuments = BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
 
     const ExportStatus: ExportStatus = {
       exportComment: exportStatus.exportComment,
@@ -170,45 +118,41 @@ export async function GetDocBulkExportStatusReport(
     };
 
     return { ExportStatus, FailedDocuments: failedDocuments };
+    } else { 
+      throw new Error(`GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`);  
+    }
   } catch (error: unknown) {
     throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
-export async function submitBulkExport(
-  submitBulkExportParams: IsubmitBulkExportParams
-): Promise<any> {
-  //  $DocBulkExportResponse= Send-DocBulkExport -Url $CurrentSendDocBulkExportConfig.Url `
-  // -Method $CurrentSendDocBulkExportConfig.Method `
-  // -sftpHostName $CurrentSendDocBulkExportConfig.sftpHostName `
-  // -ContentType $CurrentSendDocBulkExportConfig.ContentType `
-  // -Token $Token.access_token  -ContainerName $ContainerName `
-  // -ZipName $ZipName -SftpUsername $SftpUsername -SftpPassword $SftpPassword `
-  // -DocumentsGUID $Documents | ConvertFrom-Json
+// export async function submitBulkExport(
+//   submitBulkExportParams: IsubmitBulkExportParams
+// ): Promise<any> {
 
-  const headers = {
-    "Content-Type": submitBulkExportParams.ContentType,
-    Authorization: `Bearer ${submitBulkExportParams.Token}`,
-    ContainerName: submitBulkExportParams.ContainerName,
-    ZipName: submitBulkExportParams.ZipName,
-    SftpUsername: submitBulkExportParams.SftpUsername,
-    sftppassword: submitBulkExportParams.sftppassword,
-    sftpHostName: submitBulkExportParams.sftpHostName,
-  };
-  console.log(JSON.stringify(submitBulkExportParams))
-  const response = await fetch(submitBulkExportParams.Url, {
-    method: submitBulkExportParams.Method,
-    headers: headers,
-    body: JSON.stringify({
-      Data: submitBulkExportParams.DocumentsGUID,
-    }),
-  });
+//   const headers = {
+//     "Content-Type": submitBulkExportParams.ContentType,
+//     Authorization: `Bearer ${submitBulkExportParams.Token}`,
+//     ContainerName: submitBulkExportParams.ContainerName,
+//     ZipName: submitBulkExportParams.ZipName,
+//     SftpUsername: submitBulkExportParams.SftpUsername,
+//     sftppassword: submitBulkExportParams.sftppassword,
+//     sftpHostName: submitBulkExportParams.sftpHostName,
+//   };
+//   console.log(JSON.stringify(submitBulkExportParams))
+//   const response = await fetch(submitBulkExportParams.Url, {
+//     method: submitBulkExportParams.Method,
+//     headers: headers,
+//     body: JSON.stringify({
+//       Data: submitBulkExportParams.DocumentsGUID,
+//     }),
+//   });
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-  return await response.json();
-}
+//   if (!response.ok) {
+//     throw new Error(`API error: ${response.status}`);
+//   }
+//   return await response.json();
+// }
 
 export async function fetchNamespace(db: string, namespace: string) {
   const query = `
