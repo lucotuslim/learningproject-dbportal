@@ -3,7 +3,23 @@
 import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
 
-export async function getDbaserverData<T>(
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+
+    if (!body?.db || !body?.q) {
+      return new Response(JSON.stringify({ error: "Missing required fields: db, q" }), { status: 400 });
+    }
+
+    const rows = await getDbaserverData(body.db, body.q);
+    return new Response(JSON.stringify(rows), { status: 200 });
+  } catch (err) {
+    console.error("POST /api/dbaserver error:", err);
+    return new Response(JSON.stringify({ error: String(err) }), { status: 500 });
+  }
+}
+
+async function getDbaserverData<T>(
   dbName: string,
   sqlText: string
 ):Promise<T> {

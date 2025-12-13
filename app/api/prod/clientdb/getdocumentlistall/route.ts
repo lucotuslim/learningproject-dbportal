@@ -2,7 +2,7 @@ import { ApolloServer } from "@apollo/server";
 import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import { NextRequest } from "next/server";
 //import { getClientPool } from "@/lib/clientdb";
-import {getClientData} from "@/app/api/clientdb/route"
+//import {getClientData} from "@/app/api/clientdb/route"
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
@@ -22,19 +22,18 @@ const resolvers = {
       { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {
-        
-        //const pool = await getClientPool(servername, db );
-        //const request = pool.request();
-
-        // Call stored procedure (no JSON mode)
-        // const result = await request.execute(" dbo.GetDocumentListAll @IsJson  = 0");
-//         const result = await request.query(`
-//   EXEC GetDocumentListAll @IsJson = 0;
-// `);   "EXEC dbo.MyStoredProcedure @param1 = 'foo', @param2 = 123",
-          const data = await getClientData(servername, db, "exec dbo.GetDocumentListAll @IsJson  = 0;"
-            );
-        // Return only DocumentGUID column
-        return data
+          const res = await fetch(  `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ server: servername, db: db, q: "exec dbo.GetDocumentListAll @IsJson  = 0;" }),
+          });
+          if (!res.ok) {
+            const text = await res.text().catch(() => "");
+            throw new Error(`clientdb API failed: ${res.status} ${res.statusText} ${text}`);
+          }
+          const json = await res.json();
+          // return the JSON payload (expected array of { DocumentGUID: string })
+          return json;
       } catch (err) {
         console.error("SQL error:", err);
         throw err;
@@ -51,5 +50,7 @@ const server = new ApolloServer({
 
 // 🧠 Next.js Route Handler (App Router)
 const handler = startServerAndCreateNextHandler<NextRequest>(server);
-export const GET = handler;
-export const POST = handler;
+export async function GET(req: NextRequest) {
+  return handler(req);
+}
+export const POST = GET;

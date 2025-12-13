@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 import graphqlFields from "graphql-fields";
 import { GraphQLResolveInfo } from "graphql";
 // import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
-import {getDbaserverData} from "@/app/api/dbaserver/route"
+//import {getDbaserverData} from "@/app/api/dbaserver/route"
 interface Namespace { 
       ClientID: number
     Namespace: string
@@ -74,14 +74,30 @@ const resolvers = {
   //     WHERE Namespace = @Namespace
   //   `);
   const sqlColumns = fields.map(f => `[${f}]`).join(", ");
-  const result: Namespace[] = await getDbaserverData<Namespace[]>(db, 
-    `
-    SELECT 
-         ${sqlColumns}
-       FROM Vw_MonolithConnectionStrings_Prod_Env
-       WHERE Namespace = '${namespace}'
-    `
-  )
+  // const result: Namespace[] = await getDbaserverData<Namespace[]>(db, 
+  //   `
+  //   SELECT 
+  //        ${sqlColumns}
+  //      FROM Vw_MonolithConnectionStrings_Prod_Env
+  //      WHERE Namespace = '${namespace}'
+  //   `
+  // )
+  const result: Namespace[] = await fetch(`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      db: db,
+      q: `
+      SELECT 
+           ${sqlColumns}
+         FROM Vw_MonolithConnectionStrings_Prod_Env
+         WHERE Namespace = '${namespace}'
+      `
+     }),
+  }).then(res => res.json()) as Namespace[];
+      
+      console.log ("Result:", JSON.stringify(result));   
+
  // console.log (JSON.stringify(result));
       return result[0] || null;
     },
@@ -95,6 +111,9 @@ const server = new ApolloServer({
 });
 
 // 🧠 Next.js Route Handler (App Router)
+
 const handler = startServerAndCreateNextHandler<NextRequest>(server);
-export const GET = handler;
-export const POST = handler;
+export async function GET(req: NextRequest) {
+  return handler(req);
+}
+export const POST = GET;

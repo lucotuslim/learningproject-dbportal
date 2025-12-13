@@ -2,8 +2,24 @@
 //import os from "os";
 import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
+import { NextRequest, NextResponse } from "next/server";
 
-export async function getClientData(
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    
+    if (!body?.server || !body?.db || !body?.q) {
+      return NextResponse.json({ error: "Missing required fields: server, db, q" }, { status: 400 });
+    }
+    const rows = await getClientData(body.server, body.db, body.q);
+    return NextResponse.json(rows);
+  } catch (err) {
+    console.error("POST /api/clientdb error:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
+ async function getClientData(
   serverName: string,
   dbName: string,
   sqlText: string
@@ -41,9 +57,6 @@ export async function getClientData(
 
   // Otherwise, fallback to msnodesqlv8 for trusted (Windows) connection.
   console.log("Falling back to msnodesqlv8 trusted connection...");
-  //const util = await import("util");
-  //const msnodesqlv8 = eval("require")("msnodesqlv8");
-
   const conn = `
     server=${serverName};
     Database=${dbName};
@@ -61,28 +74,31 @@ export async function getClientData(
       ${sqlText}
       `, 
       QUERY_TIMEOUT_MS);
-    //console.log (rows)
     return rows;
   } catch (err) {
-    // log and rethrow so route returns a 504/500
     console.error("msnodesqlv8 safe query error:", err);
     throw err;
   }
-  
-  
-  // const query = util.promisify(msnodesqlv8.query);
-
-  // try {
-  //   const rows = await query(conn, sqlText);
-  //   console.log(`Connected via msnodesqlv8: ${serverName}/${dbName}`);
-  //   return rows;
-  // } catch (err: any) {
-  //   console.error("msnodesqlv8 query ERROR:", util.inspect(err, { depth: 10, colors: false }));
-  //   try {
-  //     console.error("JSON-safe:", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
-  //   } catch {
-  //     console.error("Error JSONifying err");
-  //   }
-  //   throw new Error(`msnodesqlv8 failed on ${serverName}/${dbName}: ${err?.message || err}`);
-  // }
 }
+
+// Minimal GET handler that proxies to getClientData using query params:
+// ?server=SERVERNAME&db=DBNAME&q=<sql-encoded>
+export async function GET(req: NextRequest) {
+  const url = new URL(req.url);
+  const server = url.searchParams.get("server");
+  const db = url.searchParams.get("db");
+  const q = url.searchParams.get("q");
+
+  if (!server || !db || !q) {
+    return NextResponse.json({ error: "Missing required query params: server, db, q" }, { status: 400 });
+  }
+
+  try {
+    const rows = await getClientData(server, db, q);
+    return NextResponse.json(rows);
+  } catch (err) {
+    console.error("GET /api/clientdb error:", err);
+    return NextResponse.json({ error: String(err) }, { status: 500 });
+  }
+}
+
