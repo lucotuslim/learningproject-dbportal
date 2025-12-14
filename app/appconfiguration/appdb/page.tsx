@@ -15,18 +15,19 @@ const ControlDbServerlist= [{ ServerName: "controldb1" }];
 
 export default function ApiDiv() {
      
-  const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
-    GetClientServerFunction(ControlDbServerlist),
-    [] as IapiInfo<IServerInfoDetails>[]
-  );
+  return <div className="container mx-auto py-10"> AppDB Page - Under Construction</div>;
+  // const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
+  //   GetClientServerFunction(ControlDbServerlist),
+  //   [] as IapiInfo<IServerInfoDetails>[]
+  // );
 
-  if (data.length === 0) {
-    return <div className="container mx-auto py-10">Loading...</div>;
-  }
+  // if (data.length === 0) {
+  //   return <div className="container mx-auto py-10">Loading...</div>;
+  // }
 
-  return (
-    <div className="container mx-auto py-10">
-      <DataTable columns={columns} data={data} />
-    </div>
-  );
+  // return (
+  //   <div className="container mx-auto py-10">
+  //     <DataTable columns={columns} data={data} />
+  //   </div>
+  // );
 }

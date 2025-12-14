@@ -90,7 +90,7 @@ const resolvers = {
       q: `
       SELECT 
            ${sqlColumns}
-         FROM Vw_MonolithConnectionStrings_Prod_Env
+         FROM Vw_MonolithConnectionStrings_PreProd_Env
          WHERE Namespace = '${namespace}'
       `
      }),

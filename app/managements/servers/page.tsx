@@ -12,19 +12,19 @@ const apiControlDbUrls= process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   : [];
 
  export default function ApiDiv() {
- 
-  const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
-    getAllServer<IServerInfoDetails>(apiControlDbUrls),
-    [] as IapiInfo<IServerInfoDetails>[]
-  );
+ return <div className="container mx-auto py-10">Server Page - Under Construction</div>;
+  // const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
+  //   getAllServer<IServerInfoDetails>(apiControlDbUrls),
+  //   [] as IapiInfo<IServerInfoDetails>[]
+  // );
 
-  if (data.length === 0) {
-    return <div className="container mx-auto py-10">Loading...</div>;
-  }
-  return (
-    <div className="container mx-auto py-10">
-      <DataTable columns={columns} data={data} />
-    </div>
-  );
+  // if (data.length === 0) {
+  //   return <div className="container mx-auto py-10">Loading...</div>;
+  // }
+  // return (
+  //   <div className="container mx-auto py-10">
+  //     <DataTable columns={columns} data={data} />
+  //   </div>
+  // );
 }
  
