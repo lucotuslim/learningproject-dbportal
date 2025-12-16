@@ -142,7 +142,7 @@ function ActionsCell({ row, refreshData }: {
   )
 }
 
-export const columns = (refreshData: () => void): ColumnDef<Namespace>[] => [
+export const columns = (): ColumnDef<Namespace>[] => [
   
   { accessorKey: "ClientID", header: "ClientID" },
   { accessorKey: "Namespace", header: "Namespace" },

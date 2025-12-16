@@ -6,7 +6,7 @@ import { GraphQLResolveInfo } from "graphql";
 // import { getDbaServerPool } from "@/lib/dbaserver"; // <-- from your previous setup
 //import {getDbaserverData} from "@/app/api/dbaserver/route"
 interface Namespace { 
-      ClientID: number
+    ClientID: number
     Namespace: string
     ConstringDatabaseName: string
     ConstringServerName: string
@@ -33,29 +33,24 @@ const typeDefs = `#graphql
 
 const resolvers = {
   Query: {
-    // Fetch all namespaces
-    // namespaces: async (_: unknown, { db }: { db: string }) => {
-      
-    //   // const pool = await getDbaServerPool(db);
-    //   // const result = await pool.request().query(`
-    //   //   SELECT 
-    //   //     ClientID, 
-    //   //     Namespace, 
-    //   //     ConstringDatabaseName, 
-    //   //     ConstringServerName, 
-    //   //     CreatedDate 
-    //   //   FROM Vw_MonolithConnectionStrings_Prod_Env
-    //   // `);
-    //   const result =  await getDbaserverData(db,
-    //   `    SELECT ClientID,  Namespace, 
-    //       ConstringDatabaseName, 
-    //       ConstringServerName, 
-    //       CreatedDate 
-    //     FROM Vw_MonolithConnectionStrings_Prod_Env `
-    //   )
-    //   return result.recordset;
-    // },
-    // Fetch a single namespace by ClientID
+    namespaces: async  (_: unknown, { db}: { db: string;},__: unknown, info: GraphQLResolveInfo) => {
+      const fields = Object.keys(graphqlFields(info));
+        const sqlColumns = fields.map(f => `[${f}]`).join(", ");
+  const result: Namespace[] = await fetch(`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      db: db,
+      q: `
+      SELECT 
+           ${sqlColumns}
+         FROM Vw_MonolithConnectionStrings_Prod_Env
+      `
+     }),
+  }).then(res => res.json()) as Namespace[];
+      return result;
+    },
+
     namespace: async (_: unknown, { db, namespace }: { db: string; namespace: string },__: unknown, info: GraphQLResolveInfo) => {
       console.log ("Fetching namespace:", namespace, "from db:", db);
       const fields = Object.keys(graphqlFields(info));
@@ -96,7 +91,7 @@ const resolvers = {
      }),
   }).then(res => res.json()) as Namespace[];
       
-      console.log ("Result:", JSON.stringify(result));   
+//      console.log ("Result:", JSON.stringify(result));   
 
  // console.log (JSON.stringify(result));
       return result[0] || null;
