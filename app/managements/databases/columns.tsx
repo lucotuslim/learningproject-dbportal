@@ -11,7 +11,7 @@ import { ConfirmationDialog, useConfirmationDialog } from "@/components/confirma
 import { useState } from "react"
 import { toast } from "sonner"
 import { Row } from "@tanstack/react-table"
-
+import { Namespace } from "./interface"
 // Recovery Model Cell Component
 function RecoveryModelCell({ row, refreshData }: { 
   row: Row<IapiInfo<IDatabaseInfo & { MachineName: string }>>
@@ -142,41 +142,13 @@ function ActionsCell({ row, refreshData }: {
   )
 }
 
-export const columns = (refreshData: () => void): ColumnDef<IapiInfo<IDatabaseInfo & { MachineName: string }>>[] => [
-  { accessorKey: "MachineName", header: "MachineName" },
-  {
-    accessorKey: "name", header: "Database Name",
-    cell: ({ row }) => {
-      const dbName = row.original.name
-      if (!dbName) return null
-      const machineName = row.original.MachineName
-      return (
-        <Link
-          href={`/managements/databases/${machineName}/${dbName}`}
-          className="text-blue-600 hover:underline"
-        >
-          {dbName}
-        </Link>
-      )
-    }
-  },
-  {accessorKey: "foundInControlDb", header: "In Control DB"},
-  { accessorKey: "create_date", header: "Create Date" },
-  { accessorKey: "compatibility_level", header: "Compatibility Level" },
-  { accessorKey: "user_access_desc", header: "User Access" },
-  { accessorKey: "state_desc", header: "State" },
-  {
-    accessorKey: "recovery_model_desc", header: "Recovery Model",
-    cell: ({ row }) => <RecoveryModelCell row={row} refreshData={refreshData} />
-  },
-  { accessorKey: "containment_desc", header: "Containment" },
-  { accessorKey: "error", header: "Error" },
-  { accessorKey: "message", header: "Message" },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => <ActionsCell row={row} refreshData={refreshData} />
-  }
+export const columns = (refreshData: () => void): ColumnDef<Namespace>[] => [
+  
+  { accessorKey: "ClientID", header: "ClientID" },
+  { accessorKey: "Namespace", header: "Namespace" },
+  { accessorKey: "ConstringDatabaseName", header: "Database Name" },
+  { accessorKey: "ConstringServerName", header: "Server Name" },
+  { accessorKey: "CreatedDate", header: "Created Date" },
 ]
 
 

@@ -6,6 +6,6 @@ type GlobalSettingStore = {
 };
 
 export const useGlobalSetting = create<GlobalSettingStore>((set) => ({
-  selectedEnvironment: "",
+  selectedEnvironment: "nonprod",
   setSelectedEnvironment: (value) => set({ selectedEnvironment: value }),
 }));

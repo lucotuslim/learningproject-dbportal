@@ -6,6 +6,7 @@ import {  IapiInfo } from "@/interfaces/generic";
 import { useObservable } from "rxjs-hooks";
 import { GetClientServerFunction } from "@/lib/rxjs/servers/servers";
 import { IServerInfoDetails } from "@/interfaces/server";
+import { useGlobalSetting } from "@/lib/store";
 
 // const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
 //   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
@@ -15,7 +16,15 @@ const ControlDbServerlist= [{ ServerName: "controldb1" }];
 
 export default function ApiDiv() {
      
-  return <div className="container mx-auto py-10"> AppDB Page - Under Construction</div>;
+  return (
+  <div className="container mx-auto py-10"> 
+  <p> AppDB Page - Under Construction</p>
+  <p> SelectedEnvironment is: {useGlobalSetting((state) => state.selectedEnvironment)} </p>
+  </div>
+  
+);
+
+
   // const data = useObservable<IapiInfo<IServerInfoDetails>[]>(() =>
   //   GetClientServerFunction(ControlDbServerlist),
   //   [] as IapiInfo<IServerInfoDetails>[]

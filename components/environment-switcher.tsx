@@ -1,9 +1,9 @@
 "use client"
-
 import * as React from "react"
 import { ChevronsUpDown } from "lucide-react"
 import { useGlobalSetting } from "@/lib/store"
 import { toast } from "sonner";
+import { shallow } from "zustand/shallow";
 
 import {
   DropdownMenu,
@@ -29,17 +29,24 @@ export function EnvironmentSwitcher({
   }[]
 }) {
   const { isMobile } = useSidebar()
-  const { selectedEnvironment, setSelectedEnvironment } = useGlobalSetting()
+
+  
+  const selectedEnvironment = useGlobalSetting(
+    (state) => state.selectedEnvironment
+  )
+  const setSelectedEnvironment = useGlobalSetting(
+    (state) => state.setSelectedEnvironment
+  )
 
   // ✅ derive active environment from global state
   const activeEnvironment =
     environments.find((e) => e.name === selectedEnvironment) ?? environments[0]
   // Optional: initialize default once
-  React.useEffect(() => {
-    if (!selectedEnvironment && environments.length > 0) {
-      setSelectedEnvironment(environments[0].name)
-    }
-  }, [selectedEnvironment, environments, setSelectedEnvironment])
+  // React.useEffect(() => {
+  //   if (!selectedEnvironment && environments.length > 0) {
+  //     setSelectedEnvironment(environments[0].name)
+  //   }
+  // }, [selectedEnvironment, setSelectedEnvironment])
 
   if (!activeEnvironment) {
     return null

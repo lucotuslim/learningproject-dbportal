@@ -56,7 +56,6 @@ const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnviron
         let mounted = true
         setLoading(true)
         setError(null)
-
             ; (async () => {
                 try {
                     const res = await fetch(endpoint, {

@@ -7,16 +7,20 @@ import { IClientInfo } from "@/interfaces/controldb";
 import { useObservable } from "rxjs-hooks";
 //import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
 import { GetClientInfo} from "@/lib/rxjs/controldb/controldb";
+import { useGlobalSetting } from "@/lib/store";
 
 const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url, apitype: "controldb" }))
   : [];
 
 export default function ApiDiv() {
+const selectedEnvironment =  useGlobalSetting((state) => state.selectedEnvironment);
+console.log("Selected Environment in Client Info Page:", selectedEnvironment);
 return ( 
     <div> 
       <h1 className="text-2xl font-bold mb-4">Client Info Page</h1>
       <p>Pending implementation.</p>
+      <p>SelectedEnvironment is: {selectedEnvironment}</p>
     </div>
   )
 
