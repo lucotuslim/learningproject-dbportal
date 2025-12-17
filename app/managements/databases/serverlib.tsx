@@ -8,7 +8,7 @@ export async function getNamespaces<T>(db:string, environment:string): Promise<T
     Namespace
     ConstringDatabaseName
     ConstringServerName
-    CreatedDate
+
       }
     }
   `;

@@ -148,7 +148,6 @@ export const columns = (): ColumnDef<Namespace>[] => [
   { accessorKey: "Namespace", header: "Namespace" },
   { accessorKey: "ConstringDatabaseName", header: "Database Name" },
   { accessorKey: "ConstringServerName", header: "Server Name" },
-  { accessorKey: "CreatedDate", header: "Created Date" },
 ]
 
 

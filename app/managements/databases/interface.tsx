@@ -3,5 +3,4 @@ export interface Namespace {
     Namespace: string
     ConstringDatabaseName: string
     ConstringServerName: string
-    CreatedDate: Date
 }
