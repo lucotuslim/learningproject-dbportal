@@ -1,6 +1,14 @@
 "use client"
 
 import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select"
+
+import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
@@ -176,19 +184,23 @@ export function DataTable<TData, TValue>({
             }}
             className="w-16 border rounded px-2 py-1"
           />
-          <select
-            value={table.getState().pagination.pageSize}
-            onChange={(e) => table.setPageSize(Number(e.target.value))}
-              className="border rounded px-2 py-1 bg-transparent appearance-none"
-          >
-            {[5, 10, 20, 30, 50].map((size) => (
-              <option key={size} value={size}
-                            className="border rounded px-2 py-1 bg-transparent appearance-none"
+
+<Select
+  value={String(table.getState().pagination.pageSize)}
+  onValueChange={(value) => table.setPageSize(Number(value))}
 >
-                Show {size}
-              </option>
-            ))}
-          </select>
+  <SelectTrigger className="w-32">
+    <SelectValue placeholder="Rows per page" />
+  </SelectTrigger>
+
+  <SelectContent>
+    {[5, 10, 20, 30, 50].map((size) => (
+      <SelectItem key={size} value={String(size)}>
+        Show {size}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
         </div>
       </div>
     </div>
