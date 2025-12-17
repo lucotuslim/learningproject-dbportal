@@ -3,7 +3,7 @@ import { startServerAndCreateNextHandler } from "@as-integrations/next";
 import graphqlFields from "graphql-fields";
 import { NextRequest } from "next/server";
 //import { getDbaServerPool } from "@/lib/dbaserver";
-import {getDbaserverData} from "@/app/api/dbaserver/route"
+//import {getDbaserverData} from "@/app/api/dbaserver/route"
 import { GraphQLResolveInfo } from "graphql";
 
 // 🧠 GraphQL Schema Definition
@@ -71,9 +71,17 @@ const resolvers = {
       //   SELECT * FROM [dbo].[DocExportOutput]
       // `);
       const sqlColumns = fields.map(f => `[${f}]`).join(", ");
-      const result = await getDbaserverData(db, `
-        SELECT ${sqlColumns} FROM [dbo].[DocExportOutput]
-      `);
+      // const result = await getDbaserverData(db, `
+      //   SELECT ${sqlColumns} FROM [dbo].[DocExportOutput]
+      // `);
+      const result = await fetch ( `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ db: db,
+          q: `   SELECT ${sqlColumns} FROM [dbo].[DocExportOutput] `
+         }),
+      }).then(res => res.json());
+      
       return result;
     },
   },
@@ -99,14 +107,22 @@ const resolvers = {
       OUTPUT INSERTED.ExportGuid, INSERTED.Filename,  INSERTED.ContainerName, INSERTED.CreatedBy, INSERTED.Namespace
       VALUES (${values.join(',')})
     `;
-      const result = await getDbaserverData(db,sql)
+      // const result = await getDbaserverData(db,sql)
+      const result = await fetch (`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ db: db,
+          q: sql
+         }),
+      }).then(res => res.json()); 
       return result[0]
     },
   },
 };
 
 const server = new ApolloServer({ typeDefs, resolvers });
-
 const handler = startServerAndCreateNextHandler<NextRequest>(server);
-export const GET = handler;
-export const POST = handler;
+export async function GET(req: NextRequest) {
+  return handler(req);
+}
+export const POST = GET;

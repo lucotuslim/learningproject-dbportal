@@ -1,7 +1,7 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
 import {DocumentExtractionTasksSetting} from "@/config/appsetting";
-import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument, IsubmitBulkExportParams } from "./interfaces";
+import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
 import {IDocBulkExportStatus} from "./interfaces"
 
 export async function checkexportStatus(
@@ -126,33 +126,33 @@ export async function GetDocBulkExportStatusReport(
   }
 }
 
-export async function submitBulkExport(
-  submitBulkExportParams: IsubmitBulkExportParams
-): Promise<any> {
+// export async function submitBulkExport(
+//   submitBulkExportParams: IsubmitBulkExportParams
+// ): Promise<any> {
 
-  const headers = {
-    "Content-Type": submitBulkExportParams.ContentType,
-    Authorization: `Bearer ${submitBulkExportParams.Token}`,
-    ContainerName: submitBulkExportParams.ContainerName,
-    ZipName: submitBulkExportParams.ZipName,
-    SftpUsername: submitBulkExportParams.SftpUsername,
-    sftppassword: submitBulkExportParams.sftppassword,
-    sftpHostName: submitBulkExportParams.sftpHostName,
-  };
-  console.log(JSON.stringify(submitBulkExportParams))
-  const response = await fetch(submitBulkExportParams.Url, {
-    method: submitBulkExportParams.Method,
-    headers: headers,
-    body: JSON.stringify({
-      Data: submitBulkExportParams.DocumentsGUID,
-    }),
-  });
+//   const headers = {
+//     "Content-Type": submitBulkExportParams.ContentType,
+//     Authorization: `Bearer ${submitBulkExportParams.Token}`,
+//     ContainerName: submitBulkExportParams.ContainerName,
+//     ZipName: submitBulkExportParams.ZipName,
+//     SftpUsername: submitBulkExportParams.SftpUsername,
+//     sftppassword: submitBulkExportParams.sftppassword,
+//     sftpHostName: submitBulkExportParams.sftpHostName,
+//   };
+//   console.log(JSON.stringify(submitBulkExportParams))
+//   const response = await fetch(submitBulkExportParams.Url, {
+//     method: submitBulkExportParams.Method,
+//     headers: headers,
+//     body: JSON.stringify({
+//       Data: submitBulkExportParams.DocumentsGUID,
+//     }),
+//   });
 
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status}`);
-  }
-  return await response.json();
-}
+//   if (!response.ok) {
+//     throw new Error(`API error: ${response.status}`);
+//   }
+//   return await response.json();
+// }
 
 export async function fetchNamespace(db: string, namespace: string) {
   const query = `
