@@ -22,9 +22,10 @@ console.log("Selected Environment in Database Page:", selectedEnvironment);
 const [data, setData] = useState<Namespace[]>([]);
 const [search, setSearch] = useState("");
 
-const filteredData = data.filter((item: Namespace) =>
-  item.Namespace?.toLowerCase().includes(search.toLowerCase())
-);
+// const filteredData = data.filter((item: Namespace) =>
+//   item.Namespace?.toLowerCase().includes(search.toLowerCase())
+// );
+const filteredData = data.filter( (item: Namespace) => item.Namespace.startsWith(search)  )
 
 const loaddata = async () => {
   if (!selectedEnvironment) return setData([]);
@@ -51,3 +52,7 @@ useEffect(() => { loaddata(); }, [selectedEnvironment]);
     </div>
   );
 }
+function item(value: Namespace, index: number, array: Namespace[]): value is Namespace {
+  throw new Error("Function not implemented.");
+}
+
