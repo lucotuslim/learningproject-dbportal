@@ -13,12 +13,18 @@ import {Namespace} from "./interface";
 import {getNamespaces } from "./serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useEffect, useState } from "react";
+import { Input } from "@/components/ui/input";
 
 export default  function Page() {
 const selectedEnvironment =  useGlobalSetting((state) => state.selectedEnvironment);
 console.log("Selected Environment in Database Page:", selectedEnvironment);
 
 const [data, setData] = useState<Namespace[]>([]);
+const [search, setSearch] = useState("");
+
+const filteredData = data.filter((item: Namespace) =>
+  item.Namespace?.toLowerCase().includes(search.toLowerCase())
+);
 
 const loaddata = async () => {
   if (!selectedEnvironment) return setData([]);
@@ -33,7 +39,15 @@ useEffect(() => { loaddata(); }, [selectedEnvironment]);
   }
   return (
     <div className="container mx-auto py-10">
-      <DataTable columns={columns()} data={data} />
+      <div className="flex items-center justify-between mb-4">
+  <Input
+    placeholder="Search Namespace..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-64"
+  />
+</div>
+      <DataTable columns={columns()} data={filteredData} />
     </div>
   );
 }
