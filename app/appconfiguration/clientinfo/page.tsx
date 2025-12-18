@@ -2,16 +2,16 @@
 import React from "react";
 // import { columns } from "./columns";
 // import { DataTable } from "./data-table";
-import { IapiUrl, IapiInfo } from "@/interfaces/generic";
+import { IapiUrl } from "@/interfaces/generic";
 // import { IClientInfo } from "@/interfaces/controldb";
 // import { useObservable } from "rxjs-hooks";
 //import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
 // import { GetClientInfo} from "@/lib/rxjs/controldb/controldb";
 import { useGlobalSetting } from "@/lib/store";
 
-const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
-  ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url, apitype: "controldb" }))
-  : [];
+// const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
+//   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url, apitype: "controldb" }))
+//   : [];
 
 export default function ApiDiv() {
 const selectedEnvironment =  useGlobalSetting((state) => state.selectedEnvironment);

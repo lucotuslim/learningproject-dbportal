@@ -3,7 +3,6 @@ import * as React from "react"
 import { ChevronsUpDown } from "lucide-react"
 import { useGlobalSetting } from "@/lib/store"
 import { toast } from "sonner";
-import { shallow } from "zustand/shallow";
 
 import {
   DropdownMenu,

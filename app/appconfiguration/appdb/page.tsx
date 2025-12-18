@@ -12,7 +12,7 @@ import { useGlobalSetting } from "@/lib/store";
 //   ? process.env.NEXT_PUBLIC_CONTROLSERVERAPI.split(',').map(url => ({ apiurl: url }))
 //   : [];
 
-const ControlDbServerlist= [{ ServerName: "controldb1" }];
+//const ControlDbServerlist= [{ ServerName: "controldb1" }];
 
 export default function ApiDiv() {
      
