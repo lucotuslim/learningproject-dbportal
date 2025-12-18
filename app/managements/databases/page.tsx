@@ -12,7 +12,7 @@ import { DataTable } from "./data-table";
 import {Namespace} from "./interface";
 import {getNamespaces } from "./serverlib";
 import { useGlobalSetting } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 export default  function Page() {
@@ -27,13 +27,16 @@ const [search, setSearch] = useState("");
 // );
 const filteredData = data.filter( (item: Namespace) => item.Namespace.startsWith(search)  )
 
-const loaddata = async () => {
+const loaddata = useCallback(async () => {
   if (!selectedEnvironment) return setData([]);
   const res = await getNamespaces<Namespace>("ServerInventory", selectedEnvironment);
   setData(res ?? []);
-};
+}, [selectedEnvironment]);  // dependencies used inside loaddata
 
-useEffect(() => { loaddata(); }, [selectedEnvironment]);
+useEffect(() => {
+  loaddata();
+}, [loaddata]);   // now safe
+
 
   if (!data ||  (data).length === 0) {
     return <div className="container mx-auto py-10">Loading...</div>;
@@ -52,7 +55,8 @@ useEffect(() => { loaddata(); }, [selectedEnvironment]);
     </div>
   );
 }
-function item(value: Namespace, index: number, array: Namespace[]): value is Namespace {
-  throw new Error("Function not implemented.");
-}
+
+// function item(value: Namespace, index: number, array: Namespace[]): value is Namespace {
+//   throw new Error("Function not implemented.");
+// }
 

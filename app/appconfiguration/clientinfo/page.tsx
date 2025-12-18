@@ -2,7 +2,7 @@
 import React from "react";
 // import { columns } from "./columns";
 // import { DataTable } from "./data-table";
-import { IapiUrl } from "@/interfaces/generic";
+//import { IapiUrl } from "@/interfaces/generic";
 // import { IClientInfo } from "@/interfaces/controldb";
 // import { useObservable } from "rxjs-hooks";
 //import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
