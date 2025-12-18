@@ -1,12 +1,12 @@
 "use client"
 import React from "react";
-import { columns } from "./columns";
-import { DataTable } from "./data-table";
+// import { columns } from "./columns";
+// import { DataTable } from "./data-table";
 import { IapiUrl, IapiInfo } from "@/interfaces/generic";
-import { IClientInfo } from "@/interfaces/controldb";
-import { useObservable } from "rxjs-hooks";
+// import { IClientInfo } from "@/interfaces/controldb";
+// import { useObservable } from "rxjs-hooks";
 //import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
-import { GetClientInfo} from "@/lib/rxjs/controldb/controldb";
+// import { GetClientInfo} from "@/lib/rxjs/controldb/controldb";
 import { useGlobalSetting } from "@/lib/store";
 
 const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI

@@ -1,11 +1,11 @@
 "use client"
 import React from "react";
-import { columns } from "./columns";
-import { DataTable } from "./data-table";
+// import { columns } from "./columns";
+// import { DataTable } from "./data-table";
 import { IapiUrl, IapiInfo } from "@/interfaces/generic";
-import { ISqlServerInstance } from "@/interfaces/generic";
-import { useObservable } from "rxjs-hooks";
-import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
+// import { ISqlServerInstance } from "@/interfaces/generic";
+// import { useObservable } from "rxjs-hooks";
+// import { ApiGetControlDbRxjs } from "@/lib/rxjs/servers/servers";
 import { useGlobalSetting } from "@/lib/store";
 
 const apiControlDbUrl: IapiUrl[] = process.env.NEXT_PUBLIC_CONTROLSERVERAPI
