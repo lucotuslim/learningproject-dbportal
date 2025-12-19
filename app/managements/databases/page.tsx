@@ -22,15 +22,15 @@ export default function Page() {
   const [data, setData] = useState<Namespace[]>([]);
   const [search, setSearch] = useState("");
 
-  // const filteredData = data.filter((item: Namespace) =>
-  //   item.Namespace?.toLowerCase().includes(search.toLowerCase())
-  // );
+//const filteredData = data.filter((item: Namespace) => item.Namespace.startsWith(search))
 const filteredData = data.filter((item: Namespace) => {
   if (search.endsWith("%")) {
     const prefix = search.slice(0, -1); // remove %
     return item.Namespace.startsWith(prefix);
-  } else {
+  } else if (search !== "") {
     return item.Namespace === search;
+  } else {
+    return true; // keep all items when search is empty
   }
 });
 
