@@ -1,3 +1,4 @@
+"use client";
 import { useState } from "react";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
@@ -22,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { IDocumentConfig } from "@/interfaces/documentextraction"
 import {chunkArray} from '@/lib/serverutils'
+import { useGlobalSetting } from "@/lib/store";
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -35,6 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default function SubmitForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
+const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -58,7 +61,7 @@ export default function SubmitForm() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const namespace = await fetchNamespace("ServerInventory", values.Namespace);
+      const namespace = await fetchNamespace("ServerInventory", values.Namespace,selectedEnvironment);
       console.log(JSON.stringify(namespace));
       if (!namespace) throw new Error("Namespace not found");
       const documents : {DocumentGUID: string}[]= await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);

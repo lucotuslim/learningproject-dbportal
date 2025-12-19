@@ -19,6 +19,7 @@ import {
     VisibilityState,
 } from "@tanstack/react-table"
 import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react"
+import { useGlobalSetting } from "@/lib/store";
 
 import { Button } from "@/components/ui/button"
 import {
@@ -44,7 +45,9 @@ export function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
+const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
 
+    
     React.useEffect(() => {
         const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
         const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
@@ -53,7 +56,6 @@ export function ListExtraction() {
         let mounted = true
         setLoading(true)
         setError(null)
-
             ; (async () => {
                 try {
                     const res = await fetch(endpoint, {
@@ -175,7 +177,7 @@ export function ListExtraction() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={async () => {
-                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid);
+                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid, selectedEnvironment);
                                 const newTab = window.open("./documentextraction/report", "_blank");
                                 // small fallback: wait until popup exists
                                 const postPayload = () => {

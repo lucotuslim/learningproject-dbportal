@@ -44,7 +44,7 @@ const resolvers = {
       q: `
       SELECT 
            ${sqlColumns}
-         FROM Vw_MonolithConnectionStrings_Prod_Env
+         FROM Vw_MonolithConnectionStrings_NonProd_Env
       `
      }),
   }).then(res => res.json()) as Namespace[];
@@ -85,7 +85,7 @@ const resolvers = {
       q: `
       SELECT 
            ${sqlColumns}
-         FROM Vw_MonolithConnectionStrings_Prod_Env
+         FROM Vw_MonolithConnectionStrings_NonProd_Env
          WHERE Namespace = '${namespace}'
       `
      }),

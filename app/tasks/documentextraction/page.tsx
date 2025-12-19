@@ -23,11 +23,11 @@ return (
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="submitform" className="w-full">
+      <TabsContent value="submitform" className="w-full" >
         <SubmitForm />
       </TabsContent>
 
-      <TabsContent value="listextraction" className="w-full">
+      <TabsContent value="listextraction" className="w-full" >
         <ListExtraction />
       </TabsContent>
     </Tabs>

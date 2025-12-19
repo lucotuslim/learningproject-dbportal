@@ -7,10 +7,11 @@ import {IDocBulkExportStatus} from "./interfaces"
 export async function checkexportStatus(
   env: string,
   Namespace: string,
-  ExportGuid: string
+  ExportGuid: string, 
+  environment: string
 ) {
   const currentconfig = DocumentExtractionTasksSetting.find( (e)  => e.env===env)
-  const namespace = await fetchNamespace("ServerInventory", Namespace);
+  const namespace = await fetchNamespace("ServerInventory", Namespace, environment);
   const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
   if (!currentconfig) {return}
   const token = await getApiToken({
@@ -154,7 +155,7 @@ export async function GetDocBulkExportStatusReport(
 //   return await response.json();
 // }
 
-export async function fetchNamespace(db: string, namespace: string) {
+export async function fetchNamespace(db: string, namespace: string, environment: string) {
   const query = `
     query Namespace($db: String!, $namespace: String!) {
       namespace(db: $db, namespace: $namespace) {
@@ -167,7 +168,7 @@ export async function fetchNamespace(db: string, namespace: string) {
   `;
   const variables = { db, namespace };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/MonolithConnectionStrings`,
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/${environment}/dbaserver/MonolithConnectionStrings`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
