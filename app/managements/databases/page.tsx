@@ -30,7 +30,7 @@ const filteredData = data.filter((item: Namespace) => {
   } else if (search !== "") {
     return item.Namespace === search;
   } else {
-    return true; // keep all items when search is empty
+    return true; 
   }
 });
 
