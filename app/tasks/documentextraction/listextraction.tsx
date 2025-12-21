@@ -1,5 +1,6 @@
-"use client"
-import { DocumentExtractionTasksSetting } from "@/config/appsetting"
+"use client";
+
+import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/documentextraction";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./serverlib"
 import { toast } from "sonner"
@@ -39,20 +40,32 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import { useEffect, useState } from "react";
 
 // replace static data with GraphQL call
-export function ListExtraction() {
+export  function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
-const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
+    const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
+  const [DocumentConfig, setDocumentConfig] = useState<typeof DocumentExtractionTasksSetting extends (...args: any[]) => Promise<infer T> ? T : never[]>([]);
 
-    
-    React.useEffect(() => {
+
+  useEffect(() => {
+    const loadConfig = async () => {
+      const config = await DocumentExtractionTasksSetting();
+      console.log("DocumentExtractionTasksSetting result:", config);
+      console.log("Is array:", Array.isArray(config));
+      setDocumentConfig(config);
+    };
+    loadConfig();
+  }, []);
+  
+  
+    useEffect(() => {
         const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
         const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
         const variables = { db: "DocumentManagement" };
-
         let mounted = true
         setLoading(true)
         setError(null)
@@ -265,7 +278,7 @@ SFTP Password: ${decsftppassword}
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");
 
-                                        const envConfig = DocumentExtractionTasksSetting.find((item) => item.env === document.env);
+                                        const envConfig = DocumentConfig.find((item) => item.env === document.env);
 
                                         // Wait a bit for the new tab to load, then send data
                                         setTimeout(() => {

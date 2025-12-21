@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { addDocExportOutput, fetchNamespace, fetchDocuments } from "./serverlib";
 import {TokenResponse} from "@/lib//utils"
 import {encryptString} from "@/lib/serverutils"
-import { DocumentExtractionTasksSetting } from "@/config/appsetting";
+import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/documentextraction";
 import {
   Select,
   SelectContent,
@@ -35,9 +35,20 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function SubmitForm() {
+export default  function SubmitForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
+  const [DocumentConfig, setDocumentConfig] = useState<typeof DocumentExtractionTasksSetting extends (...args: any[]) => Promise<infer T> ? T : never[]>([]);
+  const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
+
+useEffect(() => {
+  const loadConfig = async () => {
+    const config = await DocumentExtractionTasksSetting();
+    console.log("DocumentExtractionTasksSetting result:", config);
+    console.log("Is array:", Array.isArray(config));
+    setDocumentConfig(config);
+  };
+  loadConfig();
+}, []);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -66,17 +77,7 @@ const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnviron
       if (!namespace) throw new Error("Namespace not found");
       const documents : {DocumentGUID: string}[]= await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
-
-      // const token = await getApiToken({
-      //   Url: selectedEnvConfig!.GetDocApiToken.Url,
-      //   Method: selectedEnvConfig!.GetDocApiToken.Method,
-      //   ContentType: selectedEnvConfig!.GetDocApiToken.ContentType,
-      //   GrantType: selectedEnvConfig!.GetDocApiToken.GrantType,
-      //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-      //   Scope:   process.env.NEXT_PUBLIC_DocApiScope!,
-      //   ClientSecret: process.env.DocApiClientSecret!,
-      // });
-
+      
       const tokenres = await fetch("/api/getapitoken", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -170,7 +171,7 @@ const submitBulkExportres = await bulksubmitres.json();
                     onValueChange={(val: string) => {
                       field.onChange(val); // updates form value
                       // find and store the config for that environment
-                      const envConfig = DocumentExtractionTasksSetting.find((item) => item.env === val);
+                      const envConfig = DocumentConfig.find((item) => item.env === val);
                       setSelectedEnvConfig(envConfig ?? null);
                     }}
                   >
@@ -180,11 +181,22 @@ const submitBulkExportres = await bulksubmitres.json();
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Environments</SelectLabel>
-                        {DocumentExtractionTasksSetting.map((item) => (
+
+                        {/* {DocumentConfig.map((item) => (
                           <SelectItem key={item.env} value={item.env}>
                             {item.env}
                           </SelectItem>
-                        ))}
+                        ))} */}
+
+{DocumentConfig.map((item, idx) => (
+  <SelectItem
+    key={idx}
+    value={item.env}
+  >
+    {item.env}
+  </SelectItem>
+))}
+
                       </SelectGroup>
                     </SelectContent>
                   </Select>

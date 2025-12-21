@@ -10,7 +10,6 @@ export async function POST(req: Request) {
     if (!body?.db || !body?.q) {
       return new Response(JSON.stringify({ error: "Missing required fields: db, q" }), { status: 400 });
     }
-
     const rows = await getDbaserverData(body.db, body.q);
     return new Response(JSON.stringify(rows), { status: 200 });
   } catch (err) {

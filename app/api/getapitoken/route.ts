@@ -1,15 +1,17 @@
 // app/api/get-doc-token/route.ts
 import { NextResponse } from "next/server";
 import { getApiToken } from "@/lib/utils";
-import { DocumentExtractionTasksSetting } from "@/config/appsetting"; // must be server-importable
+//import { DocumentExtractionTasksSetting } from "@/config/appsetting"; // must be server-importable
+import {DocumentExtractionTasksSetting} from "@/app/tasks/documentextraction/documentextraction";
 
 export async function POST(req: Request) {
   try {
     const { env } = await req.json(); // client sends selected env key
+    const config = await DocumentExtractionTasksSetting();
 
     if (!env) return NextResponse.json({ error: "env required" }, { status: 400 });
 
-    const envConfig = DocumentExtractionTasksSetting.find((e) => e.env === env);
+    const envConfig = config.find((e) => e.env === env);
     if (!envConfig) return NextResponse.json({ error: "invalid env" }, { status: 400 });
 
     // >>> IMPORTANT: keep client secret server-side only.
