@@ -1,5 +1,5 @@
 "use client";
-
+import { IDocumentConfig } from "./interfaces";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/documentextraction";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./serverlib"
@@ -48,8 +48,7 @@ export  function ListExtraction() {
     const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
     const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
-  const [DocumentConfig, setDocumentConfig] = useState<typeof DocumentExtractionTasksSetting extends (...args: any[]) => Promise<infer T> ? T : never[]>([]);
-
+  const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
 
   useEffect(() => {
     const loadConfig = async () => {

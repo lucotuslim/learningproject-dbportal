@@ -1,4 +1,4 @@
-import { IDocumentConfig } from "@/interfaces/documentextraction";
+import { IDocumentConfig } from "./interfaces";
 
 export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[]> {
   const query = `
@@ -43,16 +43,7 @@ export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[
   for (const row of rows) {
     if (!row?.ConfigJson) continue;
 
-    let parsed: IDocumentConfig[];
-
-    try {
-      parsed = JSON.parse(row.ConfigJson);
-    } catch (err) {
-      console.error("Invalid ConfigJson:", row.ConfigJson);
-      continue;
-    }
-
-    if (!Array.isArray(parsed)) continue;
+    const parsed: IDocumentConfig[] = JSON.parse(row.ConfigJson);
 
     for (const cfg of parsed) {
       configs.push({

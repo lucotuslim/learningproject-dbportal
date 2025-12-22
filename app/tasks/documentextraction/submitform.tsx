@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { IDocumentConfig } from "@/interfaces/documentextraction"
+import { IDocumentConfig } from "./interfaces"
 import {chunkArray} from '@/lib/serverutils'
 import { useGlobalSetting } from "@/lib/store";
 
@@ -37,7 +37,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 export default  function SubmitForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [DocumentConfig, setDocumentConfig] = useState<typeof DocumentExtractionTasksSetting extends (...args: any[]) => Promise<infer T> ? T : never[]>([]);
+  const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
   const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
 
 useEffect(() => {

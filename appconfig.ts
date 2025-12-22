@@ -1,4 +1,3 @@
-import { IDocumentConfig } from "@/interfaces/documentextraction";
 
 export const AppConfig = {
   Global: [
