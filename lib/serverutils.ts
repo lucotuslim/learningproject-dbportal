@@ -1,5 +1,67 @@
 'use server'
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import {IApiTokenParams} from "@/interfaces/generic";
+
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
+  scope?: string;
+}
+
+export async function getApiToken({
+  Url,
+  Method,
+  ContentType,
+  GrantType,
+  ClientId,
+  Scope,
+  ClientSecret = process.env.DocApiClientSecret
+}: IApiTokenParams): Promise<TokenResponse> {
+  try {
+    if (
+      !Url ||
+      !Method ||
+      !ContentType ||
+      !GrantType ||
+      !ClientId ||
+      !Scope ||
+      !ClientSecret
+    ) {
+      throw new Error("Missing required parameters");
+    }
+
+    // 🧩 Prepare headers and body
+    const headers = {
+      "Content-Type": ContentType,
+    };
+
+    const body = new URLSearchParams({
+      grant_type: GrantType,
+      client_id: ClientId,
+      scope: Scope,
+      client_secret: ClientSecret,
+    });
+
+    // 🚀 Send request
+    const response = await fetch(Url, {
+      method: Method.toUpperCase(),
+      headers,
+      body,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Request failed: ${response.statusText} — ${errorText}`);
+    }
+
+    return await response.json();
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    throw new Error(`getApiToken: ${message}`);
+  }
+}
+
 
 export async function  chunkArray<T>(arr: T[], size: number): Promise<T[][]> {
   const result: T[][] = [];

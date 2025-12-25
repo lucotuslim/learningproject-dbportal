@@ -73,6 +73,8 @@ export interface IDocumentConfig {
     ContentType: string;
     GrantType: string;
     ClientSecret: string;
+    ClientId: string; 
+    Scope: string; 
   };
   SendDocBulkExport: {
     Url: string;

@@ -171,11 +171,9 @@ export async function getApiToken({
   GrantType,
   ClientId,
   Scope,
-  ClientSecret,
+  ClientSecret = process.env.DocApiClientSecret
 }: IApiTokenParams): Promise<TokenResponse> {
   try {
-
-    // 🧠 Validate required params
     if (
       !Url ||
       !Method ||
@@ -215,6 +213,6 @@ export async function getApiToken({
     return await response.json();
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Get-DocApiToken: ${message}`);
+    throw new Error(`getApiToken: ${message}`);
   }
 }

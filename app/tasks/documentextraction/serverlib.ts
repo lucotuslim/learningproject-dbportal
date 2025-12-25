@@ -1,5 +1,5 @@
 'use server';
-import { getApiToken } from "@/lib/utils";
+import { getApiToken } from "@/lib/serverutils";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
 import {IDocBulkExportStatus} from "./interfaces"
