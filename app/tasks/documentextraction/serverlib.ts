@@ -1,6 +1,6 @@
 'use server';
 import { getApiToken } from "@/lib/utils";
-import {DocumentExtractionTasksSetting} from "@/config/appsetting";
+import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
 import {IDocBulkExportStatus} from "./interfaces"
 
@@ -10,7 +10,8 @@ export async function checkexportStatus(
   ExportGuid: string, 
   environment: string
 ) {
-  const currentconfig = DocumentExtractionTasksSetting.find( (e)  => e.env===env)
+  const DocumentConfig = await DocumentExtractionTasksSetting();
+  const currentconfig = DocumentConfig.find( (e)  => e.env===env)
   const namespace = await fetchNamespace("ServerInventory", Namespace, environment);
   const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
   if (!currentconfig) {return}
@@ -184,7 +185,7 @@ export async function fetchNamespace(db: string, namespace: string, environment:
 }
 
 export async function fetchDocuments(servername: string, dbname: string) {
-  const query = `
+const query = `
 query Query($servername: String!, $db: String!) {
   GetDocumentListAll(servername: $servername, db: $db) {
     DocumentGUID

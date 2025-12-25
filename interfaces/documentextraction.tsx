@@ -11,25 +11,3 @@ export interface IDocExportOutput {
   CreatedDate: Date
 }
 
-
-export interface IDocumentConfig {
-  env: string;
-  GetDocApiToken: {
-    Url: string;
-    Method: string;
-    ContentType: string;
-    GrantType: string;
-    ClientSecret: string;
-  };
-  SendDocBulkExport: {
-    Url: string;
-    Method: string;
-    ContentType: string;
-    sftpHostName: string;
-  };
-  GetDocBulkExportStatus: {
-    Url: string;
-    Method: string;
-    ContentType: string;
-  };
-}

@@ -52,10 +52,10 @@ const filteredData = data.filter((item: Namespace) => {
     <div className="container mx-auto py-10">
       <div className="flex items-center justify-between mb-4">
         <Input
-          placeholder="Search Namespace..."
+          placeholder="Search Namespace. End % for like expression"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-64"
+          className="w-128"
         />
       </div>
       <DataTable columns={columns()} data={filteredData} />
