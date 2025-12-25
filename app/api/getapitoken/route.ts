@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { getApiToken } from "@/lib/utils";
 //import { DocumentExtractionTasksSetting } from "@/config/appsetting"; // must be server-importable
-import {DocumentExtractionTasksSetting} from "@/app/tasks/documentextraction/documentextraction";
+import {DocumentExtractionTasksSetting} from "@/app/tasks/documentextraction/appconfig";
 
 export async function POST(req: Request) {
   try {

@@ -1,6 +1,6 @@
 "use client";
 import { IDocumentConfig } from "./interfaces";
-import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/documentextraction";
+import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./serverlib"
 import { toast } from "sonner"
