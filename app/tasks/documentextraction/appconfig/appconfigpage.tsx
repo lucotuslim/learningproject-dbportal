@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select"
 import { AppConfigForm } from "./appconfigform";
 import { Label } from "@/components/ui/label"
+import { Button } from "@/components/ui/button";
 
 export default function AppConfigPage() {
   const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
@@ -43,12 +44,24 @@ export default function AppConfigPage() {
       <div className="md:w-1/4 space-y-2">
         <Label htmlFor="environment">Select Environment</Label>
 
+        <Button
+          size="sm"
+          className="mt-2 w-full"
+          onClick={() => {
+            setIsAdding(true)
+            setSelectedConfig(null)
+          }}
+        >
+          + Add Environment
+        </Button>
         <Select
+          disabled={isAdding}
           onValueChange={(env) => {
             const config = DocumentConfig.find(c => c.env === env) || null
             setSelectedConfig(config)
           }}
-        >          <SelectTrigger className="w-full mt-1" id="environment">
+        >
+          <SelectTrigger className="w-full mt-1" id="environment">
             <SelectValue placeholder="Choose environment" />
           </SelectTrigger>
           <SelectContent>
@@ -74,15 +87,13 @@ export default function AppConfigPage() {
               // UPDATE existing
               //await SelectedConfig(id, values)
             } else {
-              // CREATE new
-              //await SelectedConfig(values)
+              console.log ('ADD new', values)
             }
             setIsAdding(false)
           }}
           onAddCancel={() => setIsAdding(false)}
         />
       </div>
-
 
     </div>
   );
