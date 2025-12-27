@@ -8,37 +8,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { AppConfigForm } from "./appconfigform";
 import { Label } from "@/components/ui/label"
-import { Input } from "@/components/ui/input";
-
-function Field({
-  label,
-  type = "text",
-  text 
-}: {
-  label: string
-  type?: string
-  text?: string
-}) {
-  return (
-    <div className="space-y-1">
-      <Label htmlFor={label}>{label}</Label>
-      <Input id={label} type={type} defaultValue={text} />
-    </div>
-  )
-}
 
 export default function AppConfigPage() {
   const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
   const [SelectedConfig, setSelectedConfig] = useState<IDocumentConfig | null>(null);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
-
+  const [isAdding, setIsAdding] = useState(false)
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -88,50 +65,25 @@ export default function AppConfigPage() {
       </div>
 
       {/* Right */}
+
       <div className="flex-1 space-y-2">
-
-
-        {/* GetDocApiToken */}
-        <Card>
-          <CardHeader>
-            <CardTitle>GetDocApiToken</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Field label="Url" text={SelectedConfig?.GetDocApiToken?.Url} />
-            <Field label="Method" text={SelectedConfig?.GetDocApiToken?.Method} />
-            <Field label="ContentType" text={SelectedConfig?.GetDocApiToken?.ContentType} />
-            <Field label="GrantType" text={SelectedConfig?.GetDocApiToken?.GrantType} />
-            <Field label="ClientId" text={SelectedConfig?.GetDocApiToken?.ClientId} />
-            <Field label="Scope" text={SelectedConfig?.GetDocApiToken?.Scope} />
-          </CardContent>
-        </Card>
-
-        {/* SendDocBulkExport */}
-        <Card>
-          <CardHeader>
-            <CardTitle>SendDocBulkExport</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Field label="Url" text={SelectedConfig?.SendDocBulkExport?.Url} />
-            <Field label="Method" text={SelectedConfig?.SendDocBulkExport?.Method} />
-            <Field label="ContentType" text={SelectedConfig?.SendDocBulkExport?.ContentType} />
-            <Field label="sftpHostName" text={SelectedConfig?.SendDocBulkExport?.sftpHostName} />
-          </CardContent>
-        </Card>
-
-        {/* GetDocBulkExportStatus */}
-        <Card>
-          <CardHeader>
-            <CardTitle>GetDocBulkExportStatus</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Field label="Url" text={SelectedConfig?.GetDocBulkExportStatus?.Url} />
-            <Field label="Method" text={SelectedConfig?.GetDocBulkExportStatus?.Method} />
-            <Field label="ContentType" text={SelectedConfig?.GetDocBulkExportStatus?.ContentType} />
-          </CardContent>
-        </Card>
-
+        <AppConfigForm
+          row={isAdding ? null : SelectedConfig}
+          onSave={async (id, values) => {
+            if (id) {
+              // UPDATE existing
+              //await SelectedConfig(id, values)
+            } else {
+              // CREATE new
+              //await SelectedConfig(values)
+            }
+            setIsAdding(false)
+          }}
+          onAddCancel={() => setIsAdding(false)}
+        />
       </div>
+
+
     </div>
   );
 }
