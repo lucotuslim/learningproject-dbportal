@@ -6,13 +6,7 @@ import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { useMemo } from "react"
 import {
   Form,
   FormControl,
@@ -56,14 +50,13 @@ export function AppConfigForm({
   onAddCancel,
 }: {
   row: IDocumentConfig | null
-  onSave: (id: string | null, values: FormValues) => Promise<void>
+  onSave: (config: IDocumentConfig) => Promise<void>
   onAddCancel?: () => void
 }) {
   const isAddMode = row === null
-  const canEditEnv = isAddMode
   const [isEditing, setIsEditing] = useState(isAddMode)
   console.log("row:", row);
-  const defaultValues: IDocumentConfig = {
+  const defaultValues: IDocumentConfig  = useMemo<IDocumentConfig> (() => ({
     env: "",
     GetDocApiToken: {
       Url: "",
@@ -84,7 +77,7 @@ export function AppConfigForm({
       Method: "GET",
       ContentType: "application/json",
     },
-  }
+  } ) , [])
 
   const form = useForm<IDocumentConfig>({
     resolver: zodResolver(schema),
@@ -98,10 +91,10 @@ export function AppConfigForm({
     } else {
       form.reset(defaultValues)
     }
-  }, [row])
+  }, [row, form, defaultValues])
 
   const onSubmit = async (values: FormValues) => {
-    await onSave(row?.env ?? null, values)
+    await onSave(values)
     if (isAddMode) {
       form.reset()
       onAddCancel?.()
@@ -147,7 +140,6 @@ export function AppConfigForm({
         />
 
         <FormLabel className="text-left col-span-1" >Get Token URL</FormLabel>
-
         <FormField
           control={form.control}
           name="GetDocApiToken.Url"
@@ -170,6 +162,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Token Method" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -183,6 +176,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Content Type" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -196,6 +190,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="GrantType" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -209,6 +204,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="ClientId" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -221,6 +217,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Token Scope" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -238,6 +235,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Url" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -250,6 +248,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Method" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -262,6 +261,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="ContentType" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -274,6 +274,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="sftpHostName" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -291,6 +292,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Url" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -304,6 +306,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Method" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -317,6 +320,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="ContentType" />
               </FormControl>
+              <FormMessage />
             </FormItem>
           )}
         />

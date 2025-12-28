@@ -1,4 +1,93 @@
+"use server";
 import { IDocumentConfig } from "./interfaces";
+const CONFIG_SECTION = "DocumentExtractionTasksSetting";
+
+
+export async function AddDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+): Promise<void> {
+  // 1️⃣ Fetch existing config
+  const getQuery = `
+    query ($db: String!, $config: String!) {
+      GetAppConfig(db: $db, config: $config) {
+        ConfigJson
+      }
+    }
+  `;
+
+  const getRes = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: getQuery,
+        variables: {
+          db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+          config: CONFIG_SECTION,
+        },
+      }),
+      cache: "no-store",
+    }
+  );
+
+  if (!getRes.ok) {
+    throw new Error("Failed to fetch existing config");
+  }
+
+  const getResult = await getRes.json();
+  const existingJson =
+    getResult?.data?.GetAppConfig?.[0]?.ConfigJson;
+
+  let existing: IDocumentConfig[] = [];
+
+  try {
+    existing = existingJson ? JSON.parse(existingJson) : [];
+  } catch {
+    existing = [];
+  }
+
+  // 2️⃣ Deduplicate by env + append
+  const merged = new Map(
+    [...existing, config].map(c => [c.env, c])
+  );
+
+  // 3️⃣ Update config
+  const updateQuery = `
+    mutation ($input: UpdateAppConfigInput!) {
+      UpdateAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: updateQuery,
+        variables: {
+          input: {
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify([...merged.values()]),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+
+  if (!res.ok || result.errors?.length) {
+    throw new Error(
+      result.errors?.[0]?.message ??
+        "Failed to update DocumentExtractionTasksSetting"
+    );
+  }
+}
+
 
 export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[]> {
   const query = `

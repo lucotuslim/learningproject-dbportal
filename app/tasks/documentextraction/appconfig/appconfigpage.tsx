@@ -11,7 +11,7 @@ import {
 import { AppConfigForm } from "./appconfigform";
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button";
-
+import {AddDocumentExtractionTasksSetting} from "../appconfig";
 export default function AppConfigPage() {
   const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
   const [SelectedConfig, setSelectedConfig] = useState<IDocumentConfig | null>(null);
@@ -82,14 +82,11 @@ export default function AppConfigPage() {
       <div className="flex-1 space-y-2">
         <AppConfigForm
           row={isAdding ? null : SelectedConfig}
-          onSave={async (id, values) => {
-            if (id) {
-              // UPDATE existing
-              //await SelectedConfig(id, values)
-            } else {
-              console.log ('ADD new', values)
+          onSave={async (config) => {
+            if (config && typeof config === 'object') {
+              await AddDocumentExtractionTasksSetting(config)
+              setIsAdding(false)
             }
-            setIsAdding(false)
           }}
           onAddCancel={() => setIsAdding(false)}
         />
