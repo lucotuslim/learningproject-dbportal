@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { useEffect, useState } from "react";
 import { IDocumentConfig } from "../interfaces";
@@ -84,7 +85,10 @@ export default function AppConfigPage() {
           row={isAdding ? null : SelectedConfig}
           onSave={async (config) => {
             if (config && typeof config === 'object') {
-              await AddDocumentExtractionTasksSetting(config)
+              const res = await AddDocumentExtractionTasksSetting(config)
+              toast.success(`Configuration saved successfully. response: ${JSON.stringify(res)}`);
+              const updatedconfig = await DocumentExtractionTasksSetting();
+              setDocumentConfig(updatedconfig);
               setIsAdding(false)
             }
           }}

@@ -19,18 +19,15 @@ const typeDefs = `#graphql
     configSection: String!
     configJson: String!
   }
-  input UpdateAppConfigInput {
-    configSection: String!
-    configJson: String!
-  }
 
   type Query {
     GetAppConfig(db: String!, config: String! ): [AppConfig!]!
   }
+
   type Mutation {
-    AddAppConfig(input: AddAppConfigInput!): AppConfig!
-    UpdateAppConfig(input: UpdateAppConfigInput!): AppConfig!
+    AddAppConfig(input: AddAppConfigInput!): AppConfig
   }
+
 `;
 
 // 🧠 Resolvers
@@ -75,7 +72,6 @@ const resolvers = {
   },
 
   Mutation: {
-    // ➕ Add new AppConfig
     AddAppConfig: async (
       _: unknown,
       { input }: { input: { configSection: string; configJson: string } }
@@ -90,10 +86,20 @@ const resolvers = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              // q: `
+              //   INSERT INTO dbo.AppConfig (ConfigSection, ConfigJson)
+              //   OUTPUT inserted.*
+              //   VALUES ('${configSection}', '${configJson}')
+              // `,
               q: `
-                INSERT INTO dbo.AppConfig (ConfigSection, ConfigJson)
-                OUTPUT inserted.*
-                VALUES ('${configSection}', '${configJson}')
+              UPDATE dbo.AppConfig
+              SET ConfigJson = JSON_MODIFY(
+                  ConfigJson,
+                  'append $',
+              JSON_QUERY('${configJson}')
+              )
+              OUTPUT inserted.*
+              WHERE ConfigSection = '${configSection}';
               `,
             }),
           }
@@ -107,50 +113,6 @@ const resolvers = {
         return json[0];
       } catch (err) {
         console.error("AddAppConfig error:", err);
-        throw err;
-      }
-    },
-
-    // ✏️ Update existing AppConfig
-    UpdateAppConfig: async (
-      _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
-    ) => {
-      const { configSection, configJson } = input;
-
-      try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
-              q: `
-                UPDATE dbo.AppConfig
-                SET
-                  ConfigJson = '${configJson}',
-                  UpdatedAt = sysutcdatetime()
-                OUTPUT inserted.*
-                WHERE ConfigSection = '${configSection}'
-              `,
-            }),
-          }
-        );
-
-        if (!res.ok) {
-          throw new Error(`UpdateAppConfig failed: ${res.statusText}`);
-        }
-
-        const json = await res.json();
-
-        if (json.length === 0) {
-          throw new Error("ConfigSection not found");
-        }
-
-        return json[0];
-      } catch (err) {
-        console.error("UpdateAppConfig error:", err);
         throw err;
       }
     },
