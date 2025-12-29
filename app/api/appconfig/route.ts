@@ -20,12 +20,18 @@ const typeDefs = `#graphql
     configJson: String!
   }
 
+  input DeleteAppConfigInput {
+    configSection: String!
+    configJson: String!
+  }
+
   type Query {
     GetAppConfig(db: String!, config: String! ): [AppConfig!]!
   }
 
   type Mutation {
     AddAppConfig(input: AddAppConfigInput!): AppConfig
+    DeleteAppConfig(input: DeleteAppConfigInput!): AppConfig
   }
 
 `;
@@ -86,11 +92,6 @@ const resolvers = {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               db: process.env.NEXT_PUBLIC_APPCONFIGDB,
-              // q: `
-              //   INSERT INTO dbo.AppConfig (ConfigSection, ConfigJson)
-              //   OUTPUT inserted.*
-              //   VALUES ('${configSection}', '${configJson}')
-              // `,
               q: `
               UPDATE dbo.AppConfig
               SET ConfigJson = JSON_MODIFY(
@@ -116,6 +117,49 @@ const resolvers = {
         throw err;
       }
     },
+
+    DeleteAppConfig: async (
+      _: unknown,
+      { input }: { input: { configSection: string; configJson: string } }
+    ) => {
+      const { configSection, configJson } = input;
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              q: `
+              UPDATE dbo.AppConfig
+              SET ConfigJson =
+              (
+                  SELECT
+                      '[' + STRING_AGG(value, ',') + ']'
+                  FROM OPENJSON(ConfigJson)
+                  WHERE JSON_VALUE(value, '$.env') <> '${JSON.parse(configJson).env}'
+              ),
+              UpdatedAt = SYSUTCDATETIME()
+              OUTPUT inserted.*
+              WHERE ConfigSection = 'DocumentExtractionTasksSetting';
+              `,
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`DeleteAppConfig failed: ${res.statusText}`);
+        }
+
+        const json = await res.json();
+        return json[0];
+      } catch (err) {
+        console.error("DeleteAppConfig error:", err);
+        throw err;
+      }
+    }
   },
 };
 

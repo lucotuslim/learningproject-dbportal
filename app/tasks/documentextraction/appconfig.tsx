@@ -3,6 +3,47 @@ import { IDocumentConfig } from "./interfaces";
 const CONFIG_SECTION = "DocumentExtractionTasksSetting";
 
 
+export async function DeleteDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+): Promise<{data: string}> {
+  
+  const deleteQuery = `
+    mutation ($input: DeleteAppConfigInput!) {
+      DeleteAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: deleteQuery,
+        variables: {
+          input: {
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify(config),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+  console.log("DeleteDocumentExtractionTasksSetting result:", result);
+  return result;
+    
+  if (!res.ok || result.errors?.length) {
+    throw new Error(
+      result.errors?.[0]?.message ??
+        "Failed to delete DocumentExtractionTasksSetting"
+    );
+  }
+}
+
 export async function AddDocumentExtractionTasksSetting(
   config: IDocumentConfig
 ): Promise<{data: string}> {
@@ -39,7 +80,7 @@ export async function AddDocumentExtractionTasksSetting(
   if (!res.ok || result.errors?.length) {
     throw new Error(
       result.errors?.[0]?.message ??
-        "Failed to update DocumentExtractionTasksSetting"
+        "Failed to add DocumentExtractionTasksSetting"
     );
   }
 }

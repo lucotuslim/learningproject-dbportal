@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
+import { DeleteDocumentExtractionTasksSetting, DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { useEffect, useState } from "react";
 import { IDocumentConfig } from "../interfaces";
 import {
@@ -44,17 +44,6 @@ export default function AppConfigPage() {
       {/* Left */}
       <div className="md:w-1/4 space-y-2">
         <Label htmlFor="environment">Select Environment</Label>
-
-        <Button
-          size="sm"
-          className="mt-2 w-full"
-          onClick={() => {
-            setIsAdding(true)
-            setSelectedConfig(null)
-          }}
-        >
-          + Add Environment
-        </Button>
         <Select
           disabled={isAdding}
           onValueChange={(env) => {
@@ -76,6 +65,39 @@ export default function AppConfigPage() {
             ))}
           </SelectContent>
         </Select>
+
+
+        <Button
+          size="sm"
+          className="mt-2 w-full"
+          onClick={() => {
+            setIsAdding(true)
+            setSelectedConfig(null)
+          }}
+        >
+          + Add Environment
+        </Button>
+
+        <Button
+          variant="destructive"
+          disabled={!SelectedConfig || isAdding}
+          size="sm"
+          className="mt-2 w-full"
+          onClick={() => {
+            setIsAdding(false)
+            DeleteDocumentExtractionTasksSetting(SelectedConfig!).then(async () => {
+              toast.success(`Configuration deleted successfully.`);
+              const updatedconfig = await DocumentExtractionTasksSetting();
+              setDocumentConfig(updatedconfig);
+              setSelectedConfig(null);
+            }).catch((error) => {
+              toast.error(`Failed to delete configuration. Error: ${error.message}`);
+            });
+          }}
+        >
+        - Delete Environment
+        </Button>
+        
       </div>
 
       {/* Right */}
