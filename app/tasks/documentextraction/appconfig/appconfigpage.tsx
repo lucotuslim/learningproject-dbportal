@@ -83,7 +83,7 @@ export default function AppConfigPage() {
       <div className="flex-1 space-y-2">
         <AppConfigForm
           row={isAdding ? null : SelectedConfig}
-          onSave={async (config) => {
+          onSaveAction={async (config) => {
             if (config && typeof config === 'object') {
               const res = await AddDocumentExtractionTasksSetting(config)
               toast.success(`Configuration saved successfully. response: ${JSON.stringify(res)}`);
@@ -92,7 +92,7 @@ export default function AppConfigPage() {
               setIsAdding(false)
             }
           }}
-          onAddCancel={() => setIsAdding(false)}
+          onAddCancelAction={() => setIsAdding(false)}
         />
       </div>
 

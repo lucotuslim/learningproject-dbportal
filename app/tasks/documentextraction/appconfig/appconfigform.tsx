@@ -46,12 +46,12 @@ type FormValues = z.infer<typeof schema>
 
 export function AppConfigForm({
   row,
-  onSave,
-  onAddCancel,
+  onSaveAction,
+  onAddCancelAction,
 }: {
   row: IDocumentConfig | null
-  onSave: (config: IDocumentConfig) => Promise<void>
-  onAddCancel?: () => void
+  onSaveAction: (config: IDocumentConfig) => Promise<void>
+  onAddCancelAction?: () => void
 }) {
   const isAddMode = row === null
   const [isEditing, setIsEditing] = useState(isAddMode)
@@ -94,10 +94,10 @@ export function AppConfigForm({
   }, [row, form, defaultValues])
 
   const onSubmit = async (values: FormValues) => {
-    await onSave(values)
+    await onSaveAction(values)
     if (isAddMode) {
       form.reset()
-      onAddCancel?.()
+      onAddCancelAction?.()
     } else {
       setIsEditing(false)
     }
@@ -105,7 +105,7 @@ export function AppConfigForm({
 
   const onCancel = () => {
     if (isAddMode) {
-      onAddCancel?.()
+      onAddCancelAction?.()
     } else {
       form.reset()
       setIsEditing(false)
@@ -343,6 +343,16 @@ export function AppConfigForm({
             >
               {isAddMode ? "Add" : "Save"}
             </Button>
+
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={onCancel}
+            >
+              Cancel
+            </Button>
+            
             <Button
               type="button"
               size="sm"
