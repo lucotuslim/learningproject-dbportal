@@ -2,6 +2,40 @@
 import { IDocumentConfig } from "./interfaces";
 const CONFIG_SECTION = "DocumentExtractionTasksSetting";
 
+export async function UpdateDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+) :Promise<{data: string}>{
+  
+  const updateQuery = `
+    mutation ($input: UpdateAppConfigInput!) {
+      UpdateAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: updateQuery,
+        variables: {
+          input: {
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify(config),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+  console.log("UpdateDocumentExtractionTasksSetting result:", result);
+  return result;
+}
+
 
 export async function DeleteDocumentExtractionTasksSetting(
   config: IDocumentConfig

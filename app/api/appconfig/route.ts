@@ -25,6 +25,11 @@ const typeDefs = `#graphql
     configJson: String!
   }
 
+  input UpdateAppConfigInput {
+    configSection: String!
+    configJson: String!
+  }
+
   type Query {
     GetAppConfig(db: String!, config: String! ): [AppConfig!]!
   }
@@ -32,6 +37,7 @@ const typeDefs = `#graphql
   type Mutation {
     AddAppConfig(input: AddAppConfigInput!): AppConfig
     DeleteAppConfig(input: DeleteAppConfigInput!): AppConfig
+    UpdateAppConfig(input: UpdateAppConfigInput!): AppConfig
   }
 
 `;
@@ -143,7 +149,7 @@ const resolvers = {
               ),
               UpdatedAt = SYSUTCDATETIME()
               OUTPUT inserted.*
-              WHERE ConfigSection = 'DocumentExtractionTasksSetting';
+              WHERE ConfigSection = '${configSection}';
               `,
             }),
           }
@@ -159,8 +165,69 @@ const resolvers = {
         console.error("DeleteAppConfig error:", err);
         throw err;
       }
-    }
+    },
+
+    UpdateAppConfig: async (
+      _: unknown,
+      { input }: { input: { configSection: string; configJson: string } }
+    ) => {
+      const { configSection, configJson } = input;
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              q: `
+            DECLARE @ConfigSection NVARCHAR(100) = '${configSection}';
+            DECLARE @ConfigJson NVARCHAR(MAX) = N'${configJson}';
+
+            UPDATE ac
+            SET ConfigJson =
+              JSON_MODIFY(
+                ac.ConfigJson,
+                CONCAT('$[', j.[key], ']'),
+                JSON_QUERY(@ConfigJson)
+              ),
+              UpdatedAt = SYSUTCDATETIME()
+            OUTPUT inserted.*
+            FROM dbo.AppConfig ac
+            CROSS APPLY OPENJSON(ac.ConfigJson) j
+            WHERE ac.ConfigSection = @ConfigSection
+              AND JSON_VALUE(j.value, '$.env') = JSON_VALUE(@ConfigJson, '$.env');
+              `,
+            }),
+          }
+        );
+
+        if (!res.ok) {
+          throw new Error(`DeleteAppConfig failed: ${res.statusText}`);
+        }
+
+        const json = await res.json();
+        return json[0];
+      } catch (err) {
+        console.error("DeleteAppConfig error:", err);
+        throw err;
+      }
+    },
+
+
+
+
+
+
+    
   },
+
+
+
+
+
+  
 };
 
 // 🧠 Apollo Server

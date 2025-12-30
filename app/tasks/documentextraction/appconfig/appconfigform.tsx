@@ -54,9 +54,13 @@ export function AppConfigForm({
   onAddCancelAction?: () => void
 }) {
   const isAddMode = row === null
-  const [isEditing, setIsEditing] = useState(isAddMode)
-  console.log("row:", row);
-  const defaultValues: IDocumentConfig  = useMemo<IDocumentConfig> (() => ({
+  const [isEditing, setIsEditing] = useState<boolean>(isAddMode)
+  useEffect( () => { 
+    setIsEditing(isAddMode)
+  }, [isAddMode])
+  
+  // console.log("row:", row);
+  const defaultValues: IDocumentConfig = useMemo<IDocumentConfig>(() => ({
     env: "",
     GetDocApiToken: {
       Url: "",
@@ -77,7 +81,7 @@ export function AppConfigForm({
       Method: "GET",
       ContentType: "application/json",
     },
-  } ) , [])
+  }), [])
 
   const form = useForm<IDocumentConfig>({
     resolver: zodResolver(schema),
@@ -148,7 +152,7 @@ export function AppConfigForm({
               <FormControl>
                 <Input {...field} disabled={!isEditing} placeholder="Token URL" />
               </FormControl>
-                    <FormMessage />
+              <FormMessage />
             </FormItem>
           )}
         />
@@ -325,44 +329,40 @@ export function AppConfigForm({
           )}
         />
         {/* Actions */}
-        {!isEditing && !isAddMode ? (
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => setIsEditing(true)}
-          >
-            Edit
-          </Button>
-        ) : (
-          <div className="flex gap-2">
-            <Button
-              type="submit"
-              size="sm"
-              disabled={!form.formState.isDirty}
-            >
-              {isAddMode ? "Add" : "Save"}
-            </Button>
 
+        <div className="col-span-6 flex gap-2">
+          {!isEditing && !isAddMode ? (
             <Button
               type="button"
               size="sm"
-              variant="ghost"
-              onClick={onCancel}
+              variant="outline"
+              onClick={() => setIsEditing(true)}
             >
-              Cancel
+              Edit
             </Button>
-            
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          </div>
-        )}
+          ) : (
+            <>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={!form.formState.isDirty}
+              >
+                {isAddMode ? "Add" : "Save"}
+              </Button>
+
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                onClick={onCancel}
+              >
+                Cancel
+              </Button>
+            </>
+          )}
+        </div>
+
+
       </form>
     </Form>
   )

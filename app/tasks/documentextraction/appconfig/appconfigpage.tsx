@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { DeleteDocumentExtractionTasksSetting, DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
+import { UpdateDocumentExtractionTasksSetting,DeleteDocumentExtractionTasksSetting, DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { useEffect, useState } from "react";
 import { IDocumentConfig } from "../interfaces";
 import {
@@ -30,6 +30,24 @@ export default function AppConfigPage() {
     loadConfig();
   }, []);
 
+  const handleSaveConfig = async (config: IDocumentConfig) => {
+  try {
+    if (SelectedConfig) {
+      await UpdateDocumentExtractionTasksSetting(config);
+      toast.success("Configuration updated successfully.")
+    } else {
+      await AddDocumentExtractionTasksSetting(config)
+      toast.success("Configuration added successfully.")
+    }
+    const updated = await DocumentExtractionTasksSetting()
+    setDocumentConfig(updated)
+    setSelectedConfig(config)
+    setIsAdding(false)
+  } catch (err: unknown) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    toast.error(`Failed to save configuration: ${errorMessage}`)
+  }
+}
 
   if (isConfigLoading) {
     return (
@@ -65,7 +83,6 @@ export default function AppConfigPage() {
             ))}
           </SelectContent>
         </Select>
-
 
         <Button
           size="sm"
@@ -105,19 +122,10 @@ export default function AppConfigPage() {
       <div className="flex-1 space-y-2">
         <AppConfigForm
           row={isAdding ? null : SelectedConfig}
-          onSaveAction={async (config) => {
-            if (config && typeof config === 'object') {
-              const res = await AddDocumentExtractionTasksSetting(config)
-              toast.success(`Configuration saved successfully. response: ${JSON.stringify(res)}`);
-              const updatedconfig = await DocumentExtractionTasksSetting();
-              setDocumentConfig(updatedconfig);
-              setIsAdding(false)
-            }
-          }}
+          onSaveAction={handleSaveConfig}
           onAddCancelAction={() => setIsAdding(false)}
         />
       </div>
-
     </div>
   );
 }
