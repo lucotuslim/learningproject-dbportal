@@ -143,7 +143,10 @@ const resolvers = {
               SET ConfigJson =
               (
                   SELECT
-                      '[' + STRING_AGG(value, ',') + ']'
+                  ISNULL(
+                '[' + STRING_AGG(value, ',') + ']',
+                '[]'
+                )
                   FROM OPENJSON(ConfigJson)
                   WHERE JSON_VALUE(value, '$.env') <> '${JSON.parse(configJson).env}'
               ),
