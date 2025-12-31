@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import {AddDocumentExtractionTasksSetting} from "../appconfig";
 export default function AppConfigPage() {
   const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
-  const [SelectedConfig, setSelectedConfig] = useState<IDocumentConfig | null>(null);
+  const [SelectedConfig, setSelectedConfig] = useState<IDocumentConfig| null >(null);
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [isAdding, setIsAdding] = useState(false)
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function AppConfigPage() {
         <Select
           disabled={isAdding}
           onValueChange={(env) => {
-            const config = DocumentConfig.find(c => c.env === env) || null
+            const config = DocumentConfig.find(c => c.env === env) || null;
             setSelectedConfig(config)
           }}
         >
@@ -121,9 +121,13 @@ export default function AppConfigPage() {
 
       <div className="flex-1 space-y-2">
         <AppConfigForm
-          row={isAdding ? null : SelectedConfig}
+          row={SelectedConfig}
+          isAddMode={isAdding}
           onSaveAction={handleSaveConfig}
-          onAddCancelAction={() => setIsAdding(false)}
+          onAddCancelAction={() => { 
+            setIsAdding(false)
+            //setSelectedConfig(null)
+          }}
         />
       </div>
     </div>

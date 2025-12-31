@@ -1,6 +1,6 @@
 "use client"
 import { IDocumentConfig } from "../interfaces";
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -46,19 +46,21 @@ type FormValues = z.infer<typeof schema>
 
 export function AppConfigForm({
   row,
+  isAddMode,
   onSaveAction,
   onAddCancelAction,
 }: {
-  row: IDocumentConfig | null
+  row?: IDocumentConfig | null,
+  isAddMode: boolean, 
   onSaveAction: (config: IDocumentConfig) => Promise<void>
   onAddCancelAction?: () => void
 }) {
-  const isAddMode = row === null
-  const [isEditing, setIsEditing] = useState<boolean>(isAddMode)
-  useEffect( () => { 
-    setIsEditing(isAddMode)
-  }, [isAddMode])
-  
+  const [isEditing, setIsEditing] = useState<boolean>(false)
+  useEffect(() => {
+    if (isAddMode) {
+      setIsEditing(true)
+    }
+  }, [isAddMode]) 
   // console.log("row:", row);
   const defaultValues: IDocumentConfig = useMemo<IDocumentConfig>(() => ({
     env: "",
@@ -90,8 +92,10 @@ export function AppConfigForm({
   })
 
   useEffect(() => {
-    if (row) {
-      form.reset(row)
+    // if ( typeof row === "object" ) {
+    //   form.reset(row)
+    if (schema.safeParse(row).success) {
+      form.reset(row as IDocumentConfig)
     } else {
       form.reset(defaultValues)
     }
@@ -100,7 +104,7 @@ export function AppConfigForm({
   const onSubmit = async (values: FormValues) => {
     await onSaveAction(values)
     if (isAddMode) {
-      form.reset()
+      form.reset(values)
       onAddCancelAction?.()
     } else {
       setIsEditing(false)
@@ -109,6 +113,7 @@ export function AppConfigForm({
 
   const onCancel = () => {
     if (isAddMode) {
+      setIsEditing(false)
       onAddCancelAction?.()
     } else {
       form.reset()
@@ -121,217 +126,224 @@ export function AppConfigForm({
       <form className="grid grid-cols-[200px_1fr] gap-x-4 gap-y-3 items-center"
         onSubmit={form.handleSubmit(onSubmit)}
       >
-        <div className="col-span-6 font-medium text-sm text-muted-foreground">
-          GetDocApiToken
-        </div>
 
-        <FormLabel className="text-left col-span-1">
-          Environment
-        </FormLabel>
-        <FormField
-          control={form.control}
-          name="env"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="Environment (e.g. dev / staging / prod)"
-                  disabled={!isAddMode} />
-              </FormControl>
-            </FormItem>
-          )}
-        />
+        {(isAddMode || row != null) && (
+          <> 
+            <FormLabel className="text-left col-span-1">
+              Environment
+            </FormLabel>
+            <FormField
+              control={form.control}
+              name="env"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input
+                      {...field}
+                      placeholder="Environment (e.g. dev / staging / prod)"
+                      disabled={!isAddMode} />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
 
-        <FormLabel className="text-left col-span-1" >Get Token URL</FormLabel>
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.Url"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Token URL" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Get Token Method</FormLabel>
+            <div className="col-span-6 font-medium text-sm text-muted-foreground">
+              GetDocApiToken
+            </div>
 
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.Method"
-          render={({ field }) => (
-            <FormItem className="col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Token Method" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Get Token Content Type</FormLabel>
+            <FormLabel className="text-left col-span-1" >Get Token URL</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.Url"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Token URL" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Get Token Method</FormLabel>
 
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.ContentType"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Content Type" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Token GrantType</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.Method"
+              render={({ field }) => (
+                <FormItem className="col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Token Method" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Get Token Content Type</FormLabel>
 
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.GrantType"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="GrantType" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Token ClientId</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.ContentType"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Content Type" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Token GrantType</FormLabel>
 
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.ClientId"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="ClientId" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Token Scope</FormLabel>
-        <FormField
-          control={form.control}
-          name="GetDocApiToken.Scope"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Token Scope" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.GrantType"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="GrantType" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Token ClientId</FormLabel>
 
-        <div className="col-span-6 font-medium text-sm text-muted-foreground">
-          SendDocBulkExport
-        </div>
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.ClientId"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="ClientId" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Token Scope</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocApiToken.Scope"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Token Scope" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormLabel className="text-left col-span-1">Url</FormLabel>
-        <FormField
-          control={form.control}
-          name="SendDocBulkExport.Url"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Url" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">Method</FormLabel>
-        <FormField
-          control={form.control}
-          name="SendDocBulkExport.Method"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Method" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">ContentType</FormLabel>
-        <FormField
-          control={form.control}
-          name="SendDocBulkExport.ContentType"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="ContentType" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormLabel className="text-left col-span-1">sftpHostName</FormLabel>
-        <FormField
-          control={form.control}
-          name="SendDocBulkExport.sftpHostName"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="sftpHostName" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="col-span-6 font-medium text-sm text-muted-foreground">
+              SendDocBulkExport
+            </div>
 
-        <div className="col-span-6 font-medium text-sm text-muted-foreground">
-          GetDocBulkExportStatus
-        </div>
+            <FormLabel className="text-left col-span-1">Url</FormLabel>
+            <FormField
+              control={form.control}
+              name="SendDocBulkExport.Url"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Url" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">Method</FormLabel>
+            <FormField
+              control={form.control}
+              name="SendDocBulkExport.Method"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Method" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">ContentType</FormLabel>
+            <FormField
+              control={form.control}
+              name="SendDocBulkExport.ContentType"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="ContentType" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormLabel className="text-left col-span-1">sftpHostName</FormLabel>
+            <FormField
+              control={form.control}
+              name="SendDocBulkExport.sftpHostName"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="sftpHostName" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormLabel className="text-left col-span-1">Url</FormLabel>
-        <FormField
-          control={form.control}
-          name="GetDocBulkExportStatus.Url"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Url" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <div className="col-span-6 font-medium text-sm text-muted-foreground">
+              GetDocBulkExportStatus
+            </div>
 
-        <FormLabel className="text-left col-span-1">Method</FormLabel>
-        <FormField
-          control={form.control}
-          name="GetDocBulkExportStatus.Method"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="Method" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormLabel className="text-left col-span-1">Url</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocBulkExportStatus.Url"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Url" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormLabel className="text-left col-span-1">ContentType</FormLabel>
-        <FormField
-          control={form.control}
-          name="GetDocBulkExportStatus.ContentType"
-          render={({ field }) => (
-            <FormItem className="text-left col-span-5">
-              <FormControl>
-                <Input {...field} disabled={!isEditing} placeholder="ContentType" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormLabel className="text-left col-span-1">Method</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocBulkExportStatus.Method"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="Method" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormLabel className="text-left col-span-1">ContentType</FormLabel>
+            <FormField
+              control={form.control}
+              name="GetDocBulkExportStatus.ContentType"
+              render={({ field }) => (
+                <FormItem className="text-left col-span-5">
+                  <FormControl>
+                    <Input {...field} disabled={!isEditing} placeholder="ContentType" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        ) }
+
         {/* Actions */}
 
         <div className="col-span-6 flex gap-2">
-          {!isEditing && !isAddMode ? (
+          {/* {!isEditing && !isAddMode ? ( */}
+            {row && !isEditing && !isAddMode && (
             <Button
               type="button"
               size="sm"
@@ -340,7 +352,10 @@ export function AppConfigForm({
             >
               Edit
             </Button>
-          ) : (
+          )
+        }
+          
+        { isEditing && (
             <>
               <Button
                 type="submit"
@@ -349,7 +364,6 @@ export function AppConfigForm({
               >
                 {isAddMode ? "Add" : "Save"}
               </Button>
-
               <Button
                 type="button"
                 size="sm"
@@ -359,10 +373,10 @@ export function AppConfigForm({
                 Cancel
               </Button>
             </>
-          )}
+         )
+       
+          }
         </div>
-
-
       </form>
     </Form>
   )
