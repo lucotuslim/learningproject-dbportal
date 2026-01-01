@@ -2,7 +2,7 @@
 
 import * as React from "react"
 
-import { NavConfiguration } from "@/components/nav-configuration"
+// import { NavConfiguration } from "@/components/nav-configuration"
 
 //import { NavUser } from "@/components/nav-user"
 
