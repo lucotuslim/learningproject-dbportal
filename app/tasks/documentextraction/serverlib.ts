@@ -1,5 +1,5 @@
 'use server';
-import { getApiToken } from "@/lib/utils";
+import { getApiToken } from "@/lib/serverutils";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
 import {IDocBulkExportStatus} from "./interfaces"
@@ -20,9 +20,12 @@ export async function checkexportStatus(
     Method: currentconfig.GetDocApiToken.Method,
     ContentType: currentconfig.GetDocApiToken.ContentType,
     GrantType: currentconfig.GetDocApiToken.GrantType,
-    ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-    Scope: process.env.NEXT_PUBLIC_DocApiScope!,
-    ClientSecret: process.env.DocApiClientSecret!,
+    ClientId: currentconfig.GetDocApiToken.ClientId,
+    Scope: currentconfig.GetDocApiToken.Scope,
+    ClientSecret: process.env.DocApiClientSecret!
+    // ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+    // Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+    // ClientSecret: process.env.DocApiClientSecret!,
   });
 
 //     console.log (   ({

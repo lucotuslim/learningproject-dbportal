@@ -1,4 +1,126 @@
+"use server";
 import { IDocumentConfig } from "./interfaces";
+const CONFIG_SECTION = "DocumentExtractionTasksSetting";
+const APPCONFIGDB="AdminDB"
+export async function UpdateDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+) :Promise<{data: string}>{
+  
+  const updateQuery = `
+    mutation ($input: UpdateAppConfigInput!) {
+      UpdateAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: updateQuery,
+        variables: {
+          input: {
+            db: APPCONFIGDB,
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify(config),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+  console.log("UpdateDocumentExtractionTasksSetting result:", result);
+  return result;
+}
+
+
+export async function DeleteDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+): Promise<{data: string}> {
+  
+  const deleteQuery = `
+    mutation ($input: DeleteAppConfigInput!) {
+      DeleteAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: deleteQuery,
+        variables: {
+          input: {
+            db: APPCONFIGDB,
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify(config),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+  console.log("DeleteDocumentExtractionTasksSetting result:", result);
+  return result;
+    
+  if (!res.ok || result.errors?.length) {
+    throw new Error(
+      result.errors?.[0]?.message ??
+        "Failed to delete DocumentExtractionTasksSetting"
+    );
+  }
+}
+
+export async function AddDocumentExtractionTasksSetting(
+  config: IDocumentConfig
+): Promise<{data: string}> {
+  
+  const addQuery = `
+    mutation ($input: AddAppConfigInput!) {
+      AddAppConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        query: addQuery,
+        variables: {
+          input: {
+            db: APPCONFIGDB,
+            configSection: CONFIG_SECTION,
+            configJson: JSON.stringify(config),
+          },
+        },
+      }),
+    }
+  );
+
+  const result = await res.json();
+  console.log("AddDocumentExtractionTasksSetting result:", result);
+  return result;
+    
+  if (!res.ok || result.errors?.length) {
+    throw new Error(
+      result.errors?.[0]?.message ??
+        "Failed to add DocumentExtractionTasksSetting"
+    );
+  }
+}
 
 export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[]> {
   const query = `
@@ -10,7 +132,7 @@ export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[
   `;
 
   const variables = {
-    db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+    db: APPCONFIGDB,
     config: "DocumentExtractionTasksSetting",
   };
 

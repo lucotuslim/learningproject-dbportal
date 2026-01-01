@@ -36,5 +36,5 @@ export interface IApiTokenParams {
   GrantType: string;
   ClientId: string;
   Scope: string;
-  ClientSecret: string;
+  ClientSecret?: string;
 }

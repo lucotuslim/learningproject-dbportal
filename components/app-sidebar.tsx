@@ -25,7 +25,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <EnvironmentSwitcher environments={AppConfig.environments} /> 
       </SidebarHeader>
       <SidebarContent>
-        <NavConfiguration items={AppConfig.navConfiguration} />
+        {/* <NavConfiguration items={AppConfig.navConfiguration} /> */}
         <NavManagements managements={AppConfig.NavManagements} />
         <NavTasks tasks={AppConfig.tasks} />
       </SidebarContent>

@@ -1,37 +1,37 @@
-import { apiSetting } from '@/config/apisetting';
-import { ApiInterface } from '@/interfaces/generic';
-import { switchMap,  map, of } from 'rxjs';
-import { fromFetch } from 'rxjs/fetch';
+// import { apiSetting } from '@/config/apisetting';
+// import { ApiInterface } from '@/interfaces/generic';
+// import { switchMap,  map, of } from 'rxjs';
+// import { fromFetch } from 'rxjs/fetch';
 
-export function ApiRequestRxjs<T>(fetchUrl: string, apitype:string,
-  options?: RequestInit) {
-  return fromFetch(fetchUrl, options).pipe(
-    switchMap(response => {
-      if (!response.ok) {
-       // return throwError(() => new Error(`API error: ${response.status}`));
+// export function ApiRequestRxjs<T>(fetchUrl: string, apitype:string,
+//   options?: RequestInit) {
+//   return fromFetch(fetchUrl, options).pipe(
+//     switchMap(response => {
+//       if (!response.ok) {
+//        // return throwError(() => new Error(`API error: ${response.status}`));
       
-      }
-      //return response.json() as Promise<ApiInterface<T>>;
+//       }
+//       //return response.json() as Promise<ApiInterface<T>>;
 
-return response.json().then((json) => ({
-        ...json,
-        apitype: apitype 
-      })) as Promise<ApiInterface<T> & { UrlType?: string }>;
+// return response.json().then((json) => ({
+//         ...json,
+//         apitype: apitype 
+//       })) as Promise<ApiInterface<T> & { UrlType?: string }>;
 
-    })
-  );
-}
+//     })
+//   );
+// }
 
-export function getApiEndpoint(servername: string, type: string) {
-  const setting = apiSetting.find((entry) => entry.type === type);
-  if (!setting) {
-    throw new Error(`API type "${type}" not found in apiSetting`);
-  }
-  const endpoint = setting.endpoint;
-  return of(servername).pipe(
-    map((name) => ({
-      Servername: name,
-      ServerUrl: `http://${name}api:3000/api/${endpoint}`,
-    }))
-  );
-}
+// export function getApiEndpoint(servername: string, type: string) {
+//   const setting = apiSetting.find((entry) => entry.type === type);
+//   if (!setting) {
+//     throw new Error(`API type "${type}" not found in apiSetting`);
+//   }
+//   const endpoint = setting.endpoint;
+//   return of(servername).pipe(
+//     map((name) => ({
+//       Servername: name,
+//       ServerUrl: `http://${name}api:3000/api/${endpoint}`,
+//     }))
+//   );
+// }

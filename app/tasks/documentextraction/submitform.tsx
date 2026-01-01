@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label";
 import { CardContent, CardFooter } from "@/components/ui/card";
 import { toast } from "sonner";
 import { addDocExportOutput, fetchNamespace, fetchDocuments } from "./serverlib";
-import { TokenResponse } from "@/lib//utils"
 import { encryptString } from "@/lib/serverutils"
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import {
@@ -24,6 +23,7 @@ import {
 import { IDocumentConfig } from "./interfaces"
 import { chunkArray } from '@/lib/serverutils'
 import { useGlobalSetting } from "@/lib/store";
+import { getApiToken } from "@/lib/serverutils"
 
 const formSchema = z.object({
   env: z.string().min(1, "Environment is required"),
@@ -81,12 +81,33 @@ export default function SubmitForm() {
       const documents: { DocumentGUID: string }[] = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
 
-      const tokenres = await fetch("/api/getapitoken", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ env: values.env }),
-      })
-      const token = await tokenres.json() as TokenResponse
+      // const tokenres = await fetch("/api/getapitoken", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ env: values.env }),
+      // })
+      // const token = await tokenres.json() as TokenResponse
+      const currentconfig = DocumentConfig.find( (e)  => e.env===values.env)
+      console.log (JSON.stringify(currentconfig));
+      
+      const token =  await getApiToken({
+    Url: currentconfig!.GetDocApiToken.Url,
+    Method: currentconfig!.GetDocApiToken.Method,
+    ContentType: currentconfig!.GetDocApiToken.ContentType,
+    GrantType: currentconfig!.GetDocApiToken.GrantType,
+    ClientId: currentconfig!.GetDocApiToken.ClientId,
+    Scope: currentconfig!.GetDocApiToken.Scope,
+  });
+
+  //       const token = await getApiToken({
+  //   Url: currentconfig.GetDocApiToken.Url,
+  //   Method: currentconfig.GetDocApiToken.Method,
+  //   ContentType: currentconfig.GetDocApiToken.ContentType,
+  //   GrantType: currentconfig.GetDocApiToken.GrantType,
+  //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+  //   Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+  //   ClientSecret: process.env.DocApiClientSecret!,
+  // });
 
       const BATCH_SIZE = 50000;
       const batches = await chunkArray(documents, BATCH_SIZE);
