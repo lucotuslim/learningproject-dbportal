@@ -20,9 +20,12 @@ export async function checkexportStatus(
     Method: currentconfig.GetDocApiToken.Method,
     ContentType: currentconfig.GetDocApiToken.ContentType,
     GrantType: currentconfig.GetDocApiToken.GrantType,
-    ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-    Scope: process.env.NEXT_PUBLIC_DocApiScope!,
-    ClientSecret: process.env.DocApiClientSecret!,
+    ClientId: currentconfig.GetDocApiToken.ClientId,
+    Scope: currentconfig.GetDocApiToken.Scope,
+    ClientSecret: process.env.DocApiClientSecret!
+    // ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+    // Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+    // ClientSecret: process.env.DocApiClientSecret!,
   });
 
 //     console.log (   ({

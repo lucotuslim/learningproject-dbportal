@@ -1,7 +1,7 @@
 "use server";
 import { IDocumentConfig } from "./interfaces";
 const CONFIG_SECTION = "DocumentExtractionTasksSetting";
-
+const APPCONFIGDB="AdminDB"
 export async function UpdateDocumentExtractionTasksSetting(
   config: IDocumentConfig
 ) :Promise<{data: string}>{
@@ -23,6 +23,7 @@ export async function UpdateDocumentExtractionTasksSetting(
         query: updateQuery,
         variables: {
           input: {
+            db: APPCONFIGDB,
             configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
@@ -58,6 +59,7 @@ export async function DeleteDocumentExtractionTasksSetting(
         query: deleteQuery,
         variables: {
           input: {
+            db: APPCONFIGDB,
             configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
@@ -99,6 +101,7 @@ export async function AddDocumentExtractionTasksSetting(
         query: addQuery,
         variables: {
           input: {
+            db: APPCONFIGDB,
             configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
@@ -129,7 +132,7 @@ export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[
   `;
 
   const variables = {
-    db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+    db: APPCONFIGDB,
     config: "DocumentExtractionTasksSetting",
   };
 

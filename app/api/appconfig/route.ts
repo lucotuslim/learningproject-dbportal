@@ -16,16 +16,19 @@ const typeDefs = `#graphql
   }
 
   input AddAppConfigInput {
+    db: String!
     configSection: String!
     configJson: String!
   }
 
   input DeleteAppConfigInput {
+    db: String!
     configSection: String!
     configJson: String!
   }
 
   input UpdateAppConfigInput {
+    db: String!
     configSection: String!
     configJson: String!
   }
@@ -86,9 +89,9 @@ const resolvers = {
   Mutation: {
     AddAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      { input }: { input: {db: string, configSection: string; configJson: string } }
     ) => {
-      const { configSection, configJson } = input;
+      const { db, configSection, configJson } = input;
 
       try {
         const res = await fetch(
@@ -97,7 +100,7 @@ const resolvers = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              db: db,
               q: `
               UPDATE dbo.AppConfig
               SET ConfigJson = JSON_MODIFY(
@@ -126,9 +129,9 @@ const resolvers = {
 
     DeleteAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      { input }: { input: { db: string,configSection: string; configJson: string } }
     ) => {
-      const { configSection, configJson } = input;
+      const { db,configSection, configJson } = input;
 
       try {
         const res = await fetch(
@@ -137,7 +140,7 @@ const resolvers = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              db: db,
               q: `
               UPDATE dbo.AppConfig
               SET ConfigJson =
@@ -172,9 +175,9 @@ const resolvers = {
 
     UpdateAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      { input }: { input: { db: string, configSection: string; configJson: string } }
     ) => {
-      const { configSection, configJson } = input;
+      const { db, configSection, configJson } = input;
 
       try {
         const res = await fetch(
@@ -183,7 +186,7 @@ const resolvers = {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
+              db: db,
               q: `
             DECLARE @ConfigSection NVARCHAR(100) = '${configSection}';
             DECLARE @ConfigJson NVARCHAR(MAX) = N'${configJson}';
@@ -218,19 +221,8 @@ const resolvers = {
       }
     },
 
-
-
-
-
-
-    
   },
-
-
-
-
-
-  
+ 
 };
 
 // 🧠 Apollo Server
