@@ -16,25 +16,28 @@ const typeDefs = `#graphql
   }
 
   input AddAppConfigInput {
+    server: String!
     db: String!
     configSection: String!
     configJson: String!
   }
 
   input DeleteAppConfigInput {
+    server: String!
     db: String!
     configSection: String!
     configJson: String!
   }
 
   input UpdateAppConfigInput {
+    server: String!
     db: String!
     configSection: String!
     configJson: String!
   }
 
   type Query {
-    GetAppConfig(db: String!, config: String! ): [AppConfig!]!
+    GetAppConfig(server: String!, db: String!, config: String! ): [AppConfig!]!
   }
 
   type Mutation {
@@ -50,15 +53,16 @@ const resolvers = {
   Query: {
     GetAppConfig: async (
       _: unknown,
-      { db, config }: { db: string; config: string }
+      { server, db, config }: {server: string; db: string; config: string }
     ) => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              server,
               db,
               q: `
                 SELECT
@@ -89,17 +93,18 @@ const resolvers = {
   Mutation: {
     AddAppConfig: async (
       _: unknown,
-      { input }: { input: {db: string, configSection: string; configJson: string } }
+      { input }: { input: {server: string, db: string, configSection: string; configJson: string } }
     ) => {
-      const { db, configSection, configJson } = input;
+      const {server, db, configSection, configJson } = input;
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              server: server,
               db: db,
               q: `
               UPDATE dbo.AppConfig
@@ -129,17 +134,18 @@ const resolvers = {
 
     DeleteAppConfig: async (
       _: unknown,
-      { input }: { input: { db: string,configSection: string; configJson: string } }
+      { input }: { input: { server: string, db: string,configSection: string; configJson: string } }
     ) => {
-      const { db,configSection, configJson } = input;
+      const { server, db,configSection, configJson } = input;
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              server: server,
               db: db,
               q: `
               UPDATE dbo.AppConfig
@@ -175,17 +181,18 @@ const resolvers = {
 
     UpdateAppConfig: async (
       _: unknown,
-      { input }: { input: { db: string, configSection: string; configJson: string } }
+      { input }: { input: { server: string, db: string, configSection: string; configJson: string } }
     ) => {
-      const { db, configSection, configJson } = input;
+      const { server, db, configSection, configJson } = input;
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
+              server: server,
               db: db,
               q: `
             DECLARE @ConfigSection NVARCHAR(100) = '${configSection}';

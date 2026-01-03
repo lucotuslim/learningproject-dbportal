@@ -1,20 +1,67 @@
-'use server';
+"use server";
 import { getApiToken } from "@/lib/serverutils";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
-import { DocBulkExportStatusParams, DocBulkExportStatusReportParams, ExportStatus, FailedDocument } from "./interfaces";
-import {IDocBulkExportStatus} from "./interfaces"
+import {
+  DocBulkExportStatusParams,
+  DocBulkExportStatusReportParams,
+  ExportStatus,
+  FailedDocument,
+} from "./interfaces";
+import { IDocBulkExportStatus } from "./interfaces";
+
+export async function getExtractionList() {
+  const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
+  const variables = { db: "DocumentManagement" };
+
+  try {
+    const res = await fetch(
+      `${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query, variables }),
+      }
+    );
+    const json = await res.json().catch(() => null);
+    if (!res.ok)
+      throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`);
+    if (json?.errors?.length) {
+      const msg = json.errors
+        .map((e: unknown) => {
+          if (typeof e === "object" && e !== null && "message" in e) {
+            return (e as { message?: string }).message ?? JSON.stringify(e);
+          }
+          return JSON.stringify(e);
+        })
+        .join("; ");
+      throw new Error(`GraphQL error: ${msg}`);
+    }
+    const items = json?.data?.docExportOutputs ?? [];
+    return items;
+  } catch (err: unknown) {
+    console.error("Query failed:", err);
+      throw err;
+  } finally {
+  }
+}
 
 export async function checkexportStatus(
   env: string,
   Namespace: string,
-  ExportGuid: string, 
+  ExportGuid: string,
   environment: string
 ) {
   const DocumentConfig = await DocumentExtractionTasksSetting();
-  const currentconfig = DocumentConfig.find( (e)  => e.env===env)
-  const namespace = await fetchNamespace("ServerInventory", Namespace, environment);
+  const currentconfig = DocumentConfig.find((e) => e.env === env);
+  const namespace = await fetchNamespace(
+    "ServerInventory",
+    Namespace,
+    environment
+  );
   const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
-  if (!currentconfig) {return}
+  if (!currentconfig) {
+    return;
+  }
   const token = await getApiToken({
     Url: currentconfig.GetDocApiToken.Url,
     Method: currentconfig.GetDocApiToken.Method,
@@ -22,74 +69,75 @@ export async function checkexportStatus(
     GrantType: currentconfig.GetDocApiToken.GrantType,
     ClientId: currentconfig.GetDocApiToken.ClientId,
     Scope: currentconfig.GetDocApiToken.Scope,
-    ClientSecret: process.env.DocApiClientSecret!
+    ClientSecret: process.env.DocApiClientSecret!,
     // ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
     // Scope: process.env.NEXT_PUBLIC_DocApiScope!,
     // ClientSecret: process.env.DocApiClientSecret!,
   });
 
-//     console.log (   ({
-//     Url: process.env.NEXT_PUBLIC_GetDocBulkExportStatusUrl!,
-//     Method: process.env.NEXT_PUBLIC_GetDocBulkExportStatusMethod!,
-//     Token: token.access_token,
-//     ContainerName: ContainerName,
-//     ContentType: process.env.NEXT_PUBLIC_GetDocBulkExportStatusContentType!,
-//     ExportGuid: ExportGuid,
-//   })
-//  ) 
-const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
+  //     console.log (   ({
+  //     Url: process.env.NEXT_PUBLIC_GetDocBulkExportStatusUrl!,
+  //     Method: process.env.NEXT_PUBLIC_GetDocBulkExportStatusMethod!,
+  //     Token: token.access_token,
+  //     ContainerName: ContainerName,
+  //     ContentType: process.env.NEXT_PUBLIC_GetDocBulkExportStatusContentType!,
+  //     ExportGuid: ExportGuid,
+  //   })
+  //  )
+  const getDocBulkExportStatusReport = await GetDocBulkExportStatusReport({
     Url: currentconfig.GetDocBulkExportStatus.Url,
     Method: currentconfig.GetDocBulkExportStatus.Method,
     Token: token.access_token,
     ContainerName: ContainerName,
     ContentType: currentconfig.GetDocBulkExportStatus.ContentType,
     ExportGuid: ExportGuid,
-  }); 
-  
-    console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
-    console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
-return getDocBulkExportStatusReport ;
-    // Open new tab for result page
-    //const newTab = window.open("./documentextraction/report", "_blank");
+  });
 
-    // Wait a bit for the new tab to load, then send data
-    // setTimeout(() => {
-    //   newTab?.postMessage({ type: "RESULT_DATA", payload: getDocBulkExportStatusReport }, "*");
-    // }, 500);
-  }
+  console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
+  console.log(
+    "Failed Documents:",
+    getDocBulkExportStatusReport.FailedDocuments
+  );
+  return getDocBulkExportStatusReport;
+  // Open new tab for result page
+  //const newTab = window.open("./documentextraction/report", "_blank");
 
+  // Wait a bit for the new tab to load, then send data
+  // setTimeout(() => {
+  //   newTab?.postMessage({ type: "RESULT_DATA", payload: getDocBulkExportStatusReport }, "*");
+  // }, 500);
+}
 
-export async function GetDocBulkExportStatus(params: DocBulkExportStatusParams): 
-Promise<IDocBulkExportStatus> {
+export async function GetDocBulkExportStatus(
+  params: DocBulkExportStatusParams
+): Promise<IDocBulkExportStatus> {
   const { Url, Method, Token, ContainerName, ContentType, ExportGuid } = params;
   try {
     const headers = new Headers({
       "Content-Type": ContentType,
-      "Authorization": `Bearer ${Token}`,
-      "ContainerName": ContainerName,
-      "exportGuid": ExportGuid
+      Authorization: `Bearer ${Token}`,
+      ContainerName: ContainerName,
+      exportGuid: ExportGuid,
     });
 
     const response = await fetch(Url, {
       method: Method,
-      headers
+      headers,
     });
 
-    const content :IDocBulkExportStatus=  await response.json()
+    const content: IDocBulkExportStatus = await response.json();
 
     if (!response.ok) {
       // Mimic PowerShell’s catch: capture HTTP error body
-      return (  {  message: response.statusText, error: true })
+      return { message: response.statusText, error: true };
       //throw new Error(content || `HTTP error: ${response.status}`);
     }
 
-    return {...content ,
-      error: false , 
-      message: ""
-    }
+    return { ...content, error: false, message: "" };
   } catch (error: unknown) {
-    return error instanceof Error ? {message: error.message, error : true } 
-      : {message: "", error : true } 
+    return error instanceof Error
+      ? { message: error.message, error: true }
+      : { message: "", error: true };
   }
 }
 
@@ -107,27 +155,35 @@ export async function GetDocBulkExportStatusReport(
       ContentType,
       ExportGuid,
     });
-    console.log ("Raw Response:", BulkExportStatusRes);
+    console.log("Raw Response:", BulkExportStatusRes);
     //const BulkExportStatusRes = JSON.parse(BulkExportStatusResRaw);
-//    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
+    //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
     if (BulkExportStatusRes.error !== true) {
-    const exportStatus = BulkExportStatusRes.apiResult!.exportStatus ?? {};
-    const failedDocuments = BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
+      const exportStatus = BulkExportStatusRes.apiResult!.exportStatus ?? {};
+      const failedDocuments =
+        BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
 
-    const ExportStatus: ExportStatus = {
-      exportComment: exportStatus.exportComment,
-      totalDocumentsCount: exportStatus.totalDocumentsCount,
-      processedDocumentPercentage: exportStatus.processedDocumentPercentage,
-      processedDocumentSuccessfulCount: exportStatus.processedDocumentSuccessfulCount,
-      processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
-    };
+      const ExportStatus: ExportStatus = {
+        exportComment: exportStatus.exportComment,
+        totalDocumentsCount: exportStatus.totalDocumentsCount,
+        processedDocumentPercentage: exportStatus.processedDocumentPercentage,
+        processedDocumentSuccessfulCount:
+          exportStatus.processedDocumentSuccessfulCount,
+        processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
+      };
 
-    return { ExportStatus, FailedDocuments: failedDocuments };
-    } else { 
-      throw new Error(`GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`);  
+      return { ExportStatus, FailedDocuments: failedDocuments };
+    } else {
+      throw new Error(
+        `GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`
+      );
     }
   } catch (error: unknown) {
-    throw new Error(`GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(
+      `GetDocBulkExportStatusReport: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
   }
 }
 
@@ -159,7 +215,11 @@ export async function GetDocBulkExportStatusReport(
 //   return await response.json();
 // }
 
-export async function fetchNamespace(db: string, namespace: string, environment: string) {
+export async function fetchNamespace(
+  db: string,
+  namespace: string,
+  environment: string
+) {
   const query = `
     query Namespace($db: String!, $namespace: String!) {
       namespace(db: $db, namespace: $namespace) {
@@ -172,7 +232,7 @@ export async function fetchNamespace(db: string, namespace: string, environment:
   `;
   const variables = { db, namespace };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/${environment}/dbaserver/MonolithConnectionStrings`,
+    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/MonolithConnectionStrings`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -188,7 +248,7 @@ export async function fetchNamespace(db: string, namespace: string, environment:
 }
 
 export async function fetchDocuments(servername: string, dbname: string) {
-const query = `
+  const query = `
 query Query($servername: String!, $db: String!) {
   GetDocumentListAll(servername: $servername, db: $db) {
     DocumentGUID
@@ -197,7 +257,7 @@ query Query($servername: String!, $db: String!) {
 `;
   const variables = { servername: servername, db: dbname };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/clientdb/getdocumentlistall`,
+    `${process.env.APPDAPIROOT}/api/prod/clientdb/getdocumentlistall`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -205,7 +265,7 @@ query Query($servername: String!, $db: String!) {
     }
   );
   const data = await res.json();
-  console.log (JSON.stringify(data));
+  console.log(JSON.stringify(data));
 
   if (data.errors) {
     console.error(data.errors);
@@ -259,7 +319,7 @@ export async function addDocExportOutput(
     },
   };
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`,
+    `${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

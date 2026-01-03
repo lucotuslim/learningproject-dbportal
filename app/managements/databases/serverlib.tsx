@@ -1,3 +1,4 @@
+"use server"
 export async function getNamespaces<T>(db:string, environment:string): Promise<T[]> {
   // Placeholder for actual implementation to fetch MongoDB server info
 
@@ -15,7 +16,7 @@ export async function getNamespaces<T>(db:string, environment:string): Promise<T
   const variables = { db };
   console.log("Fetching namespaces from db:", db, "in environment:", environment);
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/${environment}/dbaserver/MonolithConnectionStrings`,
+    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/MonolithConnectionStrings`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -49,7 +50,7 @@ export async function getNamespaces<T>(db:string, environment:string): Promise<T
 //   `;
 //   const variables = { db, namespace };
 //   const res = await fetch(
-//     `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/${environment}/dbaserver/MonolithConnectionStrings`,
+//     `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/MonolithConnectionStrings`,
 //     {
 //       method: "POST",
 //       headers: { "Content-Type": "application/json" },

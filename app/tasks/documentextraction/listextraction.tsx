@@ -5,7 +5,8 @@ import { IDocExportOutput } from "@/interfaces/documentextraction"
 import { checkexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
-import {decryptString} from "@/lib/serverutils"
+import { getExtractionList } from "@/app/tasks/documentextraction/serverlib";
+import { decryptString } from "@/lib/serverutils"
 import * as React from "react"
 import {
     ColumnDef,
@@ -43,63 +44,30 @@ import {
 import { useEffect, useState } from "react";
 
 // replace static data with GraphQL call
-export  function ListExtraction() {
+export function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
     const [error, setError] = React.useState<string | null>(null)
-    const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
-  const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
+    const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
+    const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
 
-  useEffect(() => {
-    const loadConfig = async () => {
-      const config = await DocumentExtractionTasksSetting();
-      console.log("DocumentExtractionTasksSetting result:", config);
-      console.log("Is array:", Array.isArray(config));
-      setDocumentConfig(config);
-    };
-    loadConfig();
-  }, []);
-  
-  
     useEffect(() => {
-        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
-        const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
-        const variables = { db: "DocumentManagement" };
-        let mounted = true
-        setLoading(true)
-        setError(null)
-            ; (async () => {
-                try {
-                    const res = await fetch(endpoint, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ query, variables }),
-                    })
-                    const json = await res.json().catch(() => null)
-                    if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
-                    if (json?.errors?.length) {
-                        const msg = json.errors.map((e: unknown) => {
-                            if (typeof e === "object" && e !== null && "message" in e) {
-                                return (e as { message?: string }).message ?? JSON.stringify(e);
-                            }
-                            return JSON.stringify(e);
-                        }).join("; ")
-                        throw new Error(`GraphQL error: ${msg}`)
-                    }
-                    const items = json?.data?.docExportOutputs ?? []
+        const loadConfig = async () => {
+            const config = await DocumentExtractionTasksSetting();
+            console.log("DocumentExtractionTasksSetting result:", config);
+            console.log("Is array:", Array.isArray(config));
+            setDocumentConfig(config);
+        };
+        loadConfig();
+    }, []);
 
-                    if (mounted) setData(items)
-                } catch (err: unknown) {
-                    console.error("Query failed:", err)
-                    if (mounted) setError(typeof err === "string" ? err : (err instanceof Error ? err.message : JSON.stringify(err)))
-                } finally {
-                    if (mounted) setLoading(false)
-                }
-            })()
-        return () => {
-            mounted = false
-        }
-    }, [])
+    useEffect(() => {
+        const loadData = async () => {
+            const res = await getExtractionList();
+            setData(res ?? []);
+        };
+        loadData();
+    }, []);
 
     const columns: ColumnDef<IDocExportOutput>[] = [
         {

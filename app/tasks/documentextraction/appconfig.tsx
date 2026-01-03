@@ -15,7 +15,7 @@ export async function UpdateDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -23,8 +23,9 @@ export async function UpdateDocumentExtractionTasksSetting(
         query: updateQuery,
         variables: {
           input: {
-            db: APPCONFIGDB,
-            configSection: CONFIG_SECTION,
+    server: process.env.APPCONFIGSERVER!,
+    db: process.env.APPCONFIGDB!,
+                configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -51,7 +52,7 @@ export async function DeleteDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -59,8 +60,10 @@ export async function DeleteDocumentExtractionTasksSetting(
         query: deleteQuery,
         variables: {
           input: {
-            db: APPCONFIGDB,
-            configSection: CONFIG_SECTION,
+            
+    server: process.env.APPCONFIGSERVER!,
+    db: process.env.APPCONFIGDB!,
+                configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -93,7 +96,7 @@ export async function AddDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -101,8 +104,9 @@ export async function AddDocumentExtractionTasksSetting(
         query: addQuery,
         variables: {
           input: {
-            db: APPCONFIGDB,
-            configSection: CONFIG_SECTION,
+    server: process.env.APPCONFIGSERVER!,
+    db: process.env.APPCONFIGDB!,
+                configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -113,31 +117,26 @@ export async function AddDocumentExtractionTasksSetting(
   const result = await res.json();
   console.log("AddDocumentExtractionTasksSetting result:", result);
   return result;
-    
-  if (!res.ok || result.errors?.length) {
-    throw new Error(
-      result.errors?.[0]?.message ??
-        "Failed to add DocumentExtractionTasksSetting"
-    );
-  }
+
 }
 
 export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[]> {
   const query = `
-    query ExampleQuery($db: String!, $config: String!) {
-      GetAppConfig(db: $db, config: $config) {
+    query ExampleQuery($server: String!, $db: String!, $config: String!) {
+      GetAppConfig(server: $server, db: $db, config: $config) {
         ConfigJson
       }
     }
   `;
 
   const variables = {
-    db: APPCONFIGDB,
+    server: process.env.APPCONFIGSERVER!,
+    db: process.env.APPCONFIGDB!,
     config: "DocumentExtractionTasksSetting",
   };
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
