@@ -57,6 +57,7 @@ export function ListExtraction() {
             console.log("DocumentExtractionTasksSetting result:", config);
             console.log("Is array:", Array.isArray(config));
             setDocumentConfig(config);
+            setLoading(false);
         };
         loadConfig();
     }, []);
@@ -307,6 +308,14 @@ SFTP Password: ${decsftppassword}
         },
     })
 
+if (loading) {
+  return (
+    <div className="flex justify-center items-center h-[60vh]">
+      <span className="text-muted-foreground">Loading configuration…</span>
+    </div>
+  );
+}
+            
     return (
         <div className="w-full">
             <div className="flex items-center py-4">
@@ -345,8 +354,10 @@ SFTP Password: ${decsftppassword}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            {loading && <div className="p-4">Loading...</div>}
+
+
             {error && <div className="p-4 text-red-600">Error: {error}</div>}
+
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
