@@ -36,7 +36,7 @@ const resolvers = {
     namespaces: async  (_: unknown, { db}: { db: string;},__: unknown, info: GraphQLResolveInfo) => {
       const fields = Object.keys(graphqlFields(info));
         const sqlColumns = fields.map(f => `[${f}]`).join(", ");
-  const result: Namespace[] = await fetch(`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+  const result: Namespace[] = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ 
@@ -77,7 +77,7 @@ const resolvers = {
   //      WHERE Namespace = '${namespace}'
   //   `
   // )
-  const result: Namespace[] = await fetch(`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+  const result: Namespace[] = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ 

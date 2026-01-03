@@ -74,7 +74,7 @@ const resolvers = {
       // const result = await getDbaserverData(db, `
       //   SELECT ${sqlColumns} FROM [dbo].[DocExportOutput]
       // `);
-      const result = await fetch ( `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+      const result = await fetch ( `${process.env.APPDAPIROOT}/api/dbaserver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ db: db,
@@ -108,7 +108,7 @@ const resolvers = {
       VALUES (${values.join(',')})
     `;
       // const result = await getDbaserverData(db,sql)
-      const result = await fetch (`${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`, {
+      const result = await fetch (`${process.env.APPDAPIROOT}/api/dbaserver`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ db: db,

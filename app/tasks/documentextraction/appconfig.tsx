@@ -15,7 +15,7 @@ export async function UpdateDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -52,7 +52,7 @@ export async function DeleteDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -96,7 +96,7 @@ export async function AddDocumentExtractionTasksSetting(
   `;
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -136,7 +136,7 @@ export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[
   };
 
   const res = await fetch(
-    `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/appconfig`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

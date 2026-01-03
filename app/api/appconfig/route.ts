@@ -57,7 +57,7 @@ const resolvers = {
     ) => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -99,7 +99,7 @@ const resolvers = {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -140,7 +140,7 @@ const resolvers = {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -187,7 +187,7 @@ const resolvers = {
 
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`,
+          `${process.env.APPDAPIROOT}/api/clientdb`,
           {
             method: "POST",
             headers: { "Content-Type": "application/json" },

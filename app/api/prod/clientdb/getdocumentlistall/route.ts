@@ -22,7 +22,7 @@ const resolvers = {
       { servername  ,db }: { servername: string ; db: string;  }
     ) => {
       try {
-          const res = await fetch(  `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/clientdb`, {
+          const res = await fetch(  `${process.env.APPDAPIROOT}/api/clientdb`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ server: servername, db: db, q: "exec dbo.GetDocumentListAll @IsJson  = 0;" }),
