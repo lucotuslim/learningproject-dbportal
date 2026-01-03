@@ -17,7 +17,9 @@ import {AppConfig} from "@/config/appsetting";
 import { NavManagements } from "./nav-managements"
 import { NavTasks } from "./nav-tasks";
 import { EnvironmentSwitcher } from "./environment-switcher"
-
+import Link from "next/link";
+import { Home, type LucideIcon } from "lucide-react";
+const HomeIcon: LucideIcon = Home;
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -30,7 +32,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavTasks tasks={AppConfig.tasks} />
       </SidebarContent>
       <SidebarFooter>
-        {/* <NavUser user={AppConfig.user} /> */}
+ <Link
+  href="/"
+  className="flex items-center gap-2 text-muted-foreground hover:text-foreground"
+>
+  <HomeIcon className="h-4 w-4" />
+  <span>Home</span>
+</Link>
+
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
