@@ -47,7 +47,7 @@ import { useEffect, useState } from "react";
 export function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
-    const [error, setError] = React.useState<string | null>(null)
+    // const [error, setError] = React.useState<string | null>(null)
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
 
@@ -356,7 +356,7 @@ if (loading) {
             </div>
 
 
-            {error && <div className="p-4 text-red-600">Error: {error}</div>}
+            {/* {error && <div className="p-4 text-red-600">Error: {error}</div>} */}
 
             <div className="overflow-hidden rounded-md border">
                 <Table>

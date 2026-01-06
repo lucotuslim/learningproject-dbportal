@@ -6,14 +6,14 @@ export interface PwPusherApiConfig {
   PWPUSHER_API_URL: string;
 }
 
-export interface AppConfigDbConfig {
-  APPCONFIGDB: string;
+export interface ServerInventoryConfig {
+  SERVERINVENTORY: string;
 }
 
 export type AppConfigItem =
   | EncryptionKeyConfig
   | PwPusherApiConfig
-  | AppConfigDbConfig;
+  | ServerInventoryConfig;
 
 export type AppConfigArray = AppConfigItem[];
 

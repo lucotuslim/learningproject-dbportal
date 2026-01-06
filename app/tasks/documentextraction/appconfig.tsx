@@ -1,7 +1,7 @@
 "use server";
 import { IDocumentConfig } from "./interfaces";
 const CONFIG_SECTION = "DocumentExtractionTasksSetting";
-const APPCONFIGDB="AdminDB"
+
 export async function UpdateDocumentExtractionTasksSetting(
   config: IDocumentConfig
 ) :Promise<{data: string}>{

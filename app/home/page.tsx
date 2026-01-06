@@ -18,7 +18,6 @@ return (
         </TabsTrigger>
       </TabsList>
 
-
       <TabsContent value="settings" className="w-full" >
         <Settings />
       </TabsContent>

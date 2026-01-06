@@ -217,7 +217,7 @@ const resolvers = {
         );
 
         if (!res.ok) {
-          throw new Error(`DeleteAppConfig failed: ${res.statusText}`);
+          throw new Error(`UpdateAppConfig failed: ${res.statusText}`);
         }
 
         const json = await res.json();
