@@ -46,18 +46,34 @@ export default function Settings() {
     load();
   }, [form]);
 
-  const onSubmit = async (values: FormValues) => {
-    console.log("Saving:", values);
-    // await onSaveAction(values)
-    await UpdateGlobalSetting(values);
-    setIsEditing(false);
+  // const onSubmit = async (values: FormValues) => {
+  //   console.log("Saving:", values);
+  //   // await onSaveAction(values)
+  //   await UpdateGlobalSetting(values);
+  //   setIsEditing(false);
+  // };
+  const SubmitUpdateGlobalSetting = async (key: keyof FormValues) => {
+    try {
+
+      const value = form.getValues(key);
+      await UpdateGlobalSetting(key, value);
+
+      // 🔑 This is the key line
+      form.resetField(key, { defaultValue: value });
+
+      setIsEditing
+    } catch (error) {
+      console.error("Error updating global setting:", error);
+    } finally {
+      setIsEditing(false);
+    }
   };
 
   return (
 
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(onSubmit)}
+        onSubmit={(e) => { e.preventDefault(); }}
         className="grid grid-cols-[200px_1fr_auto] gap-x-4 gap-y-3 items-start"
       >
         {/* ENCRYPTION_KEY */}
@@ -66,7 +82,7 @@ export default function Settings() {
         <FormField
           control={form.control}
           name="ENCRYPTION_KEY"
-          render={({ field, fieldState }) => (
+          render={({ field }) => (
             <FormItem>
               <FormControl>
                 <Input {...field} disabled={!isEditing} />
@@ -77,12 +93,13 @@ export default function Settings() {
         />
 
         <Button
-          type="submit"
+          type="button"
           disabled={
             !isEditing ||
             !form.formState.dirtyFields.ENCRYPTION_KEY ||
             !!form.formState.errors.ENCRYPTION_KEY
           }
+          onClick={() => SubmitUpdateGlobalSetting("ENCRYPTION_KEY")}
         >
           Save
         </Button>
@@ -104,12 +121,13 @@ export default function Settings() {
         />
 
         <Button
-          type="submit"
+          type="button"
           disabled={
             !isEditing ||
             !form.formState.dirtyFields.PWPUSHER_API_URL ||
             !!form.formState.errors.PWPUSHER_API_URL
           }
+          onClick={() => SubmitUpdateGlobalSetting("PWPUSHER_API_URL")}
         >
           Save
         </Button>
@@ -131,12 +149,13 @@ export default function Settings() {
         />
 
         <Button
-          type="submit"
+          type="button"
           disabled={
             !isEditing ||
             !form.formState.dirtyFields.SERVERINVENTORY ||
             !!form.formState.errors.SERVERINVENTORY
           }
+          onClick={() => SubmitUpdateGlobalSetting("SERVERINVENTORY")}
         >
           Save
         </Button>

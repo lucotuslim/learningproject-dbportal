@@ -3,12 +3,13 @@ import { AppConfigItem, GetAppConfigRow } from "./interfaces"
 const CONFIG_SECTION = "Global";
 
 export async function UpdateGlobalSetting(
-  config: AppConfigItem
+  configKey:string,
+  value:string
 ): Promise<{ data: string }> {
 
   const updateQuery = `
-    mutation ($input: UpdateAppConfigInput!) {
-      UpdateAppConfig(input: $input) {
+    mutation ($input: UpdateGlobalConfigInput!) {
+      UpdateGlobalConfig(input: $input) {
         ConfigSection
       }
     }
@@ -26,7 +27,8 @@ export async function UpdateGlobalSetting(
             server: process.env.APPCONFIGSERVER!,
             db: process.env.APPCONFIGDB!,
             configSection: CONFIG_SECTION,
-            configJson: JSON.stringify(config),
+            configKey: configKey,
+            configJson: value,
           },
         },
       }),

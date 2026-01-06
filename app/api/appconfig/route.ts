@@ -36,6 +36,14 @@ const typeDefs = `#graphql
     configJson: String!
   }
 
+  input UpdateGlobalConfigInput {
+    server: String!
+    db: String!
+    configSection: String!
+    configKey: String!
+    configJson: String!
+  }
+  
   type Query {
     GetAppConfig(server: String!, db: String!, config: String! ): [AppConfig!]!
   }
@@ -44,6 +52,7 @@ const typeDefs = `#graphql
     AddAppConfig(input: AddAppConfigInput!): AppConfig
     DeleteAppConfig(input: DeleteAppConfigInput!): AppConfig
     UpdateAppConfig(input: UpdateAppConfigInput!): AppConfig
+    UpdateGlobalConfig(input: UpdateGlobalConfigInput!): AppConfig
   }
 
 `;
@@ -228,8 +237,61 @@ const resolvers = {
       }
     },
 
+UpdateGlobalConfig: async (
+  _: unknown,
+  { input }: {
+    input: {
+      server: string;
+      db: string;
+      configSection: string;
+      configKey: string;
+      configJson: string;
+    };
+  }
+) => {
+  const { server, db, configSection, configKey, configJson } = input;
+
+  const safeValue = configJson.replace(/'/g, "''");
+  const safeSection = configSection.replace(/'/g, "''");
+  const safeKey = configKey.replace(/'/g, "");
+
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+          UPDATE dbo.AppConfig
+          SET ConfigJson = JSON_MODIFY(
+            ConfigJson,
+            '$.${safeKey}',
+            '${safeValue}'
+          ),
+          UpdatedAt = SYSUTCDATETIME()
+          OUTPUT inserted.*
+          WHERE ConfigSection = '${safeSection}';
+        `,
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`UpdateGlobalConfig failed: ${res.statusText}`);
+    }
+
+    const json = await res.json();
+    return json[0];
+  } catch (err) {
+    console.error("UpdateGlobalConfig error:", err);
+    throw err;
+  }
+},
+
+    
+
   },
- 
+
 };
 
 // 🧠 Apollo Server
