@@ -75,7 +75,7 @@ export default function Settings() {
         className="grid grid-cols-[200px_1fr_auto] gap-x-4 gap-y-3 items-start"
       >
         {/* ENCRYPTION_KEY */}
-        <FormLabel className="text-left">Encryption Key</FormLabel>
+        {/* <FormLabel className="text-left">Encryption Key</FormLabel>
 
         <FormField
           control={form.control}
@@ -100,7 +100,7 @@ export default function Settings() {
           onClick={() => SubmitUpdateGlobalSetting("ENCRYPTION_KEY")}
         >
           Save
-        </Button>
+        </Button> */}
 
         {/* PWPUSHER_API_URL */}
         <FormLabel className="text-left">PWPusher API URL</FormLabel>

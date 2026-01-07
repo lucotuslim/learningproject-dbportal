@@ -232,7 +232,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json1 = await res1.json();
                                         const respassword = await decryptString(document.Password);
-                                        const decPasswordpusher = await createPush(respassword);
+                                        const decPasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, respassword);
                                         //console.log(decPasswordpusher)
                                         // Fetch and parse decrypted SFTP password
                                         // const res2 = await fetch('/api/decrypt', {
@@ -244,7 +244,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json2 = await res2.json();
                                         const resdecsftppasswordpusher = await decryptString(document.sftppassword)
-                                        const decsftppasswordpusher = await createPush(resdecsftppasswordpusher);
+                                        const decsftppasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, resdecsftppasswordpusher);
                                         //console.log(decsftppasswordpusher)
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");

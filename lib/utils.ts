@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import {ApiInterface} from "@/interfaces/generic";
-import {IApiTokenParams} from "@/interfaces/generic";
+import { ApiInterface } from "@/interfaces/generic";
+import { IApiTokenParams } from "@/interfaces/generic";
 //import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
 import util from "util";
@@ -20,7 +20,6 @@ export function formatDateTime(value?: string | Date | null): string {
 
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
-
 
 export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
   const msnodesqlv8 = eval("require")("msnodesqlv8");
@@ -56,12 +55,12 @@ export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeo
       process.removeListener("unhandledRejection", onGlobalErr);
     }
 
-     //console.log (sqlText);
+    //console.log (sqlText);
     // Now call the driver. It may synchronously throw — catch that.
     try {
       queryAsync(connStr, sqlText)
         .then((rows: unknown) => {
-        //  console.log(rows);
+          //  console.log(rows);
           if (finished) return;
           finished = true;
           cleanup();
@@ -93,22 +92,23 @@ interface PushResponse {
   updated_at: string;
 }
 
-export async function createPush(payload: string): Promise<PushResponse> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_PWPUSHER_API_URL}/p.json`, {
-    method: 'POST',
+export async function createPush(pwpusher_api_url: string, payload: string): Promise<PushResponse> {
+  const response = await fetch(`${pwpusher_api_url}/p.json`, {
+    method: "POST",
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
+      "Content-Type": "application/x-www-form-urlencoded",
     },
     body: new URLSearchParams({
-      'password[payload]': payload
-    })
+      "password[payload]": payload,
+    }),
   });
 
   const data: PushResponse = await response.json();
-  console.log(`Share this secret URL: ${process.env.NEXT_PUBLIC_PWPUSHER_API_URL}/p/${data.url_token}`);
+  console.log(
+    `Share this secret URL: ${process.env.NEXT_PUBLIC_PWPUSHER_API_URL}/p/${data.url_token}`
+  );
   return data;
 }
-
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -171,18 +171,10 @@ export async function getApiToken({
   GrantType,
   ClientId,
   Scope,
-  ClientSecret = process.env.DocApiClientSecret
+  ClientSecret = process.env.DocApiClientSecret,
 }: IApiTokenParams): Promise<TokenResponse> {
   try {
-    if (
-      !Url ||
-      !Method ||
-      !ContentType ||
-      !GrantType ||
-      !ClientId ||
-      !Scope ||
-      !ClientSecret
-    ) {
+    if (!Url || !Method || !ContentType || !GrantType || !ClientId || !Scope || !ClientSecret) {
       throw new Error("Missing required parameters");
     }
 
