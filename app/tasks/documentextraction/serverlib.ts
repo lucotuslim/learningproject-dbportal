@@ -14,17 +14,13 @@ export async function getExtractionList() {
   const variables = { db: "DocumentManagement" };
 
   try {
-    const res = await fetch(
-      `${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query, variables }),
-      }
-    );
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    });
     const json = await res.json().catch(() => null);
-    if (!res.ok)
-      throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`);
+    if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`);
     if (json?.errors?.length) {
       const msg = json.errors
         .map((e: unknown) => {
@@ -40,24 +36,22 @@ export async function getExtractionList() {
     return items;
   } catch (err: unknown) {
     console.error("Query failed:", err);
-      throw err;
+    throw err;
   } finally {
   }
 }
 
-export async function checkexportStatus(
+export async function CheckexportStatus(
   env: string,
   Namespace: string,
   ExportGuid: string,
-  environment: string
+  environment: string,
+  serverInventory: string
 ) {
   const DocumentConfig = await DocumentExtractionTasksSetting();
   const currentconfig = DocumentConfig.find((e) => e.env === env);
-  const namespace = await fetchNamespace(
-    "ServerInventory",
-    Namespace,
-    environment
-  );
+
+  const namespace = await fetchNamespace(serverInventory, Namespace, environment);
   const ContainerName = `${namespace.Namespace}-${namespace.ClientID}`;
   if (!currentconfig) {
     return;
@@ -94,10 +88,7 @@ export async function checkexportStatus(
   });
 
   console.log("Export Status:", getDocBulkExportStatusReport.ExportStatus);
-  console.log(
-    "Failed Documents:",
-    getDocBulkExportStatusReport.FailedDocuments
-  );
+  console.log("Failed Documents:", getDocBulkExportStatusReport.FailedDocuments);
   return getDocBulkExportStatusReport;
   // Open new tab for result page
   //const newTab = window.open("./documentextraction/report", "_blank");
@@ -160,29 +151,23 @@ export async function GetDocBulkExportStatusReport(
     //    const json: DocBulkExportStatusResponse = JSON.parse(rawResponse);
     if (BulkExportStatusRes.error !== true) {
       const exportStatus = BulkExportStatusRes.apiResult!.exportStatus ?? {};
-      const failedDocuments =
-        BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
+      const failedDocuments = BulkExportStatusRes.apiResult!.exportStatus.failedDocuments ?? [];
 
       const ExportStatus: ExportStatus = {
         exportComment: exportStatus.exportComment,
         totalDocumentsCount: exportStatus.totalDocumentsCount,
         processedDocumentPercentage: exportStatus.processedDocumentPercentage,
-        processedDocumentSuccessfulCount:
-          exportStatus.processedDocumentSuccessfulCount,
+        processedDocumentSuccessfulCount: exportStatus.processedDocumentSuccessfulCount,
         processedDocumentFailedCount: exportStatus.processedDocumentFailedCount,
       };
 
       return { ExportStatus, FailedDocuments: failedDocuments };
     } else {
-      throw new Error(
-        `GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`
-      );
+      throw new Error(`GetDocBulkExportStatusReport: ${BulkExportStatusRes.message}`);
     }
   } catch (error: unknown) {
     throw new Error(
-      `GetDocBulkExportStatusReport: ${
-        error instanceof Error ? error.message : String(error)
-      }`
+      `GetDocBulkExportStatusReport: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
@@ -215,11 +200,7 @@ export async function GetDocBulkExportStatusReport(
 //   return await response.json();
 // }
 
-export async function fetchNamespace(
-  db: string,
-  namespace: string,
-  environment: string
-) {
+export async function fetchNamespace(db: string, namespace: string, environment: string) {
   const query = `
     query Namespace($db: String!, $namespace: String!) {
       namespace(db: $db, namespace: $namespace) {
@@ -256,14 +237,11 @@ query Query($servername: String!, $db: String!) {
 }
 `;
   const variables = { servername: servername, db: dbname };
-  const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/prod/clientdb/getdocumentlistall`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    }
-  );
+  const res = await fetch(`${process.env.APPDAPIROOT}/api/prod/clientdb/getdocumentlistall`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
   const data = await res.json();
   console.log(JSON.stringify(data));
 
@@ -318,14 +296,11 @@ export async function addDocExportOutput(
       CreatedBy: "Api",
     },
   };
-  const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query: mutation, variables }),
-    }
-  );
+  const res = await fetch(`${process.env.APPDAPIROOT}/api/prod/dbaserver/documentations`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query: mutation, variables }),
+  });
   const data = await res.json();
   console.log("Response data:", data);
   if (data.errors) {

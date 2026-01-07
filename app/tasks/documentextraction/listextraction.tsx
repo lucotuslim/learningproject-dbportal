@@ -2,12 +2,13 @@
 import { IDocumentConfig } from "./interfaces";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import { checkexportStatus } from "./serverlib"
+import { CheckexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
 import { getExtractionList } from "@/app/tasks/documentextraction/serverlib";
 import { decryptString } from "@/lib/serverutils"
 import * as React from "react"
+
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -47,9 +48,10 @@ import { useEffect, useState } from "react";
 export function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
-    const [error, setError] = React.useState<string | null>(null)
+    // const [error, setError] = React.useState<string | null>(null)
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
+    const globalSettings = useGlobalSetting((state) => state.globalSettings);
 
     useEffect(() => {
         const loadConfig = async () => {
@@ -57,6 +59,7 @@ export function ListExtraction() {
             console.log("DocumentExtractionTasksSetting result:", config);
             console.log("Is array:", Array.isArray(config));
             setDocumentConfig(config);
+            setLoading(false);
         };
         loadConfig();
     }, []);
@@ -157,7 +160,8 @@ export function ListExtraction() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={async () => {
-                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid, selectedEnvironment);
+                                const payload = await CheckexportStatus(document.env, document.Namespace,
+                                    document.ExportGuid, selectedEnvironment, globalSettings!.SERVERINVENTORY);
                                 const newTab = window.open("./documentextraction/report", "_blank");
                                 // small fallback: wait until popup exists
                                 const postPayload = () => {
@@ -228,7 +232,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json1 = await res1.json();
                                         const respassword = await decryptString(document.Password);
-                                        const decPasswordpusher = await createPush(respassword);
+                                        const decPasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, respassword);
                                         //console.log(decPasswordpusher)
                                         // Fetch and parse decrypted SFTP password
                                         // const res2 = await fetch('/api/decrypt', {
@@ -240,7 +244,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json2 = await res2.json();
                                         const resdecsftppasswordpusher = await decryptString(document.sftppassword)
-                                        const decsftppasswordpusher = await createPush(resdecsftppasswordpusher);
+                                        const decsftppasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, resdecsftppasswordpusher);
                                         //console.log(decsftppasswordpusher)
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");
@@ -307,6 +311,14 @@ SFTP Password: ${decsftppassword}
         },
     })
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <span className="text-muted-foreground">Loading configuration…</span>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full">
             <div className="flex items-center py-4">
@@ -345,8 +357,10 @@ SFTP Password: ${decsftppassword}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            {loading && <div className="p-4">Loading...</div>}
-            {error && <div className="p-4 text-red-600">Error: {error}</div>}
+
+
+            {/* {error && <div className="p-4 text-red-600">Error: {error}</div>} */}
+
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>
