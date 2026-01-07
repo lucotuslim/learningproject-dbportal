@@ -1,10 +1,10 @@
 "use server";
-import { AppConfigItem, GetAppConfigRow } from "./interfaces"
+import { IGlobalSettings, GetAppConfigRow } from "./interfaces"
 const CONFIG_SECTION = "Global";
 
 export async function UpdateGlobalSetting(
-  configKey:string,
-  value:string
+  configKey: string,
+  value: string
 ): Promise<{ data: string }> {
 
   const updateQuery = `
@@ -123,7 +123,8 @@ export async function UpdateGlobalSetting(
 // }
 
 
-export async function GlobalSetting(): Promise<AppConfigItem> {
+export async function GlobalSetting(): Promise<IGlobalSettings> {
+
   const query = `
     query ExampleQuery($server: String!, $db: String!, $config: String!) {
       GetAppConfig(server: $server, db: $db, config: $config) {
@@ -145,9 +146,7 @@ export async function GlobalSetting(): Promise<AppConfigItem> {
     cache: "no-store",
   });
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch GlobalSetting");
-  }
+  if (!res.ok) throw new Error("Failed to fetch GlobalSetting");
 
   const result = await res.json();
   if (result.errors?.length) {
@@ -156,7 +155,7 @@ export async function GlobalSetting(): Promise<AppConfigItem> {
 
   const rows = result?.data?.GetAppConfig as GetAppConfigRow[] | undefined;
   if (!rows?.length || !rows[0]?.ConfigJson) {
-    return {} as AppConfigItem;
+    throw new Error("Global settings not found");
   }
 
   let parsed: unknown;
@@ -167,10 +166,10 @@ export async function GlobalSetting(): Promise<AppConfigItem> {
     throw new Error("ConfigJson is not valid JSON");
   }
 
-  /** 🚨 Enforce single-object format */
   if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
     throw new Error("ConfigJson must be a single JSON object");
   }
 
-  return parsed as AppConfigItem;
+  return parsed as IGlobalSettings;
+
 }

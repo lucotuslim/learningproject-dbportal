@@ -2,12 +2,13 @@
 import { IDocumentConfig } from "./interfaces";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import { checkexportStatus } from "./serverlib"
+import { CheckexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
 import { getExtractionList } from "@/app/tasks/documentextraction/serverlib";
 import { decryptString } from "@/lib/serverutils"
 import * as React from "react"
+
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -50,6 +51,7 @@ export function ListExtraction() {
     // const [error, setError] = React.useState<string | null>(null)
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
+    const globalSettings = useGlobalSetting((state) => state.globalSettings);
 
     useEffect(() => {
         const loadConfig = async () => {
@@ -158,7 +160,8 @@ export function ListExtraction() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={async () => {
-                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid, selectedEnvironment);
+                                const payload = await CheckexportStatus(document.env, document.Namespace,
+                                    document.ExportGuid, selectedEnvironment, globalSettings!.SERVERINVENTORY);
                                 const newTab = window.open("./documentextraction/report", "_blank");
                                 // small fallback: wait until popup exists
                                 const postPayload = () => {
@@ -308,14 +311,14 @@ SFTP Password: ${decsftppassword}
         },
     })
 
-if (loading) {
-  return (
-    <div className="flex justify-center items-center h-[60vh]">
-      <span className="text-muted-foreground">Loading configuration…</span>
-    </div>
-  );
-}
-            
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <span className="text-muted-foreground">Loading configuration…</span>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full">
             <div className="flex items-center py-4">

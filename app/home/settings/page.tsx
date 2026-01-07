@@ -57,11 +57,9 @@ export default function Settings() {
 
       const value = form.getValues(key);
       await UpdateGlobalSetting(key, value);
-
       // 🔑 This is the key line
       form.resetField(key, { defaultValue: value });
-
-      setIsEditing
+      setIsEditing(false);
     } catch (error) {
       console.error("Error updating global setting:", error);
     } finally {
