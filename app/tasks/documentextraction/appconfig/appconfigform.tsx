@@ -50,16 +50,14 @@ export function AppConfigForm({
   onSaveAction,
   onAddCancelAction,
 }: {
-  row?: IDocumentConfig | null,
+  row: IDocumentConfig | null,
   isAddMode: boolean, 
   onSaveAction: (config: IDocumentConfig) => Promise<void>
   onAddCancelAction?: () => void
 }) {
   const [isEditing, setIsEditing] = useState<boolean>(false)
   useEffect(() => {
-    if (isAddMode) {
-      setIsEditing(true)
-    }
+      setIsEditing(isAddMode)  
   }, [isAddMode]) 
   // console.log("row:", row);
   const defaultValues: IDocumentConfig = useMemo<IDocumentConfig>(() => ({
