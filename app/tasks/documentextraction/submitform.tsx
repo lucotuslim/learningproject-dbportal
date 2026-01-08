@@ -40,6 +40,7 @@ export default function SubmitForm() {
   const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
   const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
+  const globalSettings = useGlobalSetting((state) => state.globalSettings);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -75,7 +76,8 @@ export default function SubmitForm() {
   const onSubmit = async (values: FormValues) => {
     setIsSubmitting(true);
     try {
-      const namespace = await fetchNamespace("ServerInventory", values.Namespace, selectedEnvironment);
+
+      const namespace = await fetchNamespace(globalSettings!.SERVERINVENTORY, values.Namespace, selectedEnvironment);
       console.log(JSON.stringify(namespace));
       if (!namespace) throw new Error("Namespace not found");
       const documents: { DocumentGUID: string }[] = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
@@ -87,27 +89,27 @@ export default function SubmitForm() {
       //   body: JSON.stringify({ env: values.env }),
       // })
       // const token = await tokenres.json() as TokenResponse
-      const currentconfig = DocumentConfig.find( (e)  => e.env===values.env)
-      console.log (JSON.stringify(currentconfig));
-      
-      const token =  await getApiToken({
-    Url: currentconfig!.GetDocApiToken.Url,
-    Method: currentconfig!.GetDocApiToken.Method,
-    ContentType: currentconfig!.GetDocApiToken.ContentType,
-    GrantType: currentconfig!.GetDocApiToken.GrantType,
-    ClientId: currentconfig!.GetDocApiToken.ClientId,
-    Scope: currentconfig!.GetDocApiToken.Scope,
-  });
+      const currentconfig = DocumentConfig.find((e) => e.env === values.env)
+      console.log(JSON.stringify(currentconfig));
 
-  //       const token = await getApiToken({
-  //   Url: currentconfig.GetDocApiToken.Url,
-  //   Method: currentconfig.GetDocApiToken.Method,
-  //   ContentType: currentconfig.GetDocApiToken.ContentType,
-  //   GrantType: currentconfig.GetDocApiToken.GrantType,
-  //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
-  //   Scope: process.env.NEXT_PUBLIC_DocApiScope!,
-  //   ClientSecret: process.env.DocApiClientSecret!,
-  // });
+      const token = await getApiToken({
+        Url: currentconfig!.GetDocApiToken.Url,
+        Method: currentconfig!.GetDocApiToken.Method,
+        ContentType: currentconfig!.GetDocApiToken.ContentType,
+        GrantType: currentconfig!.GetDocApiToken.GrantType,
+        ClientId: currentconfig!.GetDocApiToken.ClientId,
+        Scope: currentconfig!.GetDocApiToken.Scope,
+      });
+
+      //       const token = await getApiToken({
+      //   Url: currentconfig.GetDocApiToken.Url,
+      //   Method: currentconfig.GetDocApiToken.Method,
+      //   ContentType: currentconfig.GetDocApiToken.ContentType,
+      //   GrantType: currentconfig.GetDocApiToken.GrantType,
+      //   ClientId: process.env.NEXT_PUBLIC_DocApiClientId!,
+      //   Scope: process.env.NEXT_PUBLIC_DocApiScope!,
+      //   ClientSecret: process.env.DocApiClientSecret!,
+      // });
 
       const BATCH_SIZE = 50000;
       const batches = await chunkArray(documents, BATCH_SIZE);

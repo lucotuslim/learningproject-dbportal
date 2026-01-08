@@ -2,11 +2,13 @@
 import { IDocumentConfig } from "./interfaces";
 import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 import { IDocExportOutput } from "@/interfaces/documentextraction"
-import { checkexportStatus } from "./serverlib"
+import { CheckexportStatus } from "./serverlib"
 import { toast } from "sonner"
 import { createPush, formatDateTime } from "@/lib/utils"
-import {decryptString} from "@/lib/serverutils"
+import { getExtractionList } from "@/app/tasks/documentextraction/serverlib";
+import { decryptString } from "@/lib/serverutils"
 import * as React from "react"
+
 import {
     ColumnDef,
     ColumnFiltersState,
@@ -43,63 +45,32 @@ import {
 import { useEffect, useState } from "react";
 
 // replace static data with GraphQL call
-export  function ListExtraction() {
+export function ListExtraction() {
     const [data, setData] = React.useState<IDocExportOutput[]>([])
     const [loading, setLoading] = React.useState<boolean>(true)
-    const [error, setError] = React.useState<string | null>(null)
-    const selectedEnvironment =    useGlobalSetting((state) => state.selectedEnvironment);
-  const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
+    // const [error, setError] = React.useState<string | null>(null)
+    const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
+    const [DocumentConfig, setDocumentConfig] = useState<IDocumentConfig[]>([]);
+    const globalSettings = useGlobalSetting((state) => state.globalSettings);
 
-  useEffect(() => {
-    const loadConfig = async () => {
-      const config = await DocumentExtractionTasksSetting();
-      console.log("DocumentExtractionTasksSetting result:", config);
-      console.log("Is array:", Array.isArray(config));
-      setDocumentConfig(config);
-    };
-    loadConfig();
-  }, []);
-  
-  
     useEffect(() => {
-        const endpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT ?? `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/prod/dbaserver/documentations`;
-        const query = `query Query($db: String!) { docExportOutputs(db: $db) { env ExportGuid Password Filename sftppassword SftpUser ContainerName Namespace CreatedBy CreatedDate } }`;
-        const variables = { db: "DocumentManagement" };
-        let mounted = true
-        setLoading(true)
-        setError(null)
-            ; (async () => {
-                try {
-                    const res = await fetch(endpoint, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ query, variables }),
-                    })
-                    const json = await res.json().catch(() => null)
-                    if (!res.ok) throw new Error(`Error: ${res.status} - ${JSON.stringify(json)}`)
-                    if (json?.errors?.length) {
-                        const msg = json.errors.map((e: unknown) => {
-                            if (typeof e === "object" && e !== null && "message" in e) {
-                                return (e as { message?: string }).message ?? JSON.stringify(e);
-                            }
-                            return JSON.stringify(e);
-                        }).join("; ")
-                        throw new Error(`GraphQL error: ${msg}`)
-                    }
-                    const items = json?.data?.docExportOutputs ?? []
+        const loadConfig = async () => {
+            const config = await DocumentExtractionTasksSetting();
+            console.log("DocumentExtractionTasksSetting result:", config);
+            console.log("Is array:", Array.isArray(config));
+            setDocumentConfig(config);
+            setLoading(false);
+        };
+        loadConfig();
+    }, []);
 
-                    if (mounted) setData(items)
-                } catch (err: unknown) {
-                    console.error("Query failed:", err)
-                    if (mounted) setError(typeof err === "string" ? err : (err instanceof Error ? err.message : JSON.stringify(err)))
-                } finally {
-                    if (mounted) setLoading(false)
-                }
-            })()
-        return () => {
-            mounted = false
-        }
-    }, [])
+    useEffect(() => {
+        const loadData = async () => {
+            const res = await getExtractionList();
+            setData(res ?? []);
+        };
+        loadData();
+    }, []);
 
     const columns: ColumnDef<IDocExportOutput>[] = [
         {
@@ -189,7 +160,8 @@ export  function ListExtraction() {
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuItem onClick={async () => {
-                                const payload = await checkexportStatus(document.env, document.Namespace, document.ExportGuid, selectedEnvironment);
+                                const payload = await CheckexportStatus(document.env, document.Namespace,
+                                    document.ExportGuid, selectedEnvironment, globalSettings!.SERVERINVENTORY);
                                 const newTab = window.open("./documentextraction/report", "_blank");
                                 // small fallback: wait until popup exists
                                 const postPayload = () => {
@@ -260,7 +232,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json1 = await res1.json();
                                         const respassword = await decryptString(document.Password);
-                                        const decPasswordpusher = await createPush(respassword);
+                                        const decPasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, respassword);
                                         //console.log(decPasswordpusher)
                                         // Fetch and parse decrypted SFTP password
                                         // const res2 = await fetch('/api/decrypt', {
@@ -272,7 +244,7 @@ SFTP Password: ${decsftppassword}
                                         // });
                                         // const json2 = await res2.json();
                                         const resdecsftppasswordpusher = await decryptString(document.sftppassword)
-                                        const decsftppasswordpusher = await createPush(resdecsftppasswordpusher);
+                                        const decsftppasswordpusher = await createPush(globalSettings!.PWPUSHER_API_URL, resdecsftppasswordpusher);
                                         //console.log(decsftppasswordpusher)
 
                                         const newTab = window.open("./documentextraction/pwpusher", "_blank");
@@ -339,6 +311,14 @@ SFTP Password: ${decsftppassword}
         },
     })
 
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center h-[60vh]">
+                <span className="text-muted-foreground">Loading configuration…</span>
+            </div>
+        );
+    }
+
     return (
         <div className="w-full">
             <div className="flex items-center py-4">
@@ -377,8 +357,10 @@ SFTP Password: ${decsftppassword}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </div>
-            {loading && <div className="p-4">Loading...</div>}
-            {error && <div className="p-4 text-red-600">Error: {error}</div>}
+
+
+            {/* {error && <div className="p-4 text-red-600">Error: {error}</div>} */}
+
             <div className="overflow-hidden rounded-md border">
                 <Table>
                     <TableHeader>

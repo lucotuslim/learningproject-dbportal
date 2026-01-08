@@ -63,9 +63,12 @@ export default function AppConfigPage() {
       <div className="md:w-1/4 space-y-2">
         <Label htmlFor="environment">Select Environment</Label>
         <Select
+          value={SelectedConfig?.env ?? ""}
           disabled={isAdding}
           onValueChange={(env) => {
             const config = DocumentConfig.find(c => c.env === env) || null;
+            console.log (JSON.stringify(DocumentConfig))
+            console.log (JSON.stringify(env))
             setSelectedConfig(config)
           }}
         >

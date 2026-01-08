@@ -1,6 +1,6 @@
 "use client"
 import { IDocumentConfig } from "../interfaces";
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -50,15 +50,13 @@ export function AppConfigForm({
   onSaveAction,
   onAddCancelAction,
 }: {
-  row: IDocumentConfig | null,
-  isAddMode: boolean, 
+  row?: IDocumentConfig | null,
+  isAddMode: boolean,
   onSaveAction: (config: IDocumentConfig) => Promise<void>
   onAddCancelAction?: () => void
 }) {
   const [isEditing, setIsEditing] = useState<boolean>(false)
-  useEffect(() => {
-      setIsEditing(isAddMode)  
-  }, [isAddMode]) 
+  useEffect(() => { setIsEditing(isAddMode)}, [isAddMode])
   // console.log("row:", row);
   const defaultValues: IDocumentConfig = useMemo<IDocumentConfig>(() => ({
     env: "",
@@ -101,12 +99,14 @@ export function AppConfigForm({
 
   const onSubmit = async (values: FormValues) => {
     await onSaveAction(values)
-    if (isAddMode) {
-      form.reset(values)
-      onAddCancelAction?.()
-    } else {
-      setIsEditing(false)
-    }
+    setIsEditing(false)
+    // if (isAddMode) {
+    //   form.reset(values)
+    //   setIsEditing(false)
+    //   onAddCancelAction?.()
+    // } else {
+    //   setIsEditing(false)
+    // }
   }
 
   const onCancel = () => {
@@ -126,7 +126,7 @@ export function AppConfigForm({
       >
 
         {(isAddMode || row != null) && (
-          <> 
+          <>
             <FormLabel className="text-left col-span-1">
               Environment
             </FormLabel>
@@ -335,13 +335,13 @@ export function AppConfigForm({
               )}
             />
           </>
-        ) }
+        )}
 
         {/* Actions */}
 
         <div className="col-span-6 flex gap-2">
           {/* {!isEditing && !isAddMode ? ( */}
-            {row && !isEditing && !isAddMode && (
+          {row && !isEditing && !isAddMode && (
             <Button
               type="button"
               size="sm"
@@ -351,9 +351,9 @@ export function AppConfigForm({
               Edit
             </Button>
           )
-        }
-          
-        { isEditing && (
+          }
+
+          {isEditing && (
             <>
               <Button
                 type="submit"
@@ -371,9 +371,9 @@ export function AppConfigForm({
                 Cancel
               </Button>
             </>
-         )
-       
+          )
           }
+
         </div>
       </form>
     </Form>

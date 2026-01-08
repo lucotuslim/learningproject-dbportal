@@ -17,28 +17,35 @@ import { Input } from "@/components/ui/input";
 
 export default function Page() {
   const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
+  const globalSettings = useGlobalSetting((state) => state.globalSettings);
   console.log("Selected Environment in Database Page:", selectedEnvironment);
 
   const [data, setData] = useState<Namespace[]>([]);
   const [search, setSearch] = useState("");
 
-//const filteredData = data.filter((item: Namespace) => item.Namespace.startsWith(search))
-const filteredData = data.filter((item: Namespace) => {
-  if (search.endsWith("%")) {
-    const prefix = search.slice(0, -1); // remove %
-    return item.Namespace.startsWith(prefix);
-  } else if (search !== "") {
-    return item.Namespace === search;
-  } else {
-    return true; 
-  }
-});
+  //const filteredData = data.filter((item: Namespace) => item.Namespace.startsWith(search))
+  const filteredData = data.filter((item: Namespace) => {
+    if (search.endsWith("%")) {
+      const prefix = search.slice(0, -1); // remove %
+      return item.Namespace.startsWith(prefix);
+    } else if (search !== "") {
+      return item.Namespace === search;
+    } else {
+      return true;
+    }
+  });
 
   const loaddata = useCallback(async () => {
-    if (!selectedEnvironment) return setData([]);
-    const res = await getNamespaces<Namespace>("ServerInventory", selectedEnvironment);
+    if (!selectedEnvironment || !globalSettings) return setData([]);
+    // const ServerInventory = await GlobalSetting();
+
+    // console.log(
+    //   "Global Setting in Database Page:",
+    //   ServerInventory["SERVERINVENTORY"]
+    // );
+    const res = await getNamespaces<Namespace>(globalSettings!.SERVERINVENTORY, selectedEnvironment);
     setData(res ?? []);
-  }, [selectedEnvironment]);  // dependencies used inside loaddata
+  }, [selectedEnvironment, globalSettings]);  // dependencies used inside loaddata
 
   useEffect(() => {
     loaddata();

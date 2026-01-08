@@ -16,28 +16,43 @@ const typeDefs = `#graphql
   }
 
   input AddAppConfigInput {
+    server: String!
+    db: String!
     configSection: String!
     configJson: String!
   }
 
   input DeleteAppConfigInput {
+    server: String!
+    db: String!
     configSection: String!
     configJson: String!
   }
 
   input UpdateAppConfigInput {
+    server: String!
+    db: String!
     configSection: String!
     configJson: String!
   }
 
+  input UpdateGlobalConfigInput {
+    server: String!
+    db: String!
+    configSection: String!
+    configKey: String!
+    configJson: String!
+  }
+  
   type Query {
-    GetAppConfig(db: String!, config: String! ): [AppConfig!]!
+    GetAppConfig(server: String!, db: String!, config: String! ): [AppConfig!]!
   }
 
   type Mutation {
     AddAppConfig(input: AddAppConfigInput!): AppConfig
     DeleteAppConfig(input: DeleteAppConfigInput!): AppConfig
     UpdateAppConfig(input: UpdateAppConfigInput!): AppConfig
+    UpdateGlobalConfig(input: UpdateGlobalConfigInput!): AppConfig
   }
 
 `;
@@ -47,17 +62,16 @@ const resolvers = {
   Query: {
     GetAppConfig: async (
       _: unknown,
-      { db, config }: { db: string; config: string }
+      { server, db, config }: { server: string; db: string; config: string }
     ) => {
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db,
-              q: `
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server,
+            db,
+            q: `
                 SELECT
                   ConfigId,
                   ConfigSection,
@@ -67,9 +81,8 @@ const resolvers = {
                 FROM dbo.AppConfig
                 WHERE ConfigSection = '${config}'
               `,
-            }),
-          }
-        );
+          }),
+        });
 
         if (!res.ok) {
           throw new Error(`GetAppConfig failed: ${res.statusText}`);
@@ -86,19 +99,27 @@ const resolvers = {
   Mutation: {
     AddAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      {
+        input,
+      }: {
+        input: {
+          server: string;
+          db: string;
+          configSection: string;
+          configJson: string;
+        };
+      }
     ) => {
-      const { configSection, configJson } = input;
+      const { server, db, configSection, configJson } = input;
 
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
-              q: `
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server: server,
+            db: db,
+            q: `
               UPDATE dbo.AppConfig
               SET ConfigJson = JSON_MODIFY(
                   ConfigJson,
@@ -108,9 +129,8 @@ const resolvers = {
               OUTPUT inserted.*
               WHERE ConfigSection = '${configSection}';
               `,
-            }),
-          }
-        );
+          }),
+        });
 
         if (!res.ok) {
           throw new Error(`AddAppConfig failed: ${res.statusText}`);
@@ -126,24 +146,35 @@ const resolvers = {
 
     DeleteAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      {
+        input,
+      }: {
+        input: {
+          server: string;
+          db: string;
+          configSection: string;
+          configJson: string;
+        };
+      }
     ) => {
-      const { configSection, configJson } = input;
+      const { server, db, configSection, configJson } = input;
 
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
-              q: `
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server: server,
+            db: db,
+            q: `
               UPDATE dbo.AppConfig
               SET ConfigJson =
               (
                   SELECT
-                      '[' + STRING_AGG(value, ',') + ']'
+                  ISNULL(
+                '[' + STRING_AGG(value, ',') + ']',
+                '[]'
+                )
                   FROM OPENJSON(ConfigJson)
                   WHERE JSON_VALUE(value, '$.env') <> '${JSON.parse(configJson).env}'
               ),
@@ -151,9 +182,8 @@ const resolvers = {
               OUTPUT inserted.*
               WHERE ConfigSection = '${configSection}';
               `,
-            }),
-          }
-        );
+          }),
+        });
 
         if (!res.ok) {
           throw new Error(`DeleteAppConfig failed: ${res.statusText}`);
@@ -169,19 +199,27 @@ const resolvers = {
 
     UpdateAppConfig: async (
       _: unknown,
-      { input }: { input: { configSection: string; configJson: string } }
+      {
+        input,
+      }: {
+        input: {
+          server: string;
+          db: string;
+          configSection: string;
+          configJson: string;
+        };
+      }
     ) => {
-      const { configSection, configJson } = input;
+      const { server, db, configSection, configJson } = input;
 
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_APPDBSERVERAPI}/api/dbaserver`,
-          {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db: process.env.NEXT_PUBLIC_APPCONFIGDB,
-              q: `
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server: server,
+            db: db,
+            q: `
             DECLARE @ConfigSection NVARCHAR(100) = '${configSection}';
             DECLARE @ConfigJson NVARCHAR(MAX) = N'${configJson}';
 
@@ -199,12 +237,11 @@ const resolvers = {
             WHERE ac.ConfigSection = @ConfigSection
               AND JSON_VALUE(j.value, '$.env') = JSON_VALUE(@ConfigJson, '$.env');
               `,
-            }),
-          }
-        );
+          }),
+        });
 
         if (!res.ok) {
-          throw new Error(`DeleteAppConfig failed: ${res.statusText}`);
+          throw new Error(`UpdateAppConfig failed: ${res.statusText}`);
         }
 
         const json = await res.json();
@@ -215,19 +252,59 @@ const resolvers = {
       }
     },
 
+    UpdateGlobalConfig: async (
+      _: unknown,
+      {
+        input,
+      }: {
+        input: {
+          server: string;
+          db: string;
+          configSection: string;
+          configKey: string;
+          configJson: string;
+        };
+      }
+    ) => {
+      const { server, db, configSection, configKey, configJson } = input;
 
+      const safeValue = configJson.replace(/'/g, "''");
+      const safeSection = configSection.replace(/'/g, "''");
+      const safeKey = configKey.replace(/'/g, "");
 
+      try {
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server,
+            db,
+            q: `
+          UPDATE dbo.AppConfig
+          SET ConfigJson = JSON_MODIFY(
+            ConfigJson,
+            '$.${safeKey}',
+            '${safeValue}'
+          ),
+          UpdatedAt = SYSUTCDATETIME()
+          OUTPUT inserted.*
+          WHERE ConfigSection = '${safeSection}';
+        `,
+          }),
+        });
 
+        if (!res.ok) {
+          throw new Error(`UpdateGlobalConfig failed: ${res.statusText}`);
+        }
 
-
-    
+        const json = await res.json();
+        return json[0];
+      } catch (err) {
+        console.error("UpdateGlobalConfig error:", err);
+        throw err;
+      }
+    },
   },
-
-
-
-
-
-  
 };
 
 // 🧠 Apollo Server
