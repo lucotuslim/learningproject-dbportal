@@ -53,7 +53,7 @@ export default function ResultPage() {
       <h1 className="text-2xl font-bold mb-4">Password Pusher Output</h1>
 
 
-      {decSftpPassword?.url_token && (
+      {decSftpPassword?.url_token && globalSetting.globalSettings?.PWPUSHER_API_URL && (
         <div>
           <p >Please login to <b>{sftpHostName}</b> with user <b>{SftpUser}</b> by using the password at:{" "}
             <Link
@@ -70,7 +70,7 @@ export default function ResultPage() {
         </div>
       )}
 
-      {decPassword?.url_token && (
+      {decPassword?.url_token &&  globalSetting.globalSettings?.PWPUSHER_API_URL && (
         <div>
           <p >
             You can open the Zipfile <b>{Filename}</b> by using the password at:{" "}

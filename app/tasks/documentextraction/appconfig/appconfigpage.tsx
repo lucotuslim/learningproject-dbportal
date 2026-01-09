@@ -67,6 +67,8 @@ export default function AppConfigPage() {
           disabled={isAdding}
           onValueChange={(env) => {
             const config = DocumentConfig.find(c => c.env === env) || null;
+            console.log (JSON.stringify(DocumentConfig))
+            console.log (JSON.stringify(env))
             setSelectedConfig(config)
           }}
         >
