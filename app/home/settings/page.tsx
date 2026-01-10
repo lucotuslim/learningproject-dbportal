@@ -26,6 +26,7 @@ const schema = z.object({
 type FormValues = z.infer<typeof schema>;
 
 export default function Settings() {
+  const [isConfigLoading, setIsConfigLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
 
   const form = useForm<FormValues>({
@@ -42,6 +43,7 @@ export default function Settings() {
     const load = async () => {
       const values = await GlobalSetting();
       form.reset(values);
+      setIsConfigLoading(false);
     };
     load();
   }, [form]);
@@ -66,6 +68,15 @@ export default function Settings() {
       setIsEditing(false);
     }
   };
+
+
+  if (isConfigLoading) {
+    return (
+      <div className="flex justify-center items-center h-[60vh]">
+        <span className="text-muted-foreground">Loading configuration…</span>
+      </div>
+    );
+  }
 
   return (
 
