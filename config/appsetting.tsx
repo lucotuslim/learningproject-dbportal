@@ -6,14 +6,9 @@ import {
 
 import {
   DatabaseIcon,
-  GalleryVerticalEnd,
-  AudioWaveform,
-  Command,
+
   SquareTerminal,
-  Bot,
-  BookOpen,
-  Settings2,
-  ServerCog,
+  HeartHandshake,
   Frame,
   PieChart,
   Map
@@ -39,7 +34,7 @@ export const AppConfig = {
   //   email: "m@example.com",
   //   avatar: "/avatars/shadcn.jpg",
   // },
-  
+
   navConfiguration: [
     {
       title: "Control Db",
@@ -77,6 +72,11 @@ export const AppConfig = {
       name: "Document Extraction",
       url: "/tasks/documentextraction",
       icon: Frame,
+    },
+    {
+      name: "Customer Permission",
+      url: "/tasks/customerpermission",
+      icon: HeartHandshake,
     },
     // {
     //   name: "Sales & Marketing",
