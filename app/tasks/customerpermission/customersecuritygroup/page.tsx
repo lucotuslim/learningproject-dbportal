@@ -9,24 +9,27 @@ import { DataTable } from "./data-table";
 // import { RefreshCcw } from "lucide-react";
 import { ICustomerSecurityGroup } from "../interfaces";
 import { getCustomerSecurityGroups } from "../serverlib";
-// import { useGlobalSetting } from "@/lib/store";
+import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
 export default function CustomerSecurityGroup() {
+    const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
+    const globalSettings = useGlobalSetting((state) => state.globalSettings);
+    console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
     const [data, setData] = useState<ICustomerSecurityGroup[]>([]);
     const [search, setSearch] = useState("");
     const loaddata = useCallback(async () => {
-        // if (!selectedEnvironment || !globalSettings) return setData([]);
+        if (!selectedEnvironment || !globalSettings) return setData([]);
         // // const ServerInventory = await GlobalSetting();
 
         // console.log(
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>("192.168.100.151", "CustomerPermissionDb");
+        const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>("192.168.100.151", "CustomerPermissionDb", selectedEnvironment);
         setData(res ?? []);
-    }, []);  // dependencies used inside loaddata
+    }, [selectedEnvironment, globalSettings]);  // dependencies used inside loaddata
 
     useEffect(() => {
         loaddata();

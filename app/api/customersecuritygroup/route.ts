@@ -25,6 +25,7 @@ type Query {
   customerSecurityGroups(
     server: String!
     db: String!
+    environment: String!
   ): [CustomerSecurityGroup!]!
 
   customerSecurityGroupByName(
@@ -37,7 +38,10 @@ type Query {
 // 🧠 Resolvers
 const resolvers = {
   Query: {
-    customerSecurityGroups: async (_: unknown, { server, db }: { server: string; db: string }) => {
+    customerSecurityGroups: async (
+      _: unknown,
+      { server, db, environment }: { server: string; db: string; environment: string }
+    ) => {
       try {
         const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
           method: "POST",
@@ -57,6 +61,7 @@ const resolvers = {
       ,[Permission]
       ,[IsDeleted]
   FROM [CustomerPermissionDb].[dbo].[CustomerSecurityGroups]
+  where Environment = '${environment}'
               `,
           }),
         });

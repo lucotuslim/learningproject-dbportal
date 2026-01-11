@@ -1,9 +1,13 @@
 "use server";
 
-export async function getCustomerSecurityGroups<T>(server: string, db: string): Promise<T[]> {
+export async function getCustomerSecurityGroups<T>(
+  server: string,
+  db: string,
+  environment: string
+): Promise<T[]> {
   const query = `
-  query CustomerSecurityGroups($server: String!, $db: String!) {
-  customerSecurityGroups(server: $server, db: $db) {
+  query CustomerSecurityGroups($server: String!, $db: String!, $environment: String!) {
+  customerSecurityGroups(server: $server, db: $db, environment: $environment) {
     GroupSID
     Environment
     ClientId
@@ -16,7 +20,7 @@ export async function getCustomerSecurityGroups<T>(server: string, db: string): 
   }
 }
   `;
-  const variables = { server: server, db: db };
+  const variables = { server: server, db: db, environment: environment };
   const res = await fetch(`${process.env.APPDAPIROOT}/api/customersecuritygroup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
