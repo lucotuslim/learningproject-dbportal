@@ -1,4 +1,36 @@
-// "use server";
+"use server";
+
+export async function getCustomerSecurityGroups<T>(server: string, db: string): Promise<T[]> {
+  const query = `
+  query CustomerSecurityGroups($server: String!, $db: String!) {
+  customerSecurityGroups(server: $server, db: $db) {
+    GroupSID
+    Environment
+    ClientId
+    CollectedTimestamp
+    Permission
+    IsDeleted
+    Namespace
+    GroupName
+    MetaData
+  }
+}
+  `;
+  const variables = { server: server, db: db };
+  const res = await fetch(`${process.env.APPDAPIROOT}/api/customersecuritygroup`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
+  const data = await res.json();
+  if (data.errors) {
+    console.error(data.errors);
+    throw new Error(data.errors[0].message);
+  }
+  return data.data.customerSecurityGroups;
+}
+
+// // Additional functions related to document extraction tasks can be added here
 // import { getApiToken } from "@/lib/serverutils";
 // import { DocumentExtractionTasksSetting } from "@/app/tasks/documentextraction/appconfig";
 // import {

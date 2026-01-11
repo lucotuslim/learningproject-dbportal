@@ -11,7 +11,7 @@ import { ColumnDef } from "@tanstack/react-table"
 // import { useState } from "react"
 // import { toast } from "sonner"
 // import { Row } from "@tanstack/react-table"
-import { CustomerSecurityGroup } from "../interfaces"
+import { ICustomerSecurityGroup } from "../interfaces"
 // Recovery Model Cell Component
 
 // // Actions Cell Component
@@ -78,12 +78,28 @@ import { CustomerSecurityGroup } from "../interfaces"
 //   )
 // }
 
-export const columns = (): ColumnDef<CustomerSecurityGroup>[] => [
+export const columns = (): ColumnDef<ICustomerSecurityGroup>[] => [
+  //  [CustomerSecurityGroupsId]
+  //       ,[GroupSID]
+  //       ,[Environment]
+  //       ,[Namespace]
+  //       ,[ClientId]
+  //       ,[GroupName]
+  //       ,[MetaData]
+  //       ,[CollectedTimestamp]
+  //       ,[Permission]
+  //       ,[IsDeleted]
+  { accessorKey: "GroupSID", header: "GroupSID" },
+  { accessorKey: "Environment", header: "Environment" },
 
-  { accessorKey: "ClientID", header: "ClientID" },
   { accessorKey: "Namespace", header: "Namespace" },
-  { accessorKey: "ConstringDatabaseName", header: "Database Name" },
-  { accessorKey: "ConstringServerName", header: "Server Name" },
+  { accessorKey: "ClientId", header: "ClientId" },
+
+  { accessorKey: "GroupName", header: "GroupName" },
+  { accessorKey: "MetaData", header: "MetaData" },
+  { accessorKey: "CollectedTimestamp", header: "CollectedTimestamp" },
+  { accessorKey: "Permission", header: "Permission" },
+  { accessorKey: "IsDeleted", header: "IsDeleted" },
 ]
 
 

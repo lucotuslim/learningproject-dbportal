@@ -2,7 +2,7 @@ export interface CustomerSecurityGroupMetaData {
   clientIDList: string;
 }
 
-export interface CustomerSecurityGroup {
+export interface ICustomerSecurityGroup {
   CustomerSecurityGroupsId: number;
   GroupSID: string;
   Environment: "Prod" | "PreProd" | "NonProd";

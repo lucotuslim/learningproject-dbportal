@@ -40,29 +40,29 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   // Default sorting: serverName asc, then databaseName asc
   // Change the ids here if your accessorKey names differ.
-  const initialSorting: SortingState = [
-    { id: "ConstringServerName", desc: false },
-    { id: "ConstringDatabaseName", desc: false },
-  ]
+  // const initialSorting: SortingState = [
+  //   { id: "ConstringServerName", desc: false },
+  //   { id: "ConstringDatabaseName", desc: false },
+  // ]
 
   const [pagination, setPagination] = useState<PaginationState>({
     pageIndex: 0,
     pageSize: 10,
   })
-  const [sorting, setSorting] = useState<SortingState>(initialSorting)
+  // const [sorting, setSorting] = useState<SortingState>(initialSorting)
 
   const table = useReactTable({
     data,
     columns,
-    state: { pagination, sorting },
+    // state: { pagination, sorting },
     onPaginationChange: setPagination,
-    onSortingChange: setSorting,
+    // onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     initialState: {
       pagination: { pageIndex: 0, pageSize: 10 },
-      sorting: initialSorting,
+      // sorting: initialSorting,
     },
   })
 
@@ -97,9 +97,9 @@ export function DataTable<TData, TValue>({
                             asc: <span aria-hidden>▲</span>,
                             desc: <span aria-hidden>▼</span>,
                           }[header.column.getIsSorted() as "asc" | "desc"] ?? (
-                            // not sorted
-                            header.column.getCanSort() ? <span aria-hidden>↕</span> : null
-                          )}
+                              // not sorted
+                              header.column.getCanSort() ? <span aria-hidden>↕</span> : null
+                            )}
                         </div>
                       )}
                     </TableHead>
@@ -185,22 +185,22 @@ export function DataTable<TData, TValue>({
             className="w-16 border rounded px-2 py-1"
           />
 
-<Select
-  value={String(table.getState().pagination.pageSize)}
-  onValueChange={(value) => table.setPageSize(Number(value))}
->
-  <SelectTrigger className="w-32">
-    <SelectValue placeholder="Rows per page" />
-  </SelectTrigger>
+          <Select
+            value={String(table.getState().pagination.pageSize)}
+            onValueChange={(value) => table.setPageSize(Number(value))}
+          >
+            <SelectTrigger className="w-32">
+              <SelectValue placeholder="Rows per page" />
+            </SelectTrigger>
 
-  <SelectContent>
-    {[5, 10, 20, 30, 50].map((size) => (
-      <SelectItem key={size} value={String(size)}>
-        Show {size}
-      </SelectItem>
-    ))}
-  </SelectContent>
-</Select>
+            <SelectContent>
+              {[5, 10, 20, 30, 50].map((size) => (
+                <SelectItem key={size} value={String(size)}>
+                  Show {size}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>
