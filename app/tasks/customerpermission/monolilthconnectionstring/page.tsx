@@ -8,24 +8,24 @@ import { DataTable } from "./data-table";
 // import { startWith, switchMap, tap } from "rxjs/operators";
 // import { from, of } from "rxjs";
 // import { RefreshCcw } from "lucide-react";
-import { ICustomerSecurityGroup } from "../interfaces";
-import { getCustomerSecurityGroups } from "../serverlib";
+import { IConnectionString } from "../interfaces";
+import { getConnectionStrings } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 
-export default function CustomerSecurityGroup() {
+export default function ConnectionString() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
     console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
-    const [data, setData] = useState<ICustomerSecurityGroup[]>([]);
+    const [data, setData] = useState<IConnectionString[]>([]);
     const [search, setSearch] = useState("");
-    const filteredData = data.filter((item: ICustomerSecurityGroup) => {
+    const filteredData = data.filter((item: IConnectionString) => {
         if (search.endsWith("%")) {
             const prefix = search.slice(0, -1); // remove %
-            return item.GroupName.startsWith(prefix);
+            return item.Namespace.startsWith(prefix);
         } else if (search !== "") {
-            return item.GroupName === search;
+            return item.Namespace === search;
         } else {
             return true;
         }
@@ -39,7 +39,7 @@ export default function CustomerSecurityGroup() {
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>("192.168.100.151", "CustomerPermissionDb", selectedEnvironment);
+        const res = await getConnectionStrings<IConnectionString>("ServerInventory", selectedEnvironment);
         setData(res ?? []);
     }, [selectedEnvironment, globalSettings]);  // dependencies used inside loaddata
 

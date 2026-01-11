@@ -1,5 +1,35 @@
 "use server";
 
+export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
+  const query = `
+  query ConnectionStrings($db: String!) {
+  ConnectionStrings(db: $db) {
+  ClientID
+  Namespace
+  ConstringDatabaseName
+  ConstringServerName
+  ISBI
+  ConnectionType
+  IsDecomm
+  }
+}`;
+  const variables = { db: db };
+  const res = await fetch(
+    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+  const data = await res.json();
+  if (data.errors) {
+    console.error(data.errors);
+    throw new Error(data.errors[0].message);
+  }
+  return data.data.ConnectionStrings;
+}
+
 export async function getCustomerSecurityGroups<T>(
   server: string,
   db: string,
