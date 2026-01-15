@@ -1,4 +1,22 @@
 "use server";
+import { IConnectionString } from "./interfaces";
+
+export async function getClientInfo(
+  clientid: number[],
+  Namespace: string
+): Promise<IConnectionString[]> {
+  const result: IConnectionString[] = [
+    {
+      ClientID: 1,
+      Namespace: "TestNamespace",
+      ConstringDatabaseName: "TestDB",
+      ConstringServerName: "TestServer",
+      ConnectionType: "SQL",
+      IsDecomm: false,
+    },
+  ];
+  return result;
+}
 
 export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
   const query = `

@@ -1,13 +1,6 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-// import { IapiInfo } from "@/interfaces/generic";
-// import {IDatabaseInfo } from "@/interfaces/databases";
-// // import {getAllDatabase} from "@/lib/rxjs/databases/databases";
-// import { useEventCallback } from "rxjs-hooks";
-// import { startWith, switchMap, tap } from "rxjs/operators";
-// import { from, of } from "rxjs";
-// import { RefreshCcw } from "lucide-react";
 import { ICustomerSecurityGroup } from "../interfaces";
 import { getCustomerSecurityGroups } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
@@ -64,7 +57,3 @@ export default function CustomerSecurityGroup() {
         </div>
     );
 }
-
-
-
-

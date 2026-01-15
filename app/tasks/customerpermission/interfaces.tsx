@@ -20,16 +20,16 @@ export interface IConnectionString {
   Namespace: string;
   ConstringDatabaseName: string;
   ConstringServerName: string;
-  ConStringLogin: string;
-  ControlDBName: string;
-  ControlServerName: string;
-  Timeout: number;
-  Comment: string;
-  ISBI: boolean;
-  StandardQueryTimeout: number;
-  ClientTimeoutMinutes: number;
+  ConStringLogin?: string;
+  ControlDBName?: string;
+  ControlServerName?: string;
+  Timeout?: number;
+  Comment?: string;
+  ISBI?: boolean;
+  StandardQueryTimeout?: number;
+  ClientTimeoutMinutes?: number;
   ConnectionType: string;
-  DatabaseConnectionLastModifiedTimestamp: string; // ISO datetime
-  CollectedTimeStamp: string; // ISO datetime
+  DatabaseConnectionLastModifiedTimestamp?: string; // ISO datetime
+  CollectedTimeStamp?: string; // ISO datetime
   IsDecomm: boolean;
 }

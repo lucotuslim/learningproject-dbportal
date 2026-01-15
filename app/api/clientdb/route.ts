@@ -7,9 +7,12 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    
+
     if (!body?.server || !body?.db || !body?.q) {
-      return NextResponse.json({ error: "Missing required fields: server, db, q" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing required fields: server, db, q" },
+        { status: 400 }
+      );
     }
     const rows = await getClientData(body.server, body.db, body.q);
     return NextResponse.json(rows);
@@ -19,11 +22,8 @@ export async function POST(req: Request) {
   }
 }
 
- async function getClientData(
-  serverName: string,
-  dbName: string,
-  sqlText: string
-) {
+async function getClientData(serverName: string, dbName: string, sqlText: string) {
+  console.log(sqlText);
   // If environment variables specify credentials, use mssql with them.
   if (process.env.DB_USER) {
     const config: sql.config = {
@@ -69,11 +69,14 @@ export async function POST(req: Request) {
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
 
   try {
-    const rows = await safeMsNodeSqlQuery(conn, `
+    const rows = await safeMsNodeSqlQuery(
+      conn,
+      `
       SET NOCOUNT ON;
       ${sqlText}
-      `, 
-      QUERY_TIMEOUT_MS);
+      `,
+      QUERY_TIMEOUT_MS
+    );
     return rows;
   } catch (err) {
     console.error("msnodesqlv8 safe query error:", err);
@@ -90,7 +93,10 @@ export async function GET(req: NextRequest) {
   const q = url.searchParams.get("q");
 
   if (!server || !db || !q) {
-    return NextResponse.json({ error: "Missing required query params: server, db, q" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Missing required query params: server, db, q" },
+      { status: 400 }
+    );
   }
 
   try {
@@ -101,4 +107,3 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
 }
-

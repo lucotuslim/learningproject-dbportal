@@ -4,7 +4,6 @@ import { NextRequest } from "next/server";
 
 // 🧠 GraphQL Schema Definition
 const typeDefs = `#graphql
-
 scalar JSON
 scalar DateTime
 
@@ -28,11 +27,14 @@ type Query {
     environment: String!
   ): [CustomerSecurityGroup!]!
 
-  customerSecurityGroupByName(
-    CustomerSecurityGroupsName: String!
-  ): CustomerSecurityGroup
+  customerSecurityGroupByClientIdName(
+    server: String!
+    db: String!
+    environment: String!
+    ClientId: Int!
+    Namespace: String!
+  ): [CustomerSecurityGroup!]!
 }
-
 `;
 
 // 🧠 Resolvers
@@ -62,6 +64,51 @@ const resolvers = {
       ,[IsDeleted]
   FROM [CustomerPermissionDb].[dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
+              `,
+          }),
+        });
+        if (!res.ok) {
+          throw new Error(`GetAppConfig failed: ${res.statusText}`);
+        }
+        return await res.json();
+      } catch (err) {
+        console.error("GetAppConfig error:", err);
+        throw err;
+      }
+    },
+
+    customerSecurityGroupByClientIdName: async (
+      _: unknown,
+      {
+        server,
+        db,
+        environment,
+        ClientId,
+        Namespace,
+      }: { server: string; db: string; environment: string; ClientId: number; Namespace: string }
+    ) => {
+      try {
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server,
+            db,
+            q: `
+                SELECT [CustomerSecurityGroupsId]
+      ,[GroupSID]
+      ,[Environment]
+      ,[Namespace]
+      ,[ClientId]
+      ,[GroupName]
+      ,[MetaData]
+      ,[CollectedTimestamp]
+      ,[Permission]
+      ,[IsDeleted]
+  FROM [CustomerPermissionDb].[dbo].[CustomerSecurityGroups]
+  where Environment = '${environment}'
+  and ClientId = ${ClientId}
+  and Namespace = '${Namespace}'
               `,
           }),
         });
