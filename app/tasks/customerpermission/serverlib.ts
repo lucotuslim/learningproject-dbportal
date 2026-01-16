@@ -1,5 +1,5 @@
 "use server";
-import { IConnectionString } from "./interfaces";
+import { IConnectionString, IConnectionStringWithFound } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
 export async function getClientInfo(
@@ -8,7 +8,7 @@ export async function getClientInfo(
   Namespace: string,
   environment: string,
   concurrency: number = 100
-): Promise<IConnectionString[]> {
+): Promise<IConnectionStringWithFound[]> {
   if (clientid.length === 0) {
     return [];
   }
@@ -26,9 +26,13 @@ export async function getClientInfo(
                 ISBI: false,
                 ConnectionType: "N/A",
                 IsDecomm: false,
-              } as IConnectionString;
+                Found: false,
+              } as IConnectionStringWithFound;
             }
-            return result;
+            return result.map((r) => ({
+              ...r,
+              Found: true,
+            }));
           })
         ),
       concurrency

@@ -33,3 +33,7 @@ export interface IConnectionString {
   CollectedTimeStamp?: string; // ISO datetime
   IsDecomm: boolean;
 }
+
+export interface IConnectionStringWithFound extends IConnectionString {
+  Found: boolean;
+}

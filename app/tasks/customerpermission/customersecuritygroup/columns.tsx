@@ -4,11 +4,11 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getClientInfo } from "../serverlib"
-import { ICustomerSecurityGroup, IConnectionString, CustomerSecurityGroupMetaData } from "../interfaces"
+import { ICustomerSecurityGroup, CustomerSecurityGroupMetaData, IConnectionStringWithFound } from "../interfaces"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string }) {
-  const [data, setData] = useState<IConnectionString[]>([])
+  const [data, setData] = useState<IConnectionStringWithFound[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -72,7 +72,7 @@ function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurity
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-[90vw] max-w-[800px] max-h-72 overflow-auto text-sm">
+      <PopoverContent className="w-[100vw] max-w-[900px] max-h-72 overflow-auto text-sm">
         {loading && (<div className="flex justify-center py-4">
           Loading...
         </div>)}
@@ -87,17 +87,26 @@ function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurity
                 <TableHead>ConstringServerName</TableHead>
                 <TableHead>ConnectionType</TableHead>
                 <TableHead>IsDecomm</TableHead>
+                <TableHead>Found?</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {data.map(info => (
-                <TableRow key={info.ClientID}>
+                <TableRow
+                  key={`${info.ClientID}-${info.ConstringDatabaseName}`}
+                  className={
+                    !info.Found
+                      ? "text-red-500"
+                      : ""
+                  }
+                >
                   <TableCell>{info.ClientID}</TableCell>
                   <TableCell>{info.Namespace}</TableCell>
                   <TableCell>{info.ConstringDatabaseName}</TableCell>
                   <TableCell>{info.ConstringServerName}</TableCell>
                   <TableCell>{info.ConnectionType}</TableCell>
                   <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
+                  <TableCell>{info.Found ? "Yes" : "No"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -107,10 +116,6 @@ function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurity
     </Popover>
   )
 }
-
-
-
-
 
 export const columns = (): ColumnDef<ICustomerSecurityGroup>[] => [
   { accessorKey: "GroupSID", header: "GroupSID" },
