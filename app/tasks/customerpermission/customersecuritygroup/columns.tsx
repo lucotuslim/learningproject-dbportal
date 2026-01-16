@@ -54,18 +54,9 @@ function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurity
     setError(null)
 
     try {
-
-      // const res = await fetch("/api/client-info", {
-      //   method: "POST",
-      //   headers: { "Content-Type": "application/json" },
-      //   body: JSON.stringify({ clientIds: clientArray })
-      // })
-
-      // if (!res.ok) throw new Error("Failed to load client info")
-
-      // const json = await res.json()
-      // setData(json)
-      getClientInfo(clientArray, Namespace).then(setData).catch(err => setError(err.message))
+      const result = await getClientInfo("ServerInventory", clientArray, Namespace, "nonprod")
+      setData(result);
+      //getClientInfo("ServerInventory", clientArray, Namespace, "nonprod").then(setData).catch(err => setError(err.message))
     } catch (err: unknown) {
       setError((err as Error).message)
     } finally {
@@ -81,8 +72,10 @@ function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurity
         </Button>
       </PopoverTrigger>
 
-      <PopoverContent className="w-300 max-h-72 overflow-auto text-sm">
-        {loading && "Loading..."}
+      <PopoverContent className="w-[90vw] max-w-[800px] max-h-72 overflow-auto text-sm">
+        {loading && (<div className="flex justify-center py-4">
+          Loading...
+        </div>)}
         {error && <div className="text-red-500">{error}</div>}
         {data.length > 0 && (
           <Table>
