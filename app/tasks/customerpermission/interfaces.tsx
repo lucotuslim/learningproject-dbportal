@@ -35,5 +35,9 @@ export interface IConnectionString {
 }
 
 export interface IConnectionStringWithFound extends IConnectionString {
+  ConnectionStringFound: boolean;
+}
+
+export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
   Found: boolean;
 }

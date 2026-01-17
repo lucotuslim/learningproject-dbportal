@@ -2,7 +2,17 @@
 import { IConnectionString, IConnectionStringWithFound } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
-export async function getClientInfo(
+export async function getclientdbpermissioninfo(
+  db: string,
+  clientid: number[],
+  Namespace: string,
+  environment: string,
+  concurrency: number = 100
+): Promise<IConnectionStringWithFound[]> {
+  return getClientWithDbInfo(db, clientid, Namespace, environment, concurrency);
+}
+
+export async function getClientWithDbInfo(
   db: string,
   clientid: number[],
   Namespace: string,
@@ -26,12 +36,12 @@ export async function getClientInfo(
                 ISBI: false,
                 ConnectionType: "N/A",
                 IsDecomm: false,
-                Found: false,
+                ConnectionStringFound: false,
               } as IConnectionStringWithFound;
             }
             return result.map((r) => ({
               ...r,
-              Found: true,
+              ConnectionStringFound: true,
             }));
           })
         ),
