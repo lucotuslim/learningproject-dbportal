@@ -1,10 +1,8 @@
 "use client"
 import { ColumnDef } from "@tanstack/react-table"
-import { Button } from "@/components/ui/button"
 import { ICustomerSecurityGroup } from "../interfaces"
-import { ClientIDListCell, CheckClientDbPermissionContent, ActionsCell } from "./columnlib"
+import { ClientIDListCell, ActionsCell } from "./columnlib"
 
-import { useState } from "react"
 
 
 export const columns = (): ColumnDef<ICustomerSecurityGroup>[] => [

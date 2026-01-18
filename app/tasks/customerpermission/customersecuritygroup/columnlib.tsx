@@ -1,15 +1,10 @@
 "use client";
-
 import { useEffect, useState } from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getClientWithDbInfo, getclientdbpermissioninfo } from "../serverlib"
-import { CustomerSecurityGroupMetaData, IConnectionStringWithFound, ICustomerSecurityGroup } from "../interfaces"
+import { CustomerSecurityGroupMetaData, IConnectionStringWithDbPermission, ICustomerSecurityGroup } from "../interfaces"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
-import {
-
-    DialogTrigger,
-} from "@/components/ui/dialog"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { MoreHorizontal } from "lucide-react"
 import {
@@ -18,7 +13,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
-
 
 export function ActionsCell({
     customer,
@@ -60,6 +54,7 @@ export function ActionsCell({
                         <CheckClientDbPermissionContent
                             metaData={customer.MetaData}
                             Namespace={customer.Namespace}
+                            clientpermission={customer.Permission}
                         />
                     </div>
                 </DialogContent>
@@ -71,11 +66,13 @@ export function ActionsCell({
 export function CheckClientDbPermissionContent({
     metaData,
     Namespace,
+    clientpermission
 }: {
     metaData?: CustomerSecurityGroupMetaData | string | null
     Namespace: string
+    clientpermission: string
 }) {
-    const [data, setData] = useState<IConnectionStringWithFound[]>([])
+    const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -99,6 +96,7 @@ export function CheckClientDbPermissionContent({
                     "ServerInventory",
                     clientArray,
                     Namespace,
+                    clientpermission,
                     "nonprod"
                 )
                 setData(result)
@@ -109,7 +107,7 @@ export function CheckClientDbPermissionContent({
             }
         }
         load()
-    }, [metaData, Namespace])
+    }, [metaData, Namespace, clientpermission])
 
     if (loading) {
         return (
@@ -132,6 +130,7 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Type</TableHead>
                     <TableHead>Decomm</TableHead>
                     <TableHead>ConnectionStringFound?</TableHead>
+                    <TableHead>Db Permission</TableHead>
                 </TableRow>
             </TableHeader>
 
@@ -150,6 +149,7 @@ export function CheckClientDbPermissionContent({
                         <TableCell>
                             {info.ConnectionStringFound ? "Yes" : "No"}
                         </TableCell>
+                        <TableCell>{info.dbpermission}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
@@ -161,7 +161,7 @@ export function CheckClientDbPermissionContent({
 
 
 export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string }) {
-    const [data, setData] = useState<IConnectionStringWithFound[]>([])
+    const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const loadClients = async () => {

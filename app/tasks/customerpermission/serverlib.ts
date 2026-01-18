@@ -1,15 +1,42 @@
 "use server";
-import { IConnectionString, IConnectionStringWithFound } from "./interfaces";
+import {
+  IConnectionString,
+  IConnectionStringWithFound,
+  IConnectionStringWithDbPermission,
+  IPermissionMapping,
+} from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
 export async function getclientdbpermissioninfo(
   db: string,
   clientid: number[],
   Namespace: string,
+  clientpermission: string,
   environment: string,
   concurrency: number = 100
-): Promise<IConnectionStringWithFound[]> {
-  return getClientWithDbInfo(db, clientid, Namespace, environment, concurrency);
+): Promise<IConnectionStringWithDbPermission[]> {
+  const PermissionMap: IPermissionMapping[] = [
+    { permission: "Owner", dbPermission: "db_owner" },
+    { permission: "ReadWrite", dbPermission: "db_datawriter" },
+    { permission: "ReadOnly", dbPermission: "db_datareader" },
+  ];
+
+  const result = await from(
+    getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)
+  ).pipe(
+    map((res) => res.filter((item) => item.ConnectionStringFound)),
+    map((res) =>
+      res.map((item) => {
+        const mapping = PermissionMap.find((map) => map.permission === clientpermission);
+        return {
+          ...item,
+          dbpermission: mapping ? mapping.dbPermission : "N/A",
+        };
+      })
+    )
+  );
+
+  return await lastValueFrom(result);
 }
 
 export async function getClientWithDbInfo(

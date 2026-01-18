@@ -39,5 +39,10 @@ export interface IConnectionStringWithFound extends IConnectionString {
 }
 
 export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
-  Found: boolean;
+  dbpermission?: string;
+}
+
+export interface IPermissionMapping {
+  permission: "Owner" | "ReadWrite" | "ReadOnly";
+  dbPermission: "db_owner" | "db_datawriter" | "db_datareader";
 }
