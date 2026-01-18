@@ -4,6 +4,7 @@ import {
   IConnectionStringWithFound,
   IConnectionStringWithDbPermission,
   IPermissionMapping,
+  IServerPrincipal,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
@@ -11,6 +12,7 @@ export async function getclientdbpermissioninfo(
   db: string,
   clientid: number[],
   Namespace: string,
+  name: string,
   clientpermission: string,
   environment: string,
   concurrency: number = 100
@@ -21,22 +23,33 @@ export async function getclientdbpermissioninfo(
     { permission: "ReadOnly", dbPermission: "db_datareader" },
   ];
 
-  const result = await from(
-    getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)
-  ).pipe(
+  const dbpermission =
+    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission ?? "N/A";
+
+  const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
     map((res) => res.filter((item) => item.ConnectionStringFound)),
-    map((res) =>
-      res.map((item) => {
-        const mapping = PermissionMap.find((map) => map.permission === clientpermission);
-        return {
-          ...item,
-          dbpermission: mapping ? mapping.dbPermission : "N/A",
-        };
-      })
+    mergeMap((items) =>
+      from(items).pipe(
+        mergeMap(async (item) => {
+          const sp = await getServerPrincipal(
+            item.ConstringServerName,
+            item.ConstringDatabaseName,
+            name
+          );
+
+          return {
+            ...item,
+            dbpermission, // string
+            serverPrincipal: sp[0]?.name ?? null, // ✅ safe
+            ServerPrincipalFound: !!sp[0]?.name, // ✅ boolean
+          } as IConnectionStringWithDbPermission;
+        }, concurrency),
+        toArray()
+      )
     )
   );
 
-  return await lastValueFrom(result);
+  return await lastValueFrom(obs$);
 }
 
 export async function getClientWithDbInfo(
@@ -180,4 +193,31 @@ async function fetchConnectionStringByClientIdName(
     throw new Error(data.errors[0].message);
   }
   return data.data.ConnectionStringByClientIdName;
+}
+
+export async function getServerPrincipal(
+  server: string,
+  db: string,
+  name: string
+): Promise<IServerPrincipal[]> {
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+        select name , create_date, default_database_name  from sys.server_principals where name = '${name}'
+              `,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`getServerPrincipal failed: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("getServerPrincipal error:", err);
+    throw err;
+  }
 }
