@@ -40,17 +40,15 @@ export interface IConnectionStringWithFound extends IConnectionString {
 
 export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
 
-  dbpermission: "db_owner" | "db_datawriter" | "db_datareader" | "N/A"
+  dbpermission: string []
   serverPrincipal: string | null
   ServerPrincipalFound: boolean
 
 }
 
-export interface IPermissionMapping {
-  permission: "Owner" | "ReadWrite" | "ReadOnly";
-  dbPermission: "db_owner" | "db_datawriter" | "db_datareader";
-
-
+export  interface IPermissionMapping {
+  permission: "Owner" | "Read" | "ReadOnly" | "ReadWrite" ;
+  dbPermission: string []
 }
 
 export interface IServerPrincipal {

@@ -17,14 +17,16 @@ export async function getclientdbpermissioninfo(
   environment: string,
   concurrency: number = 100
 ): Promise<IConnectionStringWithDbPermission[]> {
-  const PermissionMap: IPermissionMapping[] = [
-    { permission: "Owner", dbPermission: "db_owner" },
-    { permission: "ReadWrite", dbPermission: "db_datawriter" },
-    { permission: "ReadOnly", dbPermission: "db_datareader" },
-  ];
 
+const PermissionMap: IPermissionMapping[] = [
+    { permission: "Owner", dbPermission: [ "db_owner"] },
+    { permission: "ReadWrite", dbPermission: ["db_datawriter","db_datareader"] },
+    { permission: "ReadOnly", dbPermission: ["db_datareader"] },
+    { permission: "Read", dbPermission: ["db_datareader"] },
+  ];
+  
   const dbpermission =
-    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission ?? "N/A";
+    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission
 
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
     map((res) => res.filter((item) => item.ConnectionStringFound)),
