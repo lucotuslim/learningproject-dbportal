@@ -39,16 +39,17 @@ export interface IConnectionStringWithFound extends IConnectionString {
 }
 
 export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
-  dbpermission: "db_owner" | "db_datawriter" | "db_datareader" | "N/A"
+  dbpermission: string[]
   serverPrincipal: string | null
   ServerPrincipalFound: boolean
   databasePrincipal: string | null
   DatabasePrincipalFound: boolean
+  DatabaseUserMappings: string[]
 }
 
 export interface IPermissionMapping {
   permission: "Owner" | "ReadWrite" | "ReadOnly";
-  dbPermission: "db_owner" | "db_datawriter" | "db_datareader";
+  dbPermission: string[]
 }
 
 export interface IServerPrincipal {
@@ -62,4 +63,9 @@ export interface IDatabasePrincipal {
   type_desc: string;
   create_date: Date;
   modify_date: Date;
+}
+
+export interface IDatabaseUserMapping {
+  DatabaseUser: string;
+  DatabaseRole: string[]
 }

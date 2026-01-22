@@ -6,6 +6,7 @@ import {
   IPermissionMapping,
   IServerPrincipal,
   IDatabasePrincipal,
+  IDatabaseUserMapping,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
@@ -19,13 +20,13 @@ export async function getclientdbpermissioninfo(
   concurrency: number = 100
 ): Promise<IConnectionStringWithDbPermission[]> {
   const PermissionMap: IPermissionMapping[] = [
-    { permission: "Owner", dbPermission: "db_owner" },
-    { permission: "ReadWrite", dbPermission: "db_datawriter" },
-    { permission: "ReadOnly", dbPermission: "db_datareader" },
+    { permission: "Owner", dbPermission: ["db_owner"] },
+    { permission: "ReadWrite", dbPermission: ["db_datawriter", "db_datareader"] },
+    { permission: "ReadOnly", dbPermission: ["db_datareader"] },
   ];
 
-  const dbpermission =
-    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission ?? "N/A";
+  const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
+    ?.dbPermission ?? ["N/A"];
 
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
     map((res) => res.filter((item) => item.ConnectionStringFound)),
@@ -38,14 +39,20 @@ export async function getclientdbpermissioninfo(
             item.ConstringDatabaseName,
             name
           );
+          const dppermissionmapping: IDatabaseUserMapping[] = await fetchPermissionMappings(
+            item.ConstringServerName,
+            item.ConstringDatabaseName,
+            name
+          );
 
           return {
             ...item,
-            dbpermission, // string
+            dbpermission: dbpermission,
             serverPrincipal: sp[0]?.name ?? null, // ✅ safe
             ServerPrincipalFound: !!sp[0]?.name, // ✅ boolean
             databasePrincipal: dp[0]?.name ?? null, // ✅ safe
             DatabasePrincipalFound: !!dp[0]?.name, // ✅ boolean
+            DatabaseUserMappings: dppermissionmapping.map((m) => m.DatabaseRole).flat(), // ✅ array of roles
           } as IConnectionStringWithDbPermission;
         }, concurrency),
         toArray()
@@ -240,6 +247,41 @@ export async function getDatabasePrincipal(
         db,
         q: `
         select name , type_desc, create_date, modify_date  from sys.database_principals where name = '${name}'
+              `,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`getDatabasePrincipal failed: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("getDatabasePrincipal error:", err);
+    throw err;
+  }
+}
+
+export async function fetchPermissionMappings(
+  server: string,
+  db: string,
+  name: string
+): Promise<IDatabaseUserMapping[]> {
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+        SELECT
+            dp.name AS DatabaseUser,
+            drp.name AS DatabaseRole
+        FROM sys.database_principals dp
+        JOIN sys.database_role_members drm
+            ON dp.principal_id = drm.member_principal_id
+        JOIN sys.database_principals drp
+            ON drm.role_principal_id = drp.principal_id
+        WHERE dp.name = '${name}'
               `,
       }),
     });

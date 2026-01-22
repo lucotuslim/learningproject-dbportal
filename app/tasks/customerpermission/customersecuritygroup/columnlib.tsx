@@ -13,6 +13,8 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
+import { info } from "console";
 
 export function ActionsCell({
     customer,
@@ -48,7 +50,7 @@ export function ActionsCell({
                     className="mb-8 flex h-[calc(100vh-2rem)] min-w-[calc(100vw-2rem)] flex-col gap-0 p-0"
                 >
                     <DialogHeader>
-                        <DialogTitle>Client DB Permission</DialogTitle>
+                        <DialogTitle>Client DB Permission Setup - {customer.GroupName}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto p-4">
                         <CheckClientDbPermissionContent
@@ -123,6 +125,7 @@ export function CheckClientDbPermissionContent({
     if (error) {
         return <div className="text-red-500">{error}</div>
     }
+
     return (
         <Table>
             <TableHeader>
@@ -133,39 +136,87 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Server</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Decomm</TableHead>
-                    <TableHead>ConnectionStringFound?</TableHead>
-                    <TableHead>Db Permission</TableHead>
+                    <TableHead>Db Permission Required</TableHead>
                     <TableHead>Server Principal Found?</TableHead>
                     <TableHead>Database Principal Found?</TableHead>
+                    <TableHead>Database User Mappings</TableHead>
+                    <TableHead>Remarks</TableHead>
                 </TableRow>
             </TableHeader>
 
             <TableBody>
-                {data.map(info => (
-                    <TableRow
-                        key={`${info.ClientID}-${info.ConstringDatabaseName}`}
-                        className={!info.ConnectionStringFound ? "text-red-500" : ""}
-                    >
-                        <TableCell>{info.ClientID}</TableCell>
-                        <TableCell>{info.Namespace}</TableCell>
-                        <TableCell>{info.ConstringDatabaseName}</TableCell>
-                        <TableCell>{info.ConstringServerName}</TableCell>
-                        <TableCell>{info.ConnectionType}</TableCell>
-                        <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
-                        <TableCell>
-                            {info.ConnectionStringFound ? "Yes" : "No"}
-                        </TableCell>
-                        <TableCell>{info.dbpermission}</TableCell>
-                        <TableCell>{info.ServerPrincipalFound ? "Yes" : "No"}</TableCell>
-                        <TableCell>{info.DatabasePrincipalFound ? "Yes" : "No"}</TableCell>
-                    </TableRow>
-                ))}
+                {data.map(info => {
+                    const missingPermissions = info.dbpermission.filter(
+                        p =>
+                            !info.DatabaseUserMappings
+                                .map(m => m.toLowerCase())
+                                .includes(p.toLowerCase())
+                    )
+
+                    return (
+                        <TableRow
+                            key={`${info.ClientID}-${info.ConstringDatabaseName}`}
+                            className={!info.ConnectionStringFound ? "text-red-500" : ""}
+                        >
+                            <TableCell>{info.ClientID}</TableCell>
+                            <TableCell>{info.Namespace}</TableCell>
+                            <TableCell>{info.ConstringDatabaseName}</TableCell>
+                            <TableCell>{info.ConstringServerName}</TableCell>
+                            <TableCell>{info.ConnectionType}</TableCell>
+                            <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
+                            <TableCell>{info.dbpermission.join(", ")}</TableCell>
+
+                            <TableCell>
+                                {info.ServerPrincipalFound ? (
+                                    <Badge variant="secondary">Yes</Badge>
+                                ) : (
+                                    <Badge variant="destructive">No</Badge>
+                                )}
+                            </TableCell>
+
+                            <TableCell>
+                                {info.DatabasePrincipalFound ? (
+                                    <Badge variant="secondary">Yes</Badge>
+                                ) : (
+                                    <Badge variant="destructive">No</Badge>
+                                )}
+                            </TableCell>
+
+                            <TableCell>{info.DatabaseUserMappings.join(", ")}</TableCell>
+
+                            <TableCell>
+                                <div className="flex flex-col gap-1">
+                                    {!info.ServerPrincipalFound && (
+                                        <div className="text-red-600">
+                                            No Server Principal Found
+                                        </div>
+                                    )}
+
+                                    {!info.DatabasePrincipalFound && (
+                                        <div className="text-red-600">
+                                            No Database Principal Found
+                                        </div>
+                                    )}
+
+                                    {missingPermissions.length > 0 && (
+                                        <div className="text-orange-600">
+                                            <div className="font-medium">Missing Permissions:</div>
+                                            <ul className="list-disc list-inside text-sm">
+                                                {missingPermissions.map(p => (
+                                                    <li key={p}>{p}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
+                            </TableCell>
+                        </TableRow>
+                    )
+                })}
             </TableBody>
-        </Table>
+        </Table >
     )
 }
-
-
 
 
 export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string }) {

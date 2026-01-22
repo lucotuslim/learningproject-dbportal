@@ -62,7 +62,7 @@ const resolvers = {
       ,[CollectedTimestamp]
       ,[Permission]
       ,[IsDeleted]
-  FROM [CustomerPermissionDb].[dbo].[CustomerSecurityGroups]
+  FROM [dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
               `,
           }),
@@ -105,7 +105,7 @@ const resolvers = {
       ,[CollectedTimestamp]
       ,[Permission]
       ,[IsDeleted]
-  FROM [CustomerPermissionDb].[dbo].[CustomerSecurityGroups]
+  FROM [dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
   and ClientId = ${ClientId}
   and Namespace = '${Namespace}'
