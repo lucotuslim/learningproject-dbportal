@@ -14,7 +14,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { info } from "console";
 
 export function ActionsCell({
     customer,
@@ -168,7 +167,7 @@ export function CheckClientDbPermissionContent({
 
                             <TableCell>
                                 {info.ServerPrincipalFound ? (
-                                    <Badge variant="secondary">Yes</Badge>
+                                    <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
                                 ) : (
                                     <Badge variant="destructive">No</Badge>
                                 )}
@@ -176,7 +175,7 @@ export function CheckClientDbPermissionContent({
 
                             <TableCell>
                                 {info.DatabasePrincipalFound ? (
-                                    <Badge variant="secondary">Yes</Badge>
+                                    <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
                                 ) : (
                                     <Badge variant="destructive">No</Badge>
                                 )}
