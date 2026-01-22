@@ -5,6 +5,7 @@ import {
   IConnectionStringWithDbPermission,
   IPermissionMapping,
   IServerPrincipal,
+  IDatabasePrincipal,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
@@ -31,7 +32,8 @@ export async function getclientdbpermissioninfo(
     mergeMap((items) =>
       from(items).pipe(
         mergeMap(async (item) => {
-          const sp = await getServerPrincipal(
+          const sp = await getServerPrincipal(item.ConstringServerName, "master", name);
+          const dp = await getDatabasePrincipal(
             item.ConstringServerName,
             item.ConstringDatabaseName,
             name
@@ -42,6 +44,8 @@ export async function getclientdbpermissioninfo(
             dbpermission, // string
             serverPrincipal: sp[0]?.name ?? null, // ✅ safe
             ServerPrincipalFound: !!sp[0]?.name, // ✅ boolean
+            databasePrincipal: dp[0]?.name ?? null, // ✅ safe
+            DatabasePrincipalFound: !!dp[0]?.name, // ✅ boolean
           } as IConnectionStringWithDbPermission;
         }, concurrency),
         toArray()
@@ -218,6 +222,33 @@ export async function getServerPrincipal(
     return await res.json();
   } catch (err) {
     console.error("getServerPrincipal error:", err);
+    throw err;
+  }
+}
+
+export async function getDatabasePrincipal(
+  server: string,
+  db: string,
+  name: string
+): Promise<IDatabasePrincipal[]> {
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+        select name , type_desc, create_date, modify_date  from sys.database_principals where name = '${name}'
+              `,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`getDatabasePrincipal failed: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("getDatabasePrincipal error:", err);
     throw err;
   }
 }

@@ -136,6 +136,7 @@ export function CheckClientDbPermissionContent({
                     <TableHead>ConnectionStringFound?</TableHead>
                     <TableHead>Db Permission</TableHead>
                     <TableHead>Server Principal Found?</TableHead>
+                    <TableHead>Database Principal Found?</TableHead>
                 </TableRow>
             </TableHeader>
 
@@ -156,6 +157,7 @@ export function CheckClientDbPermissionContent({
                         </TableCell>
                         <TableCell>{info.dbpermission}</TableCell>
                         <TableCell>{info.ServerPrincipalFound ? "Yes" : "No"}</TableCell>
+                        <TableCell>{info.DatabasePrincipalFound ? "Yes" : "No"}</TableCell>
                     </TableRow>
                 ))}
             </TableBody>
