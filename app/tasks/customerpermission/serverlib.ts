@@ -33,27 +33,42 @@ export async function getclientdbpermissioninfo(
     mergeMap((items) =>
       from(items).pipe(
         mergeMap(async (item) => {
-          const sp = await getServerPrincipal(item.ConstringServerName, "master", name);
-          const dp = await getDatabasePrincipal(
-            item.ConstringServerName,
-            item.ConstringDatabaseName,
-            name
-          );
-          const dppermissionmapping: IDatabaseUserMapping[] = await fetchPermissionMappings(
-            item.ConstringServerName,
-            item.ConstringDatabaseName,
-            name
-          );
+          try {
+            const sp = await getServerPrincipal(item.ConstringServerName, "master", name);
+            const dp = await getDatabasePrincipal(
+              item.ConstringServerName,
+              item.ConstringDatabaseName,
+              name
+            );
+            const dppermissionmapping: IDatabaseUserMapping[] = await fetchPermissionMappings(
+              item.ConstringServerName,
+              item.ConstringDatabaseName,
+              name
+            );
 
-          return {
-            ...item,
-            dbpermission: dbpermission,
-            serverPrincipal: sp[0]?.name ?? null, // ✅ safe
-            ServerPrincipalFound: !!sp[0]?.name, // ✅ boolean
-            databasePrincipal: dp[0]?.name ?? null, // ✅ safe
-            DatabasePrincipalFound: !!dp[0]?.name, // ✅ boolean
-            DatabaseUserMappings: dppermissionmapping.map((m) => m.DatabaseRole).flat(), // ✅ array of roles
-          } as IConnectionStringWithDbPermission;
+            return {
+              ...item,
+              dbpermission: dbpermission,
+              serverPrincipal: sp[0]?.name ?? null,
+              ServerPrincipalFound: !!sp[0]?.name,
+              databasePrincipal: dp[0]?.name ?? null,
+              DatabasePrincipalFound: !!dp[0]?.name,
+              DatabaseUserMappings: dppermissionmapping.map((d) => d.DatabaseRole).flat(),
+            };
+          } catch (err) {
+            console.error("Item failed:", item.ClientID, err);
+
+            return {
+              ...item,
+              dbpermission, // ✅ still required
+              serverPrincipal: null, // ✅ required
+              ServerPrincipalFound: false,
+              databasePrincipal: null, // ✅ required
+              DatabasePrincipalFound: false,
+              DatabaseUserMappings: [],
+              error: err instanceof Error ? err.message : "Unknown error",
+            } as IConnectionStringWithDbPermission;
+          }
         }, concurrency),
         toArray()
       )
@@ -224,7 +239,12 @@ export async function getServerPrincipal(
       }),
     });
     if (!res.ok) {
-      throw new Error(`getServerPrincipal failed: ${res.statusText}`);
+      let message = res.statusText;
+      try {
+        const resBody = await res.json();
+        message = resBody?.error ?? message;
+      } catch {}
+      throw new Error(`getServerPrincipal failed (${res.status}): ${message}`);
     }
     return await res.json();
   } catch (err) {
@@ -246,17 +266,25 @@ export async function getDatabasePrincipal(
         server,
         db,
         q: `
-        select name , type_desc, create_date, modify_date  from sys.database_principals where name = '${name}'
-              `,
+        select name, type_desc, create_date, modify_date
+        from sys.database_principals
+        where name = '${name}'
+      `,
       }),
     });
+
     if (!res.ok) {
-      throw new Error(`getDatabasePrincipal failed: ${res.statusText}`);
+      let message = res.statusText;
+      try {
+        const resBody = await res.json();
+        message = resBody?.error ?? message; // ✅ error is a string
+      } catch {}
+      throw new Error(`getDatabasePrincipal failed (${res.status}): ${message}`);
     }
     return await res.json();
   } catch (err) {
     console.error("getDatabasePrincipal error:", err);
-    throw err;
+    throw err; // rethrow so caller can handle
   }
 }
 

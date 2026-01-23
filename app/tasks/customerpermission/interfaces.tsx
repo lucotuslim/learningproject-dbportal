@@ -45,6 +45,7 @@ export interface IConnectionStringWithDbPermission extends IConnectionStringWith
   databasePrincipal: string | null
   DatabasePrincipalFound: boolean
   DatabaseUserMappings: string[]
+
 }
 
 export interface IPermissionMapping {
