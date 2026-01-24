@@ -17,8 +17,10 @@ import { Badge } from "@/components/ui/badge"
 
 export function ActionsCell({
     customer,
+    selectedEnvironment
 }: {
-    customer: ICustomerSecurityGroup
+    customer: ICustomerSecurityGroup,
+    selectedEnvironment: string
 }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -57,6 +59,7 @@ export function ActionsCell({
                             Namespace={customer.Namespace}
                             name={customer.GroupName}
                             clientpermission={customer.Permission}
+                            selectedEnvironment={selectedEnvironment}
                         />
                     </div>
                 </DialogContent>
@@ -69,12 +72,14 @@ export function CheckClientDbPermissionContent({
     metaData,
     name,
     Namespace,
-    clientpermission
+    clientpermission,
+    selectedEnvironment
 }: {
     metaData?: CustomerSecurityGroupMetaData | string | null
     name: string
     Namespace: string
     clientpermission: string
+    selectedEnvironment: string
 }) {
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
@@ -95,6 +100,13 @@ export function CheckClientDbPermissionContent({
                     .split(",")
                     .map(Number)
                     .filter(Boolean)
+                //   db: string,
+                //   clientid: number[],
+                //   Namespace: string,
+                //   name: string,
+                //   clientpermission: string,
+                //   environment: string,
+                //   concurrency: number = 100,
 
                 const result = await getclientdbpermissioninfo(
                     "ServerInventory",
@@ -102,7 +114,8 @@ export function CheckClientDbPermissionContent({
                     Namespace,
                     name,
                     clientpermission,
-                    "nonprod"
+                    selectedEnvironment,
+                    100
                 )
                 setData(result)
             } catch (e) {
@@ -112,7 +125,7 @@ export function CheckClientDbPermissionContent({
             }
         }
         load()
-    }, [metaData, Namespace, clientpermission, name])
+    }, [metaData, Namespace, clientpermission, name, selectedEnvironment])
 
     if (loading) {
         return (
@@ -223,7 +236,7 @@ export function CheckClientDbPermissionContent({
 }
 
 
-export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string }) {
+export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string }) {
     const [data, setData] = useState<IConnectionStringWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -265,7 +278,7 @@ export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerS
         setLoading(true)
         setError(null)
         try {
-            const result = await getClientWithDbInfo("ServerInventory", clientArray, Namespace, "nonprod")
+            const result = await getClientWithDbInfo("ServerInventory", clientArray, Namespace, selectedEnvironment)
             setData(result);
         } catch (err: unknown) {
             setError((err as Error).message)

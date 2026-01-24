@@ -82,7 +82,7 @@ export async function getClientWithDbInfo(
   db: string,
   clientid: number[],
   Namespace: string,
-  environment: string,
+  selectedEnvironment: string,
   concurrency: number = 100
 ): Promise<IConnectionStringWithFound[]> {
   if (clientid.length === 0) {
@@ -91,7 +91,7 @@ export async function getClientWithDbInfo(
   const obs$ = from(clientid).pipe(
     mergeMap(
       (id) =>
-        from(fetchConnectionStringByClientIdName(db, id, Namespace, environment)).pipe(
+        from(fetchConnectionStringByClientIdName(db, id, Namespace, selectedEnvironment)).pipe(
           map((result) => {
             if (result.length === 0) {
               return {
