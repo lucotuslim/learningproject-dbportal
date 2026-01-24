@@ -41,11 +41,11 @@ export interface IConnectionStringWithFound extends IConnectionString {
 export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
   dbpermission: string[]
   serverPrincipal: string | null
-  ServerPrincipalFound: boolean
+  ServerPrincipalFound: boolean | null
   databasePrincipal: string | null
-  DatabasePrincipalFound: boolean
+  DatabasePrincipalFound: boolean | null
   DatabaseUserMappings: string[]
-
+  error?: string
 }
 
 export interface IPermissionMapping {

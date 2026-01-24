@@ -62,9 +62,9 @@ export async function getclientdbpermissioninfo(
               ...item,
               dbpermission, // ✅ still required
               serverPrincipal: null, // ✅ required
-              ServerPrincipalFound: false,
+              ServerPrincipalFound: null,
               databasePrincipal: null, // ✅ required
-              DatabasePrincipalFound: false,
+              DatabasePrincipalFound: null,
               DatabaseUserMappings: [],
               error: err instanceof Error ? err.message : "Unknown error",
             } as IConnectionStringWithDbPermission;

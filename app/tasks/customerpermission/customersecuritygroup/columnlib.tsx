@@ -135,11 +135,12 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Server</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Decomm</TableHead>
-                    <TableHead>Db Permission Required</TableHead>
+                    <TableHead>CustomerGroup Permission Required</TableHead>
+                    <TableHead>Database User Mappings</TableHead>
                     <TableHead>Server Principal Found?</TableHead>
                     <TableHead>Database Principal Found?</TableHead>
-                    <TableHead>Database User Mappings</TableHead>
                     <TableHead>Remarks</TableHead>
+                    <TableHead> Error</TableHead>
                 </TableRow>
             </TableHeader>
 
@@ -164,51 +165,55 @@ export function CheckClientDbPermissionContent({
                             <TableCell>{info.ConnectionType}</TableCell>
                             <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
                             <TableCell>{info.dbpermission.join(", ")}</TableCell>
-
-                            <TableCell>
-                                {info.ServerPrincipalFound ? (
-                                    <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
-                                ) : (
-                                    <Badge variant="destructive">No</Badge>
-                                )}
-                            </TableCell>
-
-                            <TableCell>
-                                {info.DatabasePrincipalFound ? (
-                                    <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
-                                ) : (
-                                    <Badge variant="destructive">No</Badge>
-                                )}
-                            </TableCell>
-
                             <TableCell>{info.DatabaseUserMappings.join(", ")}</TableCell>
-
                             <TableCell>
-                                <div className="flex flex-col gap-1">
-                                    {!info.ServerPrincipalFound && (
-                                        <div className="text-red-600">
-                                            No Server Principal Found
-                                        </div>
-                                    )}
-
-                                    {!info.DatabasePrincipalFound && (
-                                        <div className="text-red-600">
-                                            No Database Principal Found
-                                        </div>
-                                    )}
-
-                                    {missingPermissions.length > 0 && (
-                                        <div className="text-orange-600">
-                                            <div className="font-medium">Missing Permissions:</div>
-                                            <ul className="list-disc list-inside text-sm">
-                                                {missingPermissions.map(p => (
-                                                    <li key={p}>{p}</li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
+                                {!info.error &&
+                                    (info.ServerPrincipalFound ? (
+                                        <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
+                                    ) : (
+                                        <Badge variant="destructive">No</Badge>
+                                    ))}
                             </TableCell>
+                            <TableCell>
+                                {!info.error &&
+                                    (
+                                        info.DatabasePrincipalFound ? (
+                                            <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
+                                        ) : (
+                                            <Badge variant="destructive">No</Badge>
+                                        )
+                                    )
+                                }
+                            </TableCell>
+                            <TableCell>
+                                {!info.error && (
+                                    <div className="flex flex-col gap-1">
+                                        {!info.ServerPrincipalFound && (
+                                            <div className="text-red-600">
+                                                No Server Principal Found
+                                            </div>
+                                        )}
+
+                                        {!info.DatabasePrincipalFound && (
+                                            <div className="text-red-600">
+                                                No Database Principal Found
+                                            </div>
+                                        )}
+
+                                        {missingPermissions.length > 0 && (
+                                            <div className="text-orange-600">
+                                                <div className="font-medium">Missing Permissions:</div>
+                                                <ul className="list-disc list-inside text-sm">
+                                                    {missingPermissions.map(p => (
+                                                        <li key={p}>{p}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </TableCell>
+                            <TableCell className="text-red-500 whitespace-normal break-words"> {info.error}</TableCell>
                         </TableRow>
                     )
                 })}
