@@ -3,7 +3,7 @@ import React from "react";
 // import AppConfigPage from "./appconfig/appconfigpage"
 import CustomerSecurityGroup from "./customersecuritygroup/page"
 import ConnectionString from "./monolilthconnectionstring/page"
-
+import Settings from "./appconfig/appconfigpage"
 import {
   Tabs,
   TabsContent,
@@ -26,6 +26,10 @@ export default function Page() {
           <TabsTrigger value="connectionstring" className="w-full">
             Connection String
           </TabsTrigger>
+          <TabsTrigger value="settings" className="w-full">
+            Settings
+          </TabsTrigger>
+
 
         </TabsList>
 
@@ -37,6 +41,12 @@ export default function Page() {
         <TabsContent value="connectionstring" className="w-full" >
           <ConnectionString />
         </TabsContent>
+
+
+        <TabsContent value="settings" className="w-full" >
+          <Settings />
+        </TabsContent>
+
 
       </Tabs>
     </div>

@@ -13,11 +13,14 @@ import {
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog"
+import { Badge } from "@/components/ui/badge"
 
 export function ActionsCell({
     customer,
+    selectedEnvironment
 }: {
-    customer: ICustomerSecurityGroup
+    customer: ICustomerSecurityGroup,
+    selectedEnvironment: string
 }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -48,7 +51,7 @@ export function ActionsCell({
                     className="mb-8 flex h-[calc(100vh-2rem)] min-w-[calc(100vw-2rem)] flex-col gap-0 p-0"
                 >
                     <DialogHeader>
-                        <DialogTitle>Client DB Permission</DialogTitle>
+                        <DialogTitle>Client DB Permission Setup - {customer.GroupName}</DialogTitle>
                     </DialogHeader>
                     <div className="flex-1 overflow-auto p-4">
                         <CheckClientDbPermissionContent
@@ -56,6 +59,7 @@ export function ActionsCell({
                             Namespace={customer.Namespace}
                             name={customer.GroupName}
                             clientpermission={customer.Permission}
+                            selectedEnvironment={selectedEnvironment}
                         />
                     </div>
                 </DialogContent>
@@ -68,12 +72,14 @@ export function CheckClientDbPermissionContent({
     metaData,
     name,
     Namespace,
-    clientpermission
+    clientpermission,
+    selectedEnvironment
 }: {
     metaData?: CustomerSecurityGroupMetaData | string | null
     name: string
     Namespace: string
     clientpermission: string
+    selectedEnvironment: string
 }) {
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
@@ -94,6 +100,13 @@ export function CheckClientDbPermissionContent({
                     .split(",")
                     .map(Number)
                     .filter(Boolean)
+                //   db: string,
+                //   clientid: number[],
+                //   Namespace: string,
+                //   name: string,
+                //   clientpermission: string,
+                //   environment: string,
+                //   concurrency: number = 100,
 
                 const result = await getclientdbpermissioninfo(
                     "ServerInventory",
@@ -101,7 +114,8 @@ export function CheckClientDbPermissionContent({
                     Namespace,
                     name,
                     clientpermission,
-                    "nonprod"
+                    selectedEnvironment,
+                    100
                 )
                 setData(result)
             } catch (e) {
@@ -111,7 +125,7 @@ export function CheckClientDbPermissionContent({
             }
         }
         load()
-    }, [metaData, Namespace, clientpermission, name])
+    }, [metaData, Namespace, clientpermission, name, selectedEnvironment])
 
     if (loading) {
         return (
@@ -123,6 +137,7 @@ export function CheckClientDbPermissionContent({
     if (error) {
         return <div className="text-red-500">{error}</div>
     }
+
     return (
         <Table>
             <TableHeader>
@@ -133,40 +148,95 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Server</TableHead>
                     <TableHead>Type</TableHead>
                     <TableHead>Decomm</TableHead>
-                    <TableHead>ConnectionStringFound?</TableHead>
-                    <TableHead>Db Permission</TableHead>
+                    <TableHead>CustomerGroup Permission Required</TableHead>
+                    <TableHead>Database User Mappings</TableHead>
                     <TableHead>Server Principal Found?</TableHead>
+                    <TableHead>Database Principal Found?</TableHead>
+                    <TableHead>Remarks</TableHead>
+                    <TableHead> Error</TableHead>
                 </TableRow>
             </TableHeader>
 
             <TableBody>
-                {data.map(info => (
-                    <TableRow
-                        key={`${info.ClientID}-${info.ConstringDatabaseName}`}
-                        className={!info.ConnectionStringFound ? "text-red-500" : ""}
-                    >
-                        <TableCell>{info.ClientID}</TableCell>
-                        <TableCell>{info.Namespace}</TableCell>
-                        <TableCell>{info.ConstringDatabaseName}</TableCell>
-                        <TableCell>{info.ConstringServerName}</TableCell>
-                        <TableCell>{info.ConnectionType}</TableCell>
-                        <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
-                        <TableCell>
-                            {info.ConnectionStringFound ? "Yes" : "No"}
-                        </TableCell>
-                        <TableCell>{info.dbpermission}</TableCell>
-                        <TableCell>{info.ServerPrincipalFound ? "Yes" : "No"}</TableCell>
-                    </TableRow>
-                ))}
+                {data.map(info => {
+                    const missingPermissions = info.dbpermission.filter(
+                        p =>
+                            !info.DatabaseUserMappings
+                                .map(m => m.toLowerCase())
+                                .includes(p.toLowerCase())
+                    )
+
+                    return (
+                        <TableRow
+                            key={`${info.ClientID}-${info.ConstringDatabaseName}`}
+                            className={!info.ConnectionStringFound ? "text-red-500" : ""}
+                        >
+                            <TableCell>{info.ClientID}</TableCell>
+                            <TableCell>{info.Namespace}</TableCell>
+                            <TableCell>{info.ConstringDatabaseName}</TableCell>
+                            <TableCell>{info.ConstringServerName}</TableCell>
+                            <TableCell>{info.ConnectionType}</TableCell>
+                            <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
+                            <TableCell>{info.dbpermission.join(", ")}</TableCell>
+                            <TableCell>{info.DatabaseUserMappings.join(", ")}</TableCell>
+                            <TableCell>
+                                {!info.error &&
+                                    (info.ServerPrincipalFound ? (
+                                        <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
+                                    ) : (
+                                        <Badge variant="destructive">No</Badge>
+                                    ))}
+                            </TableCell>
+                            <TableCell>
+                                {!info.error &&
+                                    (
+                                        info.DatabasePrincipalFound ? (
+                                            <Badge className="dark:bg-green-800" variant="secondary">Yes</Badge>
+                                        ) : (
+                                            <Badge variant="destructive">No</Badge>
+                                        )
+                                    )
+                                }
+                            </TableCell>
+                            <TableCell>
+                                {!info.error && (
+                                    <div className="flex flex-col gap-1">
+                                        {!info.ServerPrincipalFound && (
+                                            <div className="text-red-600">
+                                                No Server Principal Found
+                                            </div>
+                                        )}
+
+                                        {!info.DatabasePrincipalFound && (
+                                            <div className="text-red-600">
+                                                No Database Principal Found
+                                            </div>
+                                        )}
+
+                                        {missingPermissions.length > 0 && (
+                                            <div className="text-orange-600">
+                                                <div className="font-medium">Missing Permissions:</div>
+                                                <ul className="list-disc list-inside text-sm">
+                                                    {missingPermissions.map(p => (
+                                                        <li key={p}>{p}</li>
+                                                    ))}
+                                                </ul>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </TableCell>
+                            <TableCell className="text-red-500 whitespace-normal break-words"> {info.error}</TableCell>
+                        </TableRow>
+                    )
+                })}
             </TableBody>
-        </Table>
+        </Table >
     )
 }
 
 
-
-
-export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string }) {
+export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string }) {
     const [data, setData] = useState<IConnectionStringWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -208,7 +278,7 @@ export function ClientIDListCell({ metaData, Namespace }: { metaData?: CustomerS
         setLoading(true)
         setError(null)
         try {
-            const result = await getClientWithDbInfo("ServerInventory", clientArray, Namespace, "nonprod")
+            const result = await getClientWithDbInfo("ServerInventory", clientArray, Namespace, selectedEnvironment)
             setData(result);
         } catch (err: unknown) {
             setError((err as Error).message)

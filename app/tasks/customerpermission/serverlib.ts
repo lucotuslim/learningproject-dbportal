@@ -5,6 +5,8 @@ import {
   IConnectionStringWithDbPermission,
   IPermissionMapping,
   IServerPrincipal,
+  IDatabasePrincipal,
+  IDatabaseUserMapping,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
@@ -17,34 +19,56 @@ export async function getclientdbpermissioninfo(
   environment: string,
   concurrency: number = 100
 ): Promise<IConnectionStringWithDbPermission[]> {
-
-const PermissionMap: IPermissionMapping[] = [
-    { permission: "Owner", dbPermission: [ "db_owner"] },
-    { permission: "ReadWrite", dbPermission: ["db_datawriter","db_datareader"] },
+  const PermissionMap: IPermissionMapping[] = [
+    { permission: "Owner", dbPermission: ["db_owner"] },
+    { permission: "ReadWrite", dbPermission: ["db_datawriter", "db_datareader"] },
     { permission: "ReadOnly", dbPermission: ["db_datareader"] },
-    { permission: "Read", dbPermission: ["db_datareader"] },
   ];
-  
-  const dbpermission =
-    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission
+
+  const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
+    ?.dbPermission ?? ["N/A"];
 
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
     map((res) => res.filter((item) => item.ConnectionStringFound)),
     mergeMap((items) =>
       from(items).pipe(
         mergeMap(async (item) => {
-          const sp = await getServerPrincipal(
-            item.ConstringServerName,
-            item.ConstringDatabaseName,
-            name
-          );
+          try {
+            const sp = await getServerPrincipal(item.ConstringServerName, "master", name);
+            const dp = await getDatabasePrincipal(
+              item.ConstringServerName,
+              item.ConstringDatabaseName,
+              name
+            );
+            const dppermissionmapping: IDatabaseUserMapping[] = await fetchPermissionMappings(
+              item.ConstringServerName,
+              item.ConstringDatabaseName,
+              name
+            );
 
-          return {
-            ...item,
-            dbpermission, // string
-            serverPrincipal: sp[0]?.name ?? null, // ✅ safe
-            ServerPrincipalFound: !!sp[0]?.name, // ✅ boolean
-          } as IConnectionStringWithDbPermission;
+            return {
+              ...item,
+              dbpermission: dbpermission,
+              serverPrincipal: sp[0]?.name ?? null,
+              ServerPrincipalFound: !!sp[0]?.name,
+              databasePrincipal: dp[0]?.name ?? null,
+              DatabasePrincipalFound: !!dp[0]?.name,
+              DatabaseUserMappings: dppermissionmapping.map((d) => d.DatabaseRole).flat(),
+            };
+          } catch (err) {
+            console.error("Item failed:", item.ClientID, err);
+
+            return {
+              ...item,
+              dbpermission, // ✅ still required
+              serverPrincipal: null, // ✅ required
+              ServerPrincipalFound: null,
+              databasePrincipal: null, // ✅ required
+              DatabasePrincipalFound: null,
+              DatabaseUserMappings: [],
+              error: err instanceof Error ? err.message : "Unknown error",
+            } as IConnectionStringWithDbPermission;
+          }
         }, concurrency),
         toArray()
       )
@@ -58,7 +82,7 @@ export async function getClientWithDbInfo(
   db: string,
   clientid: number[],
   Namespace: string,
-  environment: string,
+  selectedEnvironment: string,
   concurrency: number = 100
 ): Promise<IConnectionStringWithFound[]> {
   if (clientid.length === 0) {
@@ -67,7 +91,7 @@ export async function getClientWithDbInfo(
   const obs$ = from(clientid).pipe(
     mergeMap(
       (id) =>
-        from(fetchConnectionStringByClientIdName(db, id, Namespace, environment)).pipe(
+        from(fetchConnectionStringByClientIdName(db, id, Namespace, selectedEnvironment)).pipe(
           map((result) => {
             if (result.length === 0) {
               return {
@@ -215,11 +239,86 @@ export async function getServerPrincipal(
       }),
     });
     if (!res.ok) {
-      throw new Error(`getServerPrincipal failed: ${res.statusText}`);
+      let message = res.statusText;
+      try {
+        const resBody = await res.json();
+        message = resBody?.error ?? message;
+      } catch {}
+      throw new Error(`getServerPrincipal failed (${res.status}): ${message}`);
     }
     return await res.json();
   } catch (err) {
     console.error("getServerPrincipal error:", err);
+    throw err;
+  }
+}
+
+export async function getDatabasePrincipal(
+  server: string,
+  db: string,
+  name: string
+): Promise<IDatabasePrincipal[]> {
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+        select name, type_desc, create_date, modify_date
+        from sys.database_principals
+        where name = '${name}'
+      `,
+      }),
+    });
+
+    if (!res.ok) {
+      let message = res.statusText;
+      try {
+        const resBody = await res.json();
+        message = resBody?.error ?? message; // ✅ error is a string
+      } catch {}
+      throw new Error(`getDatabasePrincipal failed (${res.status}): ${message}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("getDatabasePrincipal error:", err);
+    throw err; // rethrow so caller can handle
+  }
+}
+
+export async function fetchPermissionMappings(
+  server: string,
+  db: string,
+  name: string
+): Promise<IDatabaseUserMapping[]> {
+  try {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        server,
+        db,
+        q: `
+        SELECT
+            dp.name AS DatabaseUser,
+            drp.name AS DatabaseRole
+        FROM sys.database_principals dp
+        JOIN sys.database_role_members drm
+            ON dp.principal_id = drm.member_principal_id
+        JOIN sys.database_principals drp
+            ON drm.role_principal_id = drp.principal_id
+        WHERE dp.name = '${name}'
+              `,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`getDatabasePrincipal failed: ${res.statusText}`);
+    }
+    return await res.json();
+  } catch (err) {
+    console.error("getDatabasePrincipal error:", err);
     throw err;
   }
 }

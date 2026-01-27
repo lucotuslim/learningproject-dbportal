@@ -1,3 +1,8 @@
+export interface ICustomerPermissionConfig {
+  customerdb: string
+  customerdbserver: string
+}
+
 export interface CustomerSecurityGroupMetaData {
   clientIDList: string;
 }
@@ -39,20 +44,34 @@ export interface IConnectionStringWithFound extends IConnectionString {
 }
 
 export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
-
-  dbpermission: string []
+  dbpermission: string[]
   serverPrincipal: string | null
-  ServerPrincipalFound: boolean
-
+  ServerPrincipalFound: boolean | null
+  databasePrincipal: string | null
+  DatabasePrincipalFound: boolean | null
+  DatabaseUserMappings: string[]
+  error?: string
 }
 
-export  interface IPermissionMapping {
-  permission: "Owner" | "Read" | "ReadOnly" | "ReadWrite" ;
-  dbPermission: string []
+export interface IPermissionMapping {
+  permission: "Owner" | "ReadWrite" | "ReadOnly";
+  dbPermission: string[]
 }
 
 export interface IServerPrincipal {
   name: string;
   create_date: Date;
   default_database_name: string | null;
+}
+
+export interface IDatabasePrincipal {
+  name: string;
+  type_desc: string;
+  create_date: Date;
+  modify_date: Date;
+}
+
+export interface IDatabaseUserMapping {
+  DatabaseUser: string;
+  DatabaseRole: string[]
 }
