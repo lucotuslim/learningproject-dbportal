@@ -1,180 +1,92 @@
-// "use server";
-// import { IDocumentConfig } from "./interfaces";
-// const CONFIG_SECTION = "CustomerSecurityGroups";
+"use server";
+import { ICustomerPermissionConfig } from "./interfaces";
+const CONFIG_SECTION = "customerpermission";
 
-// export async function UpdateDocumentExtractionTasksSetting(
-//   config: IDocumentConfig
-// ): Promise<{ data: string }> {
+export async function UpdateCustomerPermissionSetting(
+    configKey: string,
+    value: string
+): Promise<{ data: string }> {
 
-//   const updateQuery = `
-//     mutation ($input: UpdateAppConfigInput!) {
-//       UpdateAppConfig(input: $input) {
-//         ConfigSection
-//       }
-//     }
-//   `;
+    const updateQuery = `
+    mutation ($input: UpdateGlobalConfigInput!) {
+      UpdateGlobalConfig(input: $input) {
+        ConfigSection
+      }
+    }
+  `;
 
-//   const res = await fetch(
-//     `${process.env.APPDAPIROOT}/api/appconfig`,
-//     {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         query: updateQuery,
-//         variables: {
-//           input: {
-//             server: process.env.APPCONFIGSERVER!,
-//             db: process.env.APPCONFIGDB!,
-//             configSection: CONFIG_SECTION,
-//             configJson: JSON.stringify(config),
-//           },
-//         },
-//       }),
-//     }
-//   );
+    const res = await fetch(
+        `${process.env.APPDAPIROOT}/api/appconfig`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                query: updateQuery,
+                variables: {
+                    input: {
+                        server: process.env.APPCONFIGSERVER!,
+                        db: process.env.APPCONFIGDB!,
+                        configSection: CONFIG_SECTION,
+                        configKey: configKey,
+                        configJson: value,
+                    },
+                },
+            }),
+        }
+    );
 
-//   const result = await res.json();
-//   console.log("UpdateDocumentExtractionTasksSetting result:", result);
-//   return result;
-// }
+    const result = await res.json();
+    console.log("UpdateGlobalSetting result:", result);
+    return result;
+}
 
 
-// export async function DeleteDocumentExtractionTasksSetting(
-//   config: IDocumentConfig
-// ): Promise<{ data: string }> {
+export async function CustomerPermissionSetting(): Promise<ICustomerPermissionConfig> {
+    const query = `
+    query ExampleQuery($server: String!, $db: String!, $config: String!) {
+      GetAppConfig(server: $server, db: $db, config: $config) {
+        ConfigJson
+      }
+    }
+  `;
 
-//   const deleteQuery = `
-//     mutation ($input: DeleteAppConfigInput!) {
-//       DeleteAppConfig(input: $input) {
-//         ConfigSection
-//       }
-//     }
-//   `;
+    const variables = {
+        server: process.env.APPCONFIGSERVER!,
+        db: process.env.APPCONFIGDB!,
+        config: CONFIG_SECTION,
+    };
 
-//   const res = await fetch(
-//     `${process.env.APPDAPIROOT}/api/appconfig`,
-//     {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         query: deleteQuery,
-//         variables: {
-//           input: {
+    const res = await fetch(
+        `${process.env.APPDAPIROOT}/api/appconfig`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, variables }),
+            cache: "no-store",
+        }
+    );
 
-//             server: process.env.APPCONFIGSERVER!,
-//             db: process.env.APPCONFIGDB!,
-//             configSection: CONFIG_SECTION,
-//             configJson: JSON.stringify(config),
-//           },
-//         },
-//       }),
-//     }
-//   );
 
-//   const result = await res.json();
-//   console.log("DeleteDocumentExtractionTasksSetting result:", result);
-//   return result;
+    if (!res.ok) throw new Error("Failed to fetch CustomerPermissionSetting");
 
-//   if (!res.ok || result.errors?.length) {
-//     throw new Error(
-//       result.errors?.[0]?.message ??
-//       "Failed to delete DocumentExtractionTasksSetting"
-//     );
-//   }
-// }
+    const result = await res.json();
+    if (result.errors?.length) {
+        throw new Error(result.errors[0].message);
+    }
 
-// export async function AddDocumentExtractionTasksSetting(
-//   config: IDocumentConfig
-// ): Promise<{ data: string }> {
+    const rows = result?.data?.GetAppConfig as { ConfigJson: string }[] | undefined;
+    if (!rows?.length || !rows[0]?.ConfigJson) {
+        throw new Error("CustomerPermission settings not found");
+    }
+    let parsed: unknown;
+    try {
+        parsed = JSON.parse(rows[0].ConfigJson);
+    } catch {
+        throw new Error("ConfigJson is not valid JSON");
+    }
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+        throw new Error("ConfigJson must be a single JSON object");
+    }
+    return parsed as ICustomerPermissionConfig
 
-//   const addQuery = `
-//     mutation ($input: AddAppConfigInput!) {
-//       AddAppConfig(input: $input) {
-//         ConfigSection
-//       }
-//     }
-//   `;
-
-//   const res = await fetch(
-//     `${process.env.APPDAPIROOT}/api/appconfig`,
-//     {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({
-//         query: addQuery,
-//         variables: {
-//           input: {
-//             server: process.env.APPCONFIGSERVER!,
-//             db: process.env.APPCONFIGDB!,
-//             configSection: CONFIG_SECTION,
-//             configJson: JSON.stringify(config),
-//           },
-//         },
-//       }),
-//     }
-//   );
-
-//   const result = await res.json();
-//   console.log("AddDocumentExtractionTasksSetting result:", result);
-//   return result;
-
-// }
-
-// export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[]> {
-//   const query = `
-//     query ExampleQuery($server: String!, $db: String!, $config: String!) {
-//       GetAppConfig(server: $server, db: $db, config: $config) {
-//         ConfigJson
-//       }
-//     }
-//   `;
-
-//   const variables = {
-//     server: process.env.APPCONFIGSERVER!,
-//     db: process.env.APPCONFIGDB!,
-//     config: "DocumentExtractionTasksSetting",
-//   };
-
-//   const res = await fetch(
-//     `${process.env.APPDAPIROOT}/api/appconfig`,
-//     {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ query, variables }),
-//       cache: "no-store",
-//     }
-//   );
-
-//   if (!res.ok) {
-//     throw new Error("Failed to fetch DocumentExtractionTasksSetting");
-//   }
-
-//   const result = await res.json();
-
-//   if (result.errors?.length) {
-//     throw new Error(result.errors[0].message);
-//   }
-
-//   const rows = result?.data?.GetAppConfig;
-
-//   if (!Array.isArray(rows)) return [];
-
-//   const configs: IDocumentConfig[] = [];
-
-//   for (const row of rows) {
-//     if (!row?.ConfigJson) continue;
-
-//     const parsed: IDocumentConfig[] = JSON.parse(row.ConfigJson);
-
-//     for (const cfg of parsed) {
-//       configs.push({
-//         ...cfg,
-//       });
-//     }
-//   }
-
-//   // 🔒 Guarantee uniqueness (CRITICAL for Radix Select)
-//   return Array.from(
-//     new Map(configs.map(c => [c.env, c])).values()
-//   );
-// }
+}

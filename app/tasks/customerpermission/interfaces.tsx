@@ -1,3 +1,8 @@
+export interface ICustomerPermissionConfig {
+  customerdb: string
+  customerdbserver: string
+}
+
 export interface CustomerSecurityGroupMetaData {
   clientIDList: string;
 }
