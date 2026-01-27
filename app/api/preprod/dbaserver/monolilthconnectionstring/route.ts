@@ -31,6 +31,7 @@ const typeDefs = `#graphql
 
   type Query {
     ConnectionStrings(db: String!): [ConnectionString!]!
+    ConnectionStringByClientIdName(db: String!, ClientId: Int!, Namespace: String!): [ConnectionString!]!
   }
 `;
 
@@ -52,7 +53,31 @@ const resolvers = {
           q: `
       SELECT 
            ${sqlColumns}
-         FROM MonolithConnectionStrings_PreProd
+         FROM MonolithConnectionStrings_preprod
+      `,
+        }),
+      }).then((res) => res.json());
+      return result;
+    },
+
+    ConnectionStringByClientIdName: async (
+      _: unknown,
+      { db, ClientId, Namespace }: { db: string; ClientId: number; Namespace: string },
+      __: unknown,
+      info: GraphQLResolveInfo
+    ) => {
+      const fields = Object.keys(graphqlFields(info));
+      const sqlColumns = fields.map((f) => `[${f}]`).join(", ");
+      const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          db: db,
+          q: `
+      SELECT 
+           ${sqlColumns}
+         FROM MonolithConnectionStrings_preprod
+          WHERE ClientID = ${ClientId} AND Namespace = '${Namespace}'
       `,
         }),
       }).then((res) => res.json());

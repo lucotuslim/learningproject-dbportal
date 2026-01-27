@@ -53,7 +53,7 @@ export default function CustomerSecurityGroup() {
                     className="w-128"
                 />
             </div>
-            <DataTable columns={columns()} data={filteredData} />
+            <DataTable columns={columns(selectedEnvironment)} data={filteredData} />
         </div>
     );
 }

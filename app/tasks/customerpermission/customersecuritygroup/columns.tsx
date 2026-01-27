@@ -3,11 +3,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { ICustomerSecurityGroup } from "../interfaces"
 import { ClientIDListCell, ActionsCell } from "./columnlib"
 
-
-
-
-export const columns = (): ColumnDef<ICustomerSecurityGroup>[] =>
-
+export const columns = (selectedEnvironment: string): ColumnDef<ICustomerSecurityGroup>[] =>
   [
     { accessorKey: "GroupSID", header: "GroupSID" },
     { accessorKey: "Environment", header: "Environment" },
@@ -18,7 +14,7 @@ export const columns = (): ColumnDef<ICustomerSecurityGroup>[] =>
       cell: ({ row }) =>
         row.original.MetaData ? (
 
-          <ClientIDListCell metaData={row.original.MetaData} Namespace={row.original.Namespace} selectedEnvironment="nonprod" />
+          <ClientIDListCell metaData={row.original.MetaData} Namespace={row.original.Namespace} selectedEnvironment={selectedEnvironment} />
         ) : (
           "None"
         )
@@ -26,17 +22,13 @@ export const columns = (): ColumnDef<ICustomerSecurityGroup>[] =>
     { accessorKey: "CollectedTimestamp", header: "CollectedTimestamp" },
     { accessorKey: "Permission", header: "Permission" },
     { accessorKey: "IsDeleted", header: "IsDeleted" },
-
-
     {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => (
-        <ActionsCell customer={row.original} selectedEnvironment="nonprod" />
+        <ActionsCell customer={row.original} selectedEnvironment={selectedEnvironment} />
       ),
     }
-
-
   ]
 
 
