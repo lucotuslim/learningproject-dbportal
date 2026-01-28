@@ -68,9 +68,16 @@ const resolvers = {
               `,
           }),
         });
+
         if (!res.ok) {
-          throw new Error(`GetAppConfig failed: ${res.statusText}`);
+          const errBody = await res.json().catch(() => null);
+          throw new Error(
+            errBody?.error
+              ? `GetAppConfig failed: ${errBody.error}`
+              : `GetAppConfig failed with status ${res.status}`
+          );
         }
+
         return await res.json();
       } catch (err) {
         console.error("GetAppConfig error:", err);

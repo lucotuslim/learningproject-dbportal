@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 const schema = z.object({
     customerdb: z.string().min(1, "Required"),
     customerdbserver: z.string().min(1, "Required"),
+    monolilthconnectionstringdb: z.string().min(1, "Required"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -33,7 +34,8 @@ export default function Settings() {
         mode: "onChange",
         defaultValues: {
             customerdb: "",
-            customerdbserver: ""
+            customerdbserver: "",
+            monolilthconnectionstringdb: ""
         },
     });
 
@@ -107,7 +109,7 @@ export default function Settings() {
                 </Button>
 
                 {/* SERVERINVENTORY */}
-                <FormLabel className="text-left">ServerInventory</FormLabel>
+                <FormLabel className="text-left">Customerdb Server</FormLabel>
 
                 <FormField
                     control={form.control}
@@ -133,6 +135,39 @@ export default function Settings() {
                 >
                     Save
                 </Button>
+
+
+                <FormLabel className="text-left">monolilthconnectionstringdbDb</FormLabel>
+
+                <FormField
+                    control={form.control}
+                    name="monolilthconnectionstringdb"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <Input {...field} disabled={!isEditing} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <Button
+                    type="button"
+                    disabled={
+                        !isEditing ||
+                        !form.formState.dirtyFields.monolilthconnectionstringdb ||
+                        !!form.formState.errors.monolilthconnectionstringdb
+                    }
+                    onClick={() => SubmitUpdateCustomerPermissionSetting("monolilthconnectionstringdb")}
+                >
+                    Save
+                </Button>
+
+
+
+
+
 
                 {/* GLOBAL EDIT TOGGLE */}
                 <div className="col-span-3 mt-4">

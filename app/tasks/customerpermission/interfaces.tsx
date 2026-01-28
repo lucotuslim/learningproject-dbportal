@@ -1,6 +1,7 @@
 export interface ICustomerPermissionConfig {
   customerdb: string
   customerdbserver: string
+  monolilthconnectionstringdb: string
 }
 
 export interface CustomerSecurityGroupMetaData {

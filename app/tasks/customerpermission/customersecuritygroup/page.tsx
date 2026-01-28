@@ -1,12 +1,13 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-import { ICustomerSecurityGroup } from "../interfaces";
+import { ICustomerSecurityGroup, ICustomerPermissionConfig } from "../interfaces";
 import { getCustomerSecurityGroups } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
-
+import { CustomerPermissionSetting } from "../appconfig"
+import { toast } from "sonner";
 export default function CustomerSecurityGroup() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
@@ -23,18 +24,27 @@ export default function CustomerSecurityGroup() {
             return true;
         }
     });
+    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
+    useEffect(() => {
+        CustomerPermissionSetting().then(setcustomerpermissionsetting)
+    }, [])
 
     const loaddata = useCallback(async () => {
-        if (!selectedEnvironment || !globalSettings) return setData([]);
+        if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return setData([]);
         // // const ServerInventory = await GlobalSetting();
 
         // console.log(
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>("192.168.100.151", "CustomerPermissionDb", selectedEnvironment);
-        setData(res ?? []);
-    }, [selectedEnvironment, globalSettings]);  // dependencies used inside loaddata
+        try {
+            const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment);
+            setData(res ?? []);
+        } catch (err) {
+            console.error("Failed to load customer permission setting:", err);
+            toast.error(String(err))
+        }
+    }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
 
     useEffect(() => {
         loaddata();

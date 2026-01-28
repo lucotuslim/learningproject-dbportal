@@ -40,7 +40,6 @@ export async function UpdateCustomerPermissionSetting(
     return result;
 }
 
-
 export async function CustomerPermissionSetting(): Promise<ICustomerPermissionConfig> {
     const query = `
     query ExampleQuery($server: String!, $db: String!, $config: String!) {

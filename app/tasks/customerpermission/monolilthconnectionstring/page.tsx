@@ -1,18 +1,12 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-// import { IapiInfo } from "@/interfaces/generic";
-// import {IDatabaseInfo } from "@/interfaces/databases";
-// // import {getAllDatabase} from "@/lib/rxjs/databases/databases";
-// import { useEventCallback } from "rxjs-hooks";
-// import { startWith, switchMap, tap } from "rxjs/operators";
-// import { from, of } from "rxjs";
-// import { RefreshCcw } from "lucide-react";
-import { IConnectionString } from "../interfaces";
+import { IConnectionString, ICustomerPermissionConfig } from "../interfaces";
 import { getConnectionStrings } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
+import { CustomerPermissionSetting } from "../appconfig"
 
 export default function ConnectionString() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
@@ -31,17 +25,22 @@ export default function ConnectionString() {
         }
     });
 
+    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
+    useEffect(() => {
+        CustomerPermissionSetting().then(setcustomerpermissionsetting)
+    }, [])
+
     const loaddata = useCallback(async () => {
-        if (!selectedEnvironment || !globalSettings) return setData([]);
+        if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return setData([]);
         // // const ServerInventory = await GlobalSetting();
 
         // console.log(
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getConnectionStrings<IConnectionString>("ServerInventory", selectedEnvironment);
+        const res = await getConnectionStrings<IConnectionString>(customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
         setData(res ?? []);
-    }, [selectedEnvironment, globalSettings]);  // dependencies used inside loaddata
+    }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
 
     useEffect(() => {
         loaddata();
