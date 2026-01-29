@@ -17,10 +17,31 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
+export const EnvironmentSchema = z.enum([
+    "nonprod",
+    "preprod",
+    "prod",
+]);
+
+export const LoginTypeSchema = z.enum([
+    "SQL_LOGIN",
+    "WINDOWS_LOGIN",
+    "WINDOWS_GROUP",
+]);
+
+export const NotAllowedUserSchema = z.object({
+    name: z.string().min(1, "Required"),
+    type_desc: LoginTypeSchema,
+});
+
 const schema = z.object({
     customerdb: z.string().min(1, "Required"),
     customerdbserver: z.string().min(1, "Required"),
     monolilthconnectionstringdb: z.string().min(1, "Required"),
+    notallowedlist: z.record(
+        EnvironmentSchema,
+        z.array(NotAllowedUserSchema)
+    ),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -29,13 +50,19 @@ export default function Settings() {
     const [isConfigLoading, setIsConfigLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
 
+
     const form = useForm<FormValues>({
         resolver: zodResolver(schema),
         mode: "onChange",
         defaultValues: {
             customerdb: "",
             customerdbserver: "",
-            monolilthconnectionstringdb: ""
+            monolilthconnectionstringdb: "",
+            notallowedlist: {
+                nonprod: [],
+                preprod: [],
+                prod: [],
+            },
         },
     });
 
@@ -160,6 +187,44 @@ export default function Settings() {
                         !!form.formState.errors.monolilthconnectionstringdb
                     }
                     onClick={() => SubmitUpdateCustomerPermissionSetting("monolilthconnectionstringdb")}
+                >
+                    Save
+                </Button>
+
+
+                <FormLabel className="text-left">Not allow list</FormLabel>
+                <FormField
+                    control={form.control}
+                    name="notallowedlist"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <textarea
+                                    className="min-h-[800px] w-full rounded-md border p-2 font-mono text-sm"
+                                    disabled={!isEditing}
+                                    value={JSON.stringify(field.value, null, 2)}
+                                    onChange={(e) => {
+                                        try {
+                                            field.onChange(JSON.parse(e.target.value));
+                                        } catch {
+                                            // ignore invalid JSON while typing
+                                        }
+                                    }}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <Button
+                    type="button"
+                    disabled={
+                        !isEditing ||
+                        !form.formState.dirtyFields.notallowedlist ||
+                        !!form.formState.errors.notallowedlist
+                    }
+                    onClick={() => SubmitUpdateCustomerPermissionSetting("notallowedlist")}
                 >
                     Save
                 </Button>

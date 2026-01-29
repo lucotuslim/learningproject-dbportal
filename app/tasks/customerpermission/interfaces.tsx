@@ -2,7 +2,16 @@ export interface ICustomerPermissionConfig {
   customerdb: string
   customerdbserver: string
   monolilthconnectionstringdb: string
+  notallowedlist: Record<Environment, NotAllowedUser[]>
 }
+
+export type Environment = "nonprod" | "preprod" | "prod"
+
+export interface NotAllowedUser {
+  name: string
+  type_desc: "SQL_LOGIN" | "WINDOWS_LOGIN" | "WINDOWS_GROUP"
+}
+
 
 export interface CustomerSecurityGroupMetaData {
   clientIDList: string;

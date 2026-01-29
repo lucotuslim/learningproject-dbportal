@@ -4,7 +4,7 @@ const CONFIG_SECTION = "customerpermission";
 
 export async function UpdateCustomerPermissionSetting(
     configKey: string,
-    value: string
+    value: unknown
 ): Promise<{ data: string }> {
 
     const updateQuery = `
@@ -28,7 +28,10 @@ export async function UpdateCustomerPermissionSetting(
                         db: process.env.APPCONFIGDB!,
                         configSection: CONFIG_SECTION,
                         configKey: configKey,
-                        configJson: value,
+                        configJson:
+                            typeof value === "string"
+                                ? value
+                                : JSON.stringify(value),
                     },
                 },
             }),
