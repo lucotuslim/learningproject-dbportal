@@ -34,14 +34,27 @@ export const NotAllowedUserSchema = z.object({
     type_desc: LoginTypeSchema,
 });
 
+const notAllowedListParsedSchema = z.record(
+    EnvironmentSchema,
+    z.array(NotAllowedUserSchema)
+);
+
 const schema = z.object({
     customerdb: z.string().min(1, "Required"),
     customerdbserver: z.string().min(1, "Required"),
     monolilthconnectionstringdb: z.string().min(1, "Required"),
-    notallowedlist: z.record(
-        EnvironmentSchema,
-        z.array(NotAllowedUserSchema)
-    ),
+    notallowedlist: z
+        .string()
+        .min(1, "Required")
+        .refine((value) => {
+            try {
+                const parsed = JSON.parse(value);
+                notAllowedListParsedSchema.parse(parsed);
+                return true;
+            } catch {
+                return false;
+            }
+        }, "Invalid JSON structure for Not Allowed List"),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -57,18 +70,17 @@ export default function Settings() {
             customerdb: "",
             customerdbserver: "",
             monolilthconnectionstringdb: "",
-            notallowedlist: {
-                nonprod: [],
-                preprod: [],
-                prod: [],
-            },
+            notallowedlist: ""
         },
     });
 
     useEffect(() => {
         const load = async () => {
             const values = await CustomerPermissionSetting()
-            form.reset(values);
+            form.reset({
+                ...values,
+                notallowedlist: JSON.stringify(values.notallowedlist, null, 4),
+            });
             setIsConfigLoading(false);
         };
         load();
@@ -198,16 +210,19 @@ export default function Settings() {
                                 <textarea
                                     className="min-h-[600px] w-full rounded-md border p-2 font-mono text-sm"
                                     disabled={!isEditing}
-                                    value={JSON.stringify(field.value, null, 4)}
-                                // onChange={(e) => {
-                                //     try {
-                                //         console.log(e.target.value);
-                                //         field.onChange(JSON.parse(e.target.value));
-                                //     } catch {
-                                //         // ignore invalid JSON while typing
-                                //     }
-                                // }}
+                                    value={field.value}
+                                    onChange={(e) => field.onChange(e.target.value)}
+                                    onBlur={() => {
+                                        try {
+                                            const pretty = JSON.stringify(JSON.parse(field.value), null, 4);
+                                            field.onChange(pretty);
+                                        } catch {
+                                            // invalid JSON → leave as-is, Zod will show error
+                                        }
+                                    }}
                                 />
+
+
                             </FormControl>
                             <FormMessage />
                         </FormItem>
