@@ -50,7 +50,6 @@ export default function Settings() {
     const [isConfigLoading, setIsConfigLoading] = useState(true);
     const [isEditing, setIsEditing] = useState(false);
 
-
     const form = useForm<FormValues>({
         resolver: zodResolver(schema),
         mode: "onChange",
@@ -90,7 +89,6 @@ export default function Settings() {
         }
     };
 
-
     if (isConfigLoading) {
         return (
             <div className="flex justify-center items-center h-[60vh]">
@@ -109,7 +107,6 @@ export default function Settings() {
 
                 {/* PWPUSHER_API_URL */}
                 <FormLabel className="text-left">Customer Db</FormLabel>
-
                 <FormField
                     control={form.control}
                     name="customerdb"
@@ -137,7 +134,6 @@ export default function Settings() {
 
                 {/* SERVERINVENTORY */}
                 <FormLabel className="text-left">Customerdb Server</FormLabel>
-
                 <FormField
                     control={form.control}
                     name="customerdbserver"
@@ -200,16 +196,17 @@ export default function Settings() {
                         <FormItem>
                             <FormControl>
                                 <textarea
-                                    className="min-h-[800px] w-full rounded-md border p-2 font-mono text-sm"
+                                    className="min-h-[600px] w-full rounded-md border p-2 font-mono text-sm"
                                     disabled={!isEditing}
-                                    value={JSON.stringify(field.value, null, 2)}
-                                    onChange={(e) => {
-                                        try {
-                                            field.onChange(JSON.parse(e.target.value));
-                                        } catch {
-                                            // ignore invalid JSON while typing
-                                        }
-                                    }}
+                                    value={JSON.stringify(field.value, null, 4)}
+                                // onChange={(e) => {
+                                //     try {
+                                //         console.log(e.target.value);
+                                //         field.onChange(JSON.parse(e.target.value));
+                                //     } catch {
+                                //         // ignore invalid JSON while typing
+                                //     }
+                                // }}
                                 />
                             </FormControl>
                             <FormMessage />

@@ -28,10 +28,8 @@ export async function UpdateCustomerPermissionSetting(
                         db: process.env.APPCONFIGDB!,
                         configSection: CONFIG_SECTION,
                         configKey: configKey,
-                        configJson:
-                            typeof value === "string"
-                                ? value
-                                : JSON.stringify(value),
+                        configJson: value
+
                     },
                 },
             }),
