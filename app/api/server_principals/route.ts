@@ -7,40 +7,39 @@ const typeDefs = `#graphql
 
 scalar DateTime
 
-type DatabasePrincipal {
+type ServerPrincipal {
   name: String!
   type_desc: String!
-  default_schema_name: String
   create_date: DateTime
   modify_date: DateTime
   sid: String
 }
 
 type Query {
-  databaseprincipal(
+  serverprincipal(
     server: String!
     db: String!
-  ): [DatabasePrincipal!]!
+  ): [ServerPrincipal!]!
 
-  databaseprincipalByName(
+  serverprincipalByName(
     server: String!
     db: String!
     name: String!
-  ): [DatabasePrincipal!]!
+  ): [ServerPrincipal!]!
 
-    databaseprincipalByNameType(
+    serverprincipalByNameType(
     server: String!
     db: String!
     name: String!
     type: String!
-  ): [DatabasePrincipal!]!
+  ): [ServerPrincipal!]!
 }
 `;
 
 // 🧠 Resolvers
 const resolvers = {
   Query: {
-    databaseprincipal: async (_: unknown, { server, db }: { server: string; db: string }) => {
+    serverprincipal: async (_: unknown, { server, db }: { server: string; db: string }) => {
       try {
         const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
           method: "POST",
@@ -49,7 +48,7 @@ const resolvers = {
             server,
             db,
             q: `
-            select name, type_desc , default_schema_name, create_date, modify_date, sid from sys.database_principals
+            select name, type_desc, create_date, modify_date from sys.server_principals
               `,
           }),
         });
@@ -58,19 +57,19 @@ const resolvers = {
           const errBody = await res.json().catch(() => null);
           throw new Error(
             errBody?.error
-              ? `DatabasePrincipalApi failed: ${errBody.error}`
-              : `DatabasePrincipalApi failed with status ${res.status}`
+              ? `ServerPrincipalApi failed: ${errBody.error}`
+              : `ServerPrincipalApi failed with status ${res.status}`
           );
         }
 
         return await res.json();
       } catch (err) {
-        console.error("DatabasePrincipalApi error:", err);
+        console.error("ServerPrincipalApi error:", err);
         throw err;
       }
     },
 
-    databaseprincipalByName: async (
+    serverprincipalByName: async (
       _: unknown,
       { server, db, name }: { server: string; db: string; name: string }
     ) => {
@@ -82,21 +81,21 @@ const resolvers = {
             server,
             db,
             q: `
-            select name, type_desc , default_schema_name, create_date, modify_date, sid from sys.database_principals
+            select   name, type_desc, create_date, modify_date from sys.server_principals
             where name ='${name}'
               `,
           }),
         });
         if (!res.ok) {
-          throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          throw new Error(`ServerPrincipalApi failed: ${res.statusText}`);
         }
         return await res.json();
       } catch (err) {
-        console.error("DatabasePrincipalApi error:", err);
+        console.error("ServerPrincipalApi error:", err);
         throw err;
       }
     },
-    databaseprincipalByNameType: async (
+    serverprincipalByNameType: async (
       _: unknown,
       { server, db, name, type }: { server: string; db: string; name: string; type: string }
     ) => {
@@ -108,18 +107,18 @@ const resolvers = {
             server,
             db,
             q: `
-            select name, type_desc , default_schema_name, create_date, modify_date, sid from sys.database_principals
+            select   name, type_desc, create_date, modify_date from sys.server_principals
             where name ='${name}'
             and type_desc = '${type}'
               `,
           }),
         });
         if (!res.ok) {
-          throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          throw new Error(`ServerPrincipalApi failed: ${res.statusText}`);
         }
         return await res.json();
       } catch (err) {
-        console.error("DatabasePrincipalApi error:", err);
+        console.error("ServerPrincipalApi error:", err);
         throw err;
       }
     },
