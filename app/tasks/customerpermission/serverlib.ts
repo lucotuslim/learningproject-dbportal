@@ -10,6 +10,18 @@ import {
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
+// export async function getnotallowedlist(
+//   db: string,
+//   clientid: number[],
+//   Namespace: string,
+//   name: string,
+//   clientpermission: string,
+//   environment: string,
+//   concurrency: number = 100
+// ) {
+
+// }
+
 export async function getclientdbpermissioninfo(
   db: string,
   clientid: number[],

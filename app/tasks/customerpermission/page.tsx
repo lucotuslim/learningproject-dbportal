@@ -3,6 +3,7 @@ import React from "react";
 // import AppConfigPage from "./appconfig/appconfigpage"
 import CustomerSecurityGroup from "./customersecuritygroup/page"
 import ConnectionString from "./monolilthconnectionstring/page"
+import NotAllowedList from "./notallowedlist/page";
 import Settings from "./appconfig/appconfigpage"
 import {
   Tabs,
@@ -17,6 +18,11 @@ export default function Page() {
     <div className="w-full gap-6 m-6">
       <Tabs defaultValue="customersecuritygroup" className="w-full">
         <TabsList className="w-full">
+
+          <TabsTrigger value="notallowedlist" className="w-full">
+            Not Allowed List
+          </TabsTrigger>
+
           <TabsTrigger value="customersecuritygroup" className="w-full">
             Customer Security Group
           </TabsTrigger>
@@ -27,6 +33,12 @@ export default function Page() {
             Settings
           </TabsTrigger>
         </TabsList>
+
+
+        <TabsContent value="notallowedlist" className="w-full" >
+          <NotAllowedList />
+        </TabsContent>
+
         <TabsContent value="customersecuritygroup" className="w-full" >
           <CustomerSecurityGroup />
         </TabsContent>

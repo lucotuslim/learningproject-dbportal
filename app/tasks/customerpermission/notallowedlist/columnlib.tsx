@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getClientWithDbInfo, getclientdbpermissioninfo } from "../serverlib"
-import { CustomerSecurityGroupMetaData, IConnectionStringWithDbPermission, IConnectionStringWithFound, ICustomerPermissionConfig, ICustomerSecurityGroup } from "../interfaces"
+import { CustomerSecurityGroupMetaData, IConnectionStringWithDbPermission, IConnectionStringWithFound, ICustomerSecurityGroup } from "../interfaces"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -14,7 +14,6 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
-import { CustomerPermissionSetting } from "../appconfig";
 
 export function ActionsCell({
     customer,
@@ -86,13 +85,8 @@ export function CheckClientDbPermissionContent({
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
     useEffect(() => {
-        CustomerPermissionSetting().then(setcustomerpermissionsetting)
-    }, [])
-
-    useEffect(() => {
-        if (!metaData || !customerpermissionsetting) return
+        if (!metaData) return
 
         const load = async () => {
             setLoading(true)
@@ -106,9 +100,16 @@ export function CheckClientDbPermissionContent({
                     .split(",")
                     .map(Number)
                     .filter(Boolean)
+                //   db: string,
+                //   clientid: number[],
+                //   Namespace: string,
+                //   name: string,
+                //   clientpermission: string,
+                //   environment: string,
+                //   concurrency: number = 100,
 
                 const result = await getclientdbpermissioninfo(
-                    customerpermissionsetting.monolilthconnectionstringdb,
+                    "ServerInventory",
                     clientArray,
                     Namespace,
                     name,
@@ -124,7 +125,7 @@ export function CheckClientDbPermissionContent({
             }
         }
         load()
-    }, [metaData, Namespace, clientpermission, name, selectedEnvironment, customerpermissionsetting])
+    }, [metaData, Namespace, clientpermission, name, selectedEnvironment])
 
     if (loading) {
         return (
