@@ -212,11 +212,11 @@ export function CheckClientDbPermissionContent({
                                             </div>
                                         )}
 
-                                        {missingPermissions.length > 0 && (
+                                        {!info.MissingRoleMappings || info.MissingRoleMappings.length === 0 ? null : (
                                             <div className="text-orange-600">
-                                                <div className="font-medium">Missing Permissions:</div>
+                                                <div className="font-medium">Missing Db Role Mappings :</div>
                                                 <ul className="list-disc list-inside text-sm">
-                                                    {missingPermissions.map(p => (
+                                                    {info.MissingRoleMappings.map(p => (
                                                         <li key={p}>{p}</li>
                                                     ))}
                                                 </ul>

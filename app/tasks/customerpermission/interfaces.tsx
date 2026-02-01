@@ -60,6 +60,7 @@ export interface IConnectionStringWithDbPermission extends IConnectionStringWith
   databasePrincipal: string | null
   DatabasePrincipalFound: boolean | null
   DatabaseUserMappings: string[]
+  MissingRoleMappings: string[]
   error?: string
 }
 

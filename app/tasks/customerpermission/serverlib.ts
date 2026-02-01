@@ -58,6 +58,12 @@ export async function getclientdbpermissioninfo(
               name
             );
 
+            //             const missingPermissions = info.dbpermission.filter(
+            //     p =>
+            //         !info.DatabaseUserMappings
+            //             .map(m => m.toLowerCase())
+            //             .includes(p.toLowerCase())
+            // )
             return {
               ...item,
               dbpermission: dbpermission,
@@ -66,10 +72,17 @@ export async function getclientdbpermissioninfo(
               databasePrincipal: dp[0]?.name ?? null,
               DatabasePrincipalFound: !!dp[0]?.name,
               DatabaseUserMappings: dppermissionmapping.map((d) => d.DatabaseRole).flat(),
-            };
+              MissingRoleMappings: dbpermission.filter(
+                (p) =>
+                  !dppermissionmapping
+                    .map((m) => m.DatabaseRole)
+                    .flat()
+                    .map((r) => r.toLowerCase())
+                    .includes(p.toLowerCase())
+              ),
+            } as IConnectionStringWithDbPermission;
           } catch (err) {
             console.error("Item failed:", item.ClientID, err);
-
             return {
               ...item,
               dbpermission, // ✅ still required
@@ -78,6 +91,7 @@ export async function getclientdbpermissioninfo(
               databasePrincipal: null, // ✅ required
               DatabasePrincipalFound: null,
               DatabaseUserMappings: [],
+              MissingRoleMappings: [],
               error: err instanceof Error ? err.message : "Unknown error",
             } as IConnectionStringWithDbPermission;
           }
