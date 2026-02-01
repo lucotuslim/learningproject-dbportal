@@ -239,6 +239,12 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
     const [data, setData] = useState<IConnectionStringWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
+
+    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
+    useEffect(() => {
+        CustomerPermissionSetting().then(setcustomerpermissionsetting)
+    }, [])
+
     const loadClients = async () => {
         if (loading || data.length > 0) return
 
@@ -277,7 +283,8 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
         setLoading(true)
         setError(null)
         try {
-            const result = await getClientWithDbInfo("ServerInventory", clientArray, Namespace, selectedEnvironment)
+            if (!customerpermissionsetting) return
+            const result = await getClientWithDbInfo(customerpermissionsetting.monolilthconnectionstringdb, clientArray, Namespace, selectedEnvironment)
             setData(result);
         } catch (err: unknown) {
             setError((err as Error).message)
