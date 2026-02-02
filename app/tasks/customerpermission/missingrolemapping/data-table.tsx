@@ -41,7 +41,7 @@ export function DataTable<TData, TValue>({
   // Default sorting: serverName asc, then databaseName asc
   // Change the ids here if your accessorKey names differ.
   const initialSorting: SortingState = [
-    { id: "GroupName", desc: false },
+    { id: "Namespace", desc: false },
   ]
 
   const [pagination, setPagination] = useState<PaginationState>({

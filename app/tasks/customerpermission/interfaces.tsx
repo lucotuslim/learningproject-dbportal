@@ -12,7 +12,6 @@ export interface NotAllowedUser {
   type_desc: "SQL_LOGIN" | "WINDOWS_LOGIN" | "WINDOWS_GROUP"
 }
 
-
 export interface CustomerSecurityGroupMetaData {
   clientIDList: string;
 }

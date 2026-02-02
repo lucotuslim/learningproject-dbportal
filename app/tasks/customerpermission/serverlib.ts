@@ -7,52 +7,95 @@ import {
   IServerPrincipal,
   IDatabasePrincipal,
   IDatabaseUserMapping,
+  ICustomerSecurityGroup,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
+import { tap } from "rxjs/operators";
 
 export async function getAllMissingDbPermissions(
   customerdbserver: string,
   customerdb: string,
+  serverinventory: string,
   selectedEnvironment: string,
   concurrency: number = 100
 ): Promise<IConnectionStringWithDbPermission[]> {
-  //  return   getclientdbpermissioninfo(db, clientid, Namespace, name, clientpermission, environment, concurrency).pipe(
-  //   map( (results ) => results.filter ( (item )=> item.MissingRoleMappings.length > 0 ) ),
-  //   toArray()
-
-  // 1.      const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment);
-
-  // 2.  getclientdbpermissioninfo(
-  //   db: string,
-  //   clientid: number[],
-  //   Namespace: string,
-  //   name: string,
-  //   clientpermission: string,
-  //   environment: string,
-  //   concurrency: number = 100
-
   const obs$ = from(
-    getclientdbpermissioninfo(
-      db,
-      clientid,
-      Namespace,
-      name,
-      clientpermission,
-      environment,
-      concurrency
+    getCustomerSecurityGroups<ICustomerSecurityGroup>(
+      customerdbserver,
+      customerdb,
+      selectedEnvironment
     )
   ).pipe(
-    map((results) =>
-      results.filter(
-        (item) =>
-          item.ServerPrincipalFound === false ||
-          item.DatabasePrincipalFound === false ||
-          item.MissingRoleMappings.length > 0
-      )
-    )
+    // 1️⃣ log groups
+    tap((groups) => {
+      console.log("🔹 CustomerSecurityGroups count:", groups.length);
+      console.log("🔹 Sample group:", groups[0]);
+    }),
+
+    // flatten groups
+    mergeMap((groups) => from(groups)),
+
+    // 2️⃣ per group
+    mergeMap((group) => {
+      // ✅ extract client IDs properly
+      const clientIDList =
+        typeof group.MetaData === "string"
+          ? JSON.parse(group.MetaData).clientIDList
+          : group.MetaData?.clientIDList;
+
+      const clientIds = clientIDList.split(",").map(Number).filter(Boolean);
+
+      console.log("➡️ Processing group with clientIds:", {
+        GroupName: group.GroupName,
+        clientIds,
+        Namespace: group.Namespace,
+        Permission: group.Permission,
+      });
+
+      // ✅ MUST return an Observable here
+
+      return from(
+        getclientdbpermissioninfo(
+          serverinventory,
+          clientIds,
+          group.Namespace,
+          group.GroupName,
+          group.Permission,
+          selectedEnvironment,
+          concurrency
+        )
+      ).pipe(
+        // ✅ attach group info here
+        map((results) =>
+          results.map((r) => ({
+            ...r,
+            GroupName: group.GroupName,
+          }))
+        ),
+        map((results) =>
+          results.filter(
+            (item) =>
+              item.ServerPrincipalFound === false ||
+              item.DatabasePrincipalFound === false ||
+              item.MissingRoleMappings.length > 0
+          )
+        )
+      );
+    }, concurrency),
+
+    // flatten arrays
+    mergeMap((results) => from(results)),
+
+    // collect final output
+    toArray(),
+
+    tap((final) => {
+      console.log("✅ FINAL RESULT COUNT:", final.length);
+      console.log("✅ FINAL SAMPLE:", final[0]);
+    })
   );
 
-  return lastValueFrom(obs$);
+  return await lastValueFrom(obs$);
 }
 
 export async function getclientdbpermissioninfo(
@@ -273,6 +316,14 @@ async function fetchConnectionStringByClientIdName(
     }
   );
   const data = await res.json();
+
+  console.log("GraphQL raw response:", {
+    ok: res.ok,
+    status: res.status,
+    data,
+    variables,
+  });
+
   if (data.errors) {
     console.error(data.errors);
     throw new Error(data.errors[0].message);
