@@ -10,17 +10,50 @@ import {
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map } from "rxjs";
 
-// export async function getnotallowedlist(
-//   db: string,
-//   clientid: number[],
-//   Namespace: string,
-//   name: string,
-//   clientpermission: string,
-//   environment: string,
-//   concurrency: number = 100
-// ) {
+export async function getAllMissingDbPermissions(
+  customerdbserver: string,
+  customerdb: string,
+  selectedEnvironment: string,
+  concurrency: number = 100
+): Promise<IConnectionStringWithDbPermission[]> {
+  //  return   getclientdbpermissioninfo(db, clientid, Namespace, name, clientpermission, environment, concurrency).pipe(
+  //   map( (results ) => results.filter ( (item )=> item.MissingRoleMappings.length > 0 ) ),
+  //   toArray()
 
-// }
+  // 1.      const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment);
+
+  // 2.  getclientdbpermissioninfo(
+  //   db: string,
+  //   clientid: number[],
+  //   Namespace: string,
+  //   name: string,
+  //   clientpermission: string,
+  //   environment: string,
+  //   concurrency: number = 100
+
+  const obs$ = from(
+    getclientdbpermissioninfo(
+      db,
+      clientid,
+      Namespace,
+      name,
+      clientpermission,
+      environment,
+      concurrency
+    )
+  ).pipe(
+    map((results) =>
+      results.filter(
+        (item) =>
+          item.ServerPrincipalFound === false ||
+          item.DatabasePrincipalFound === false ||
+          item.MissingRoleMappings.length > 0
+      )
+    )
+  );
+
+  return lastValueFrom(obs$);
+}
 
 export async function getclientdbpermissioninfo(
   db: string,

@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-// import AppConfigPage from "./appconfig/appconfigpage"
+import MissingRoleMappings from "./missingrolemapping/page";
 import CustomerSecurityGroup from "./customersecuritygroup/page"
 import ConnectionString from "./monolilthconnectionstring/page"
 import Settings from "./appconfig/appconfigpage"
@@ -15,8 +15,13 @@ export default function Page() {
 
   return (
     <div className="w-full gap-6 m-6">
-      <Tabs defaultValue="customersecuritygroup" className="w-full">
+      <Tabs defaultValue="missingrolemappings" className="w-full">
         <TabsList className="w-full">
+
+          <TabsTrigger value="missingrolemappings" className="w-full">
+            Missing Role Mappings
+          </TabsTrigger>
+
 
           <TabsTrigger value="customersecuritygroup" className="w-full">
             Customer Security Group
@@ -29,7 +34,9 @@ export default function Page() {
           </TabsTrigger>
         </TabsList>
 
-
+        <TabsContent value="missingrolemappings" className="w-full" >
+          <MissingRoleMappings />
+        </TabsContent>
 
         <TabsContent value="customersecuritygroup" className="w-full" >
           <CustomerSecurityGroup />
