@@ -2,7 +2,7 @@ export interface ICustomerPermissionConfig {
   customerdb: string
   customerdbserver: string
   monolilthconnectionstringdb: string
-  notallowedlist: Record<Environment, NotAllowedUser[]>
+  // notallowedlist: Record<Environment, NotAllowedUser[]>
 }
 
 export type Environment = "nonprod" | "preprod" | "prod"

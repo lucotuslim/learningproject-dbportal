@@ -17,7 +17,7 @@ export async function getAllMissingDbPermissions(
   customerdb: string,
   serverinventory: string,
   selectedEnvironment: string,
-  concurrency: number = 100
+  concurrency: number = 10
 ): Promise<IConnectionStringWithDbPermission[]> {
   const obs$ = from(
     getCustomerSecurityGroups<ICustomerSecurityGroup>(
@@ -117,7 +117,13 @@ export async function getclientdbpermissioninfo(
     ?.dbPermission ?? ["N/A"];
 
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
-    map((res) => res.filter((item) => item.ConnectionStringFound)),
+map(res => {
+  console.log('rawCount', res.length, 'raw sample', res.slice(0,2));
+  const filtered = res.filter(item => item.ConnectionStringFound);
+  console.log('filteredCount', filtered.length);
+  return filtered;
+}),
+
     mergeMap((items) =>
       from(items).pipe(
         mergeMap(async (item) => {

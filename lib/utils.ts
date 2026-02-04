@@ -5,6 +5,56 @@ import { IApiTokenParams } from "@/interfaces/generic";
 //import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
 import util from "util";
+// use eval(require) if your bundler rewrites require at build time:
+// import * as mssql from "mssql";
+
+// type PoolEntry = {
+//   pool:  mssql.ConnectionPool; // mssql.ConnectionPool
+//   connecting: Promise<void> | null;
+// };
+// const poolMap = new Map<string, PoolEntry>();
+
+// async function getOrCreatePool(
+//   connStr: string,
+//   poolOptions:  {
+//     max: 10,
+//     min: 0,
+//     idleTimeoutMillis: 30_000,
+//   }
+// ): Promise<mssql.ConnectionPool> {
+
+//   const existing = poolMap.get(connStr);
+//   if (existing) {
+//     if (existing.pool.connected) return existing.pool;
+//     if (existing.connecting) return existing.connecting; // ✅ now matches return type
+//   }
+
+//   const config: mssql.config = {
+
+    
+//     driver: "msnodesqlv8" as const,
+//     pool: poolOptions,
+//     options: {
+//       enableArithAbort: true,
+//     },
+//   };
+
+//   const pool = new mssql.ConnectionPool(config);
+
+//   const connecting: Promise<mssql.ConnectionPool> =
+//     pool.connect().then(() => pool);
+
+//   pool.on("error", (err: Error) => {
+//     console.error("[mssql pool error]", err);
+//     pool.close().catch(() => {});
+//     poolMap.delete(connStr);
+//   });
+
+//   poolMap.set(connStr, { pool, connecting });
+//   return connecting;
+// }
+
+
 
 export function formatDateTime(value?: string | Date | null): string {
   if (!value) return "";

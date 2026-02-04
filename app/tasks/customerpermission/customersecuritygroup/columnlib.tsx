@@ -157,7 +157,7 @@ export function CheckClientDbPermissionContent({
             </TableHeader>
 
             <TableBody>
-                {data.map(info => {
+                {data.map((info,index) => {
                     const missingPermissions = info.dbpermission.filter(
                         p =>
                             !info.DatabaseUserMappings
@@ -167,7 +167,8 @@ export function CheckClientDbPermissionContent({
 
                     return (
                         <TableRow
-                            key={`${info.ClientID}-${info.ConstringDatabaseName}`}
+                                key={`${index}-${info.Namespace}-${info.ConstringDatabaseName}`}
+
                             className={!info.ConnectionStringFound ? "text-red-500" : ""}
                         >
                             <TableCell>{info.ClientID}</TableCell>

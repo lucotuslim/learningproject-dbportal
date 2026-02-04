@@ -79,7 +79,7 @@ export default function Settings() {
             const values = await CustomerPermissionSetting()
             form.reset({
                 ...values,
-                notallowedlist: JSON.stringify(values.notallowedlist, null, 4),
+                // notallowedlist: JSON.stringify(values.notallowedlist, null, 4),
             });
             setIsConfigLoading(false);
         };
