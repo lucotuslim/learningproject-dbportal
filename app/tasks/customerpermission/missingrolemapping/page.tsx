@@ -11,7 +11,7 @@ import { toast } from "sonner";
 export default function MissingRoleMappings() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
-    console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
+    const [loading, setLoading]= useState<boolean>(true)
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([]);
     const [search, setSearch] = useState("");
     const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
@@ -31,10 +31,12 @@ export default function MissingRoleMappings() {
     }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
 
     useEffect(() => {
+        setLoading(true)
         loaddata();
+        setLoading(false)
     }, [loaddata]);   // now safe
 
-    if (!data || (data).length === 0) {
+    if (loading) {
         return <div className="container mx-auto py-10">Loading...</div>;
     }
     return (

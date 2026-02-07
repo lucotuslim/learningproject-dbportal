@@ -17,7 +17,7 @@ export async function getAllMissingDbPermissions(
   customerdb: string,
   serverinventory: string,
   selectedEnvironment: string,
-  concurrency: number = 10
+  concurrency: number = 50
 ): Promise<IConnectionStringWithDbPermission[]> {
   const obs$ = from(
     getCustomerSecurityGroups<ICustomerSecurityGroup>(
@@ -350,7 +350,7 @@ export async function getServerPrincipal(
         server,
         db,
         q: `
-        select name , create_date, default_database_name  from sys.server_principals where name = '${name}'
+        select name , create_date, default_database_name  from sys.server_principals where name = 'custadds\\${name}'
               `,
       }),
     });
@@ -384,7 +384,7 @@ export async function getDatabasePrincipal(
         q: `
         select name, type_desc, create_date, modify_date
         from sys.database_principals
-        where name = '${name}'
+        where name = 'custadds\\${name}'
       `,
       }),
     });
@@ -425,7 +425,7 @@ export async function fetchPermissionMappings(
             ON dp.principal_id = drm.member_principal_id
         JOIN sys.database_principals drp
             ON drm.role_principal_id = drp.principal_id
-        WHERE dp.name = '${name}'
+        WHERE dp.name = 'custadds\\${name}'
               `,
       }),
     });

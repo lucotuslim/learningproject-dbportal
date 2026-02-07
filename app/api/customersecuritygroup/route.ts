@@ -65,7 +65,7 @@ const resolvers = {
   FROM [dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
   and Namespace <> 'NULL'
-  and Namespace ='abanohealthcare'
+  --and Namespace ='abanohealthcare'
               `,
           }),
         });

@@ -321,9 +321,9 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.map(info => (
+                            {data.map((info,index) => (
                                 <TableRow
-                                    key={`${info.ClientID}-${info.ConstringDatabaseName}`}
+                                    key={`${index}-${info.ClientID}-${info.ConstringDatabaseName}`}
                                     className={
                                         !info.ConnectionStringFound
                                             ? "text-red-500"
