@@ -315,6 +315,7 @@ async function fetchConnectionStringByClientIdName(
   const variables = { db: db, ClientId: ClientId, Namespace: Namespace };
   const res = await fetch(
     `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
+    // `/api/${environment}/dbaserver/monolilthconnectionstring`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

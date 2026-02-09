@@ -52,7 +52,7 @@ const resolvers = {
             server,
             db,
             q: `
-                SELECT  [CustomerSecurityGroupsId]
+                SELECT Top 10 [CustomerSecurityGroupsId]
       ,[GroupSID]
       ,[Environment]
       ,[Namespace]
