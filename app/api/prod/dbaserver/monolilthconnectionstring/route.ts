@@ -32,6 +32,7 @@ const typeDefs = `#graphql
   type Query {
     ConnectionStrings(db: String!): [ConnectionString!]!
     ConnectionStringByClientIdName(db: String!, ClientId: Int!, Namespace: String!): [ConnectionString!]!
+    ConnectionStringByClientArrayName(db: String!, ClientIds: [Int!]!, Namespace: String!): [ConnectionString!]!
   }
 `;
 
@@ -53,7 +54,7 @@ const resolvers = {
           q: `
       SELECT 
            ${sqlColumns}
-         FROM MonolithConnectionStrings_prod
+         FROM MonolithConnectionStrings_prod where isdecomm = 0
       `,
         }),
       }).then((res) => res.json());
@@ -83,6 +84,32 @@ const resolvers = {
       }).then((res) => res.json());
       return result;
     },
+
+    ConnectionStringByClientArrayName: async (
+          _: unknown,
+          { db, ClientIds, Namespace }: { db: string; ClientIds: number[]; Namespace: string },
+          __: unknown,
+          info: GraphQLResolveInfo
+        ) => {
+          const fields = Object.keys(graphqlFields(info));
+          const sqlColumns = fields.map((f) => `[${f}]`).join(", ");
+          const clientidtext = ClientIds.join(",")
+          const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              db: db,
+              q: `
+          SELECT 
+               ${sqlColumns}
+             FROM MonolithConnectionStrings_preprod
+              WHERE ClientID  in (${clientidtext}) AND Namespace = '${Namespace}'
+          `,
+            }),
+          }).then((res) => res.json());
+          return result;
+        },
+    
   },
 };
 

@@ -24,6 +24,7 @@ export default function MissingRoleMappings() {
         try {
             const res = await getAllMissingDbPermissions(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
             setData(res ?? []);
+            setLoading(false);
         } catch (err) {
             console.error("Failed to load customer permission setting:", err);
             toast.error(String(err))
@@ -33,7 +34,7 @@ export default function MissingRoleMappings() {
     useEffect(() => {
         setLoading(true)
         loaddata();
-        setLoading(false)
+        //setLoading(false)
     }, [loaddata]);   // now safe
 
     if (loading) {

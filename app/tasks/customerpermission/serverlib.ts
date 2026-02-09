@@ -117,6 +117,8 @@ export async function getclientdbpermissioninfo(
     ?.dbPermission ?? ["N/A"];
 
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
+tap( (rawresult) => console.log(JSON.stringify(rawresult))),
+
 map(res => {
   console.log('rawCount', res.length, 'raw sample', res.slice(0,2));
   const filtered = res.filter(item => item.ConnectionStringFound);
@@ -196,38 +198,40 @@ export async function getClientWithDbInfo(
   if (clientid.length === 0) {
     return [];
   }
-  const obs$ = from(clientid).pipe(
-    mergeMap(
-      (id) =>
-        from(fetchConnectionStringByClientIdName(db, id, Namespace, selectedEnvironment)).pipe(
-          map((result) => {
-            if (result.length === 0) {
-              return {
-                ClientID: id,
-                Namespace: Namespace,
-                ConstringDatabaseName: "N/A",
-                ConstringServerName: "N/A",
-                ISBI: false,
-                ConnectionType: "N/A",
-                IsDecomm: false,
-                ConnectionStringFound: false,
-              } as IConnectionStringWithFound;
-            }
-            return result.map((r) => ({
-              ...r,
-              ConnectionStringFound: true,
-            }));
-          })
-        ),
-      concurrency
-    ),
-    mergeMap((x) => (Array.isArray(x) ? x : [x])),
-    toArray(),
-    map((results) => results.sort((a, b) => a.ClientID - b.ClientID))
-  );
 
-  // For demonstration, returning a mock result here
-  return await lastValueFrom(obs$);
+const obs$ = from(
+  fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
+).pipe(
+  map((result: IConnectionString[]) => {
+    // ensure result is an array
+    if (!Array.isArray(result) || result.length === 0) {
+      return clientid.map((c) =>
+        ({
+          ClientID: c,
+          Namespace,
+          ConstringDatabaseName: "N/A",
+          ConstringServerName: "N/A",
+          ISBI: false,
+          ConnectionType: "N/A",
+          IsDecomm: false,
+          ConnectionStringFound: false,
+        } as IConnectionStringWithFound)
+      );
+    }
+
+    // result is an array of found rows — mark each as found
+    return result.map((r) =>
+      ({
+        ...r,
+        ConnectionStringFound: true,
+      } as IConnectionStringWithFound)
+    );
+  })
+);
+
+// consume it (example)
+return await lastValueFrom(obs$);
+
 }
 
 export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
@@ -336,6 +340,50 @@ async function fetchConnectionStringByClientIdName(
     throw new Error(data.errors[0].message);
   }
   return data.data.ConnectionStringByClientIdName;
+}
+
+async function fetchConnectionStringByClientArrayName(
+  db: string,
+  ClientIds: number[],
+  Namespace: string,
+  environment: string
+): Promise<IConnectionString[]> {
+  const query = `
+  query ConnectionStringByClientArrayName($db: String!, $ClientIds: [Int!]!, $Namespace: String!) {
+    ConnectionStringByClientArrayName(db: $db, ClientIds: $ClientIds, Namespace: $Namespace) {
+      ClientID
+      Namespace
+      ConstringDatabaseName
+      ConstringServerName
+      ISBI
+      ConnectionType
+      IsDecomm
+    }
+  }`;
+  const variables = { db: db, ClientIds: ClientIds, Namespace: Namespace };
+  const res = await fetch(
+    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
+    // `/api/${environment}/dbaserver/monolilthconnectionstring`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, variables }),
+    }
+  );
+  const data = await res.json();
+
+  console.log("GraphQL raw response:", {
+    ok: res.ok,
+    status: res.status,
+    data,
+    variables,
+  });
+
+  if (data.errors) {
+    console.error(data.errors);
+    throw new Error(data.errors[0].message);
+  }
+  return data.data.ConnectionStringByClientArrayName;
 }
 
 export async function getServerPrincipal(

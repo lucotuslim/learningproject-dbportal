@@ -52,7 +52,7 @@ const resolvers = {
             server,
             db,
             q: `
-                SELECT Top 10 [CustomerSecurityGroupsId]
+                SELECT Top 100 [CustomerSecurityGroupsId]
       ,[GroupSID]
       ,[Environment]
       ,[Namespace]
@@ -65,7 +65,7 @@ const resolvers = {
   FROM [dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
   and Namespace <> 'NULL'
-  --and Namespace ='abanohealthcare'
+  --and Namespace ='resultscx'
               `,
           }),
         });
