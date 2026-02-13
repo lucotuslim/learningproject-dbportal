@@ -64,6 +64,7 @@ const resolvers = {
       ,[IsDeleted]
   FROM [dbo].[CustomerSecurityGroups]
   where Environment = '${environment}'
+  and IsDeleted = 0
   and Namespace <> 'NULL'
   --and Namespace ='resultscx'
               `,
