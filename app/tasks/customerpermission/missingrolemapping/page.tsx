@@ -11,9 +11,8 @@ import { toast } from "sonner";
 export default function MissingRoleMappings() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
-    const [loading, setLoading]= useState<boolean>(true)
+    const [loading, setLoading] = useState<boolean>(true)
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([]);
-    const [search, setSearch] = useState("");
     const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
     useEffect(() => {
         CustomerPermissionSetting().then(setcustomerpermissionsetting)
