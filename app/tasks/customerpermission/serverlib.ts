@@ -8,6 +8,7 @@ import {
   IDatabasePrincipal,
   IDatabaseUserMapping,
   ICustomerSecurityGroup,
+  CustomerSecurityGroupMetaData,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map, of, forkJoin } from "rxjs";
 import { catchError, groupBy, reduce, tap } from "rxjs/operators";
@@ -19,35 +20,37 @@ type CombinedGroup = {
   clientIds: number[];
 };
 
-function normalizeClientIdsFromMeta(meta: any): number[] {
-  let clientIDListRaw: string | number[] | undefined;
+function normalizeClientIdsFromMeta(metadata: CustomerSecurityGroupMetaData): number[] {
+  let clientIDList: string | undefined;
 
-  try {
-    if (typeof meta === "string") {
-      const parsed = JSON.parse(meta || "{}");
-      clientIDListRaw = parsed?.clientIDList;
-    } else if (meta && typeof meta === "object") {
-      clientIDListRaw = (meta as any).clientIDList;
+  if (typeof metadata === "string") {
+    try {
+      const parsed = JSON.parse(metadata);
+      clientIDList = parsed?.clientIDList;
+    } catch {
+      console.error("Failed to parse MetaData string:", metadata);
+      return [];
     }
-  } catch (err) {
-    console.warn("Failed to parse MetaData:", err);
-    clientIDListRaw = undefined;
+  } else {
+    clientIDList = metadata.clientIDList;
   }
 
-  if (Array.isArray(clientIDListRaw)) {
-    return (clientIDListRaw as any[])
-      .map((v) => Number(v))
-      .filter((n) => Number.isFinite(n) && n > 0);
+  if (!clientIDList) {
+    console.warn("No clientIDList found in MetaData:", metadata);
+    return [];
   }
 
-  if (typeof clientIDListRaw === "string") {
-    return clientIDListRaw
-      .split(",")
-      .map((s) => Number(s.trim()))
-      .filter((n) => Number.isFinite(n) && n > 0);
+  const clientArray = clientIDList
+    .split(",")
+    .map((id) => Number(id.trim()))
+    .filter(Boolean);
+
+  if (clientArray.length === 0) {
+    console.warn("No valid Client IDs found in MetaData:", metadata);
+    return [];
   }
 
-  return [];
+  return clientArray;
 }
 
 export async function getAllMissingDbPermissions(
@@ -73,12 +76,12 @@ export async function getAllMissingDbPermissions(
     // flatten groups
     mergeMap((groups) => from(groups)),
 
-        groupBy(
+    groupBy(
       (g: ICustomerSecurityGroup) =>
         `${g.Namespace ?? ""}|${g.GroupName ?? ""}|${g.Permission ?? ""}`
     ),
 
-        mergeMap((group$) =>
+    mergeMap((group$) =>
       group$.pipe(
         reduce(
           (acc: { ns?: string; gn?: string; perm?: string; ids: Set<number> }, curr) => {
@@ -86,6 +89,7 @@ export async function getAllMissingDbPermissions(
             if (!acc.ns) acc.ns = curr.Namespace;
             if (!acc.gn) acc.gn = curr.GroupName;
             if (!acc.perm) acc.perm = curr.Permission;
+            tap(() => console.log(curr.MetaData.clientIDList));
 
             const clientIds = normalizeClientIdsFromMeta(curr.MetaData);
             for (const id of clientIds) acc.ids.add(id);
@@ -100,15 +104,17 @@ export async function getAllMissingDbPermissions(
           }
         ),
         // map reduced accumulator to CombinedGroup
-        map((acc) => ({
-          Namespace: acc.ns,
-          GroupName: acc.gn,
-          Permission: acc.perm,
-          clientIds: Array.from(acc.ids),
-        } as CombinedGroup))
+        map(
+          (acc) =>
+            ({
+              Namespace: acc.ns,
+              GroupName: acc.gn,
+              Permission: acc.perm,
+              clientIds: Array.from(acc.ids),
+            }) as CombinedGroup
+        )
       )
     ),
-
 
     // 2️⃣ per group
     mergeMap((combined) => {
@@ -131,14 +137,13 @@ export async function getAllMissingDbPermissions(
 
       return from(
         getclientdbpermissioninfo(
-            serverinventory,
-            combined.clientIds,
-            combined.Namespace,
-            combined.GroupName,
-            combined.Permission,
-            selectedEnvironment,
-            concurrency
-
+          serverinventory,
+          combined.clientIds,
+          combined.Namespace,
+          combined.GroupName,
+          combined.Permission,
+          selectedEnvironment,
+          concurrency
         )
       ).pipe(
         // ✅ attach group info here
@@ -174,7 +179,6 @@ export async function getAllMissingDbPermissions(
   return await lastValueFrom(obs$);
 }
 
-
 export async function getclientdbpermissioninfo(
   db: string,
   clientid: number[],
@@ -190,24 +194,21 @@ export async function getclientdbpermissioninfo(
     { permission: "ReadOnly", dbPermission: ["db_datareader"] },
   ];
 
-  const dbpermission =
-    PermissionMap.find((m) => m.permission === clientpermission)?.dbPermission ??
-    ["N/A"];
+  const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
+    ?.dbPermission ?? ["N/A"];
 
-  const obs$ = from(
-    getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)
-  ).pipe(
+  const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
     // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
     catchError((err) => {
       console.error("getClientWithDbInfo failed:", err);
-      return of([] ); // keep typing: returns empty array
+      return of([]); // keep typing: returns empty array
     }),
 
-    tap((rawresult: any[]) =>
+    tap((rawresult) =>
       console.log("raw result count", Array.isArray(rawresult) ? rawresult.length : 0)
     ),
 
-    map((res: any[]) => {
+    map((res) => {
       const list = Array.isArray(res) ? res : [];
       console.log("rawCount", list.length, "raw sample", list.slice(0, 2));
       const filtered = list.filter((item) => item.ConnectionStringFound);
@@ -219,106 +220,92 @@ export async function getclientdbpermissioninfo(
     mergeMap(
       (items) =>
         from(items).pipe(
-          mergeMap(
-            (item) => {
-              // turn each async call into an Observable and catch error to return a safe default
-              const sp$ = from(
-                getServerPrincipal(item.ConstringServerName, "master", name)
-              ).pipe(
-                catchError((err) => {
-                  console.error(
-                    `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
-                    err
-                  );
-                  return of([] );
-                })
-              );
+          mergeMap((item) => {
+            // turn each async call into an Observable and catch error to return a safe default
+            const sp$ = from(getServerPrincipal(item.ConstringServerName, "master", name)).pipe(
+              catchError((err) => {
+                console.error(
+                  `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
+                  err
+                );
+                return of([]);
+              })
+            );
 
-              const dp$ = from(
-                getDatabasePrincipal(
-                  item.ConstringServerName,
-                  item.ConstringDatabaseName,
-                  name
-                )
-              ).pipe(
-                catchError((err) => {
-                  console.error(
-                    `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
-                    err
-                  );
-                  return of([] );
-                })
-              );
+            const dp$ = from(
+              getDatabasePrincipal(item.ConstringServerName, item.ConstringDatabaseName, name)
+            ).pipe(
+              catchError((err) => {
+                console.error(
+                  `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
+                  err
+                );
+                return of([]);
+              })
+            );
 
-              const dpPermissionMap$ = from(
-                fetchPermissionMappings(
-                  item.ConstringServerName,
-                  item.ConstringDatabaseName,
-                  name
-                )
-              ).pipe(
-                catchError((err) => {
-                  console.error(
-                    `fetchPermissionMappings failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
-                    err
-                  );
-                  return of([]);
-                })
-              );
+            const dpPermissionMap$ = from(
+              fetchPermissionMappings(item.ConstringServerName, item.ConstringDatabaseName, name)
+            ).pipe(
+              catchError((err) => {
+                console.error(
+                  `fetchPermissionMappings failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
+                  err
+                );
+                return of([]);
+              })
+            );
 
-              // run the three calls in parallel and build the result
-              return forkJoin({
-                sp: sp$,
-                dp: dp$,
-                dpmap: dpPermissionMap$,
-              }).pipe(
-                map(({ sp, dp, dpmap }) => {
-                  const serverPrincipalName = sp?.[0]?.name ?? null;
-                  const databasePrincipalName = dp?.[0]?.name ?? null;
+            // run the three calls in parallel and build the result
+            return forkJoin({
+              sp: sp$,
+              dp: dp$,
+              dpmap: dpPermissionMap$,
+            }).pipe(
+              map(({ sp, dp, dpmap }) => {
+                const serverPrincipalName = sp?.[0]?.name ?? null;
+                const databasePrincipalName = dp?.[0]?.name ?? null;
 
-                  const dbUserMappings = Array.isArray(dpmap)
-                    ? dpmap.map((d: any) => d.DatabaseRole).flat()
-                    : [];
+                const dbUserMappings = Array.isArray(dpmap)
+                  ? dpmap.map((d) => d.DatabaseRole).flat()
+                  : [];
 
-                  const missingRoleMappings = dbpermission.filter(
-                    (p) =>
-                      !dbUserMappings
-                        .map((r: string) => r?.toLowerCase?.() ?? "")
-                        .includes(p.toLowerCase())
-                  );
+                const missingRoleMappings = dbpermission.filter(
+                  (p) =>
+                    !dbUserMappings
+                      .map((r: string) => r?.toLowerCase?.() ?? "")
+                      .includes(p.toLowerCase())
+                );
 
-                  return {
-                    ...item,
-                    dbpermission,
-                    serverPrincipal: serverPrincipalName,
-                    ServerPrincipalFound: !!serverPrincipalName,
-                    databasePrincipal: databasePrincipalName,
-                    DatabasePrincipalFound: !!databasePrincipalName,
-                    DatabaseUserMappings: dbUserMappings,
-                    MissingRoleMappings: missingRoleMappings,
-                  } as IConnectionStringWithDbPermission;
-                }),
+                return {
+                  ...item,
+                  dbpermission,
+                  serverPrincipal: serverPrincipalName,
+                  ServerPrincipalFound: !!serverPrincipalName,
+                  databasePrincipal: databasePrincipalName,
+                  DatabasePrincipalFound: !!databasePrincipalName,
+                  DatabaseUserMappings: dbUserMappings,
+                  MissingRoleMappings: missingRoleMappings,
+                } as IConnectionStringWithDbPermission;
+              }),
 
-                // If anything unexpected happens in mapping, return an error-annotated object
-                catchError((err) => {
-                  console.error("Mapping error for item", item.ClientID, err);
-                  return of({
-                    ...item,
-                    dbpermission,
-                    serverPrincipal: null,
-                    ServerPrincipalFound: null,
-                    databasePrincipal: null,
-                    DatabasePrincipalFound: null,
-                    DatabaseUserMappings: [],
-                    MissingRoleMappings: [],
-                    error:
-                      err instanceof Error ? err.message : "Unknown mapping error",
-                  } as IConnectionStringWithDbPermission);
-                })
-              );
-            },
-            concurrency
-          ),
+              // If anything unexpected happens in mapping, return an error-annotated object
+              catchError((err) => {
+                console.error("Mapping error for item", item.ClientID, err);
+                return of({
+                  ...item,
+                  dbpermission,
+                  serverPrincipal: null,
+                  ServerPrincipalFound: null,
+                  databasePrincipal: null,
+                  DatabasePrincipalFound: null,
+                  DatabaseUserMappings: [],
+                  MissingRoleMappings: [],
+                  error: err instanceof Error ? err.message : "Unknown mapping error",
+                } as IConnectionStringWithDbPermission);
+              })
+            );
+          }, concurrency),
           toArray()
         ),
       1 // outer mergeMap concurrency - we only need 1 since inner controls concurrency
@@ -349,39 +336,40 @@ export async function getClientWithDbInfo(
     return [];
   }
 
-const obs$ = from(
-  fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
-).pipe(
-  map((result: IConnectionString[]) => {
-    // ensure result is an array
-    if (!Array.isArray(result) || result.length === 0) {
-      return clientid.map((c) =>
-        ({
-          ClientID: c,
-          Namespace,
-          ConstringDatabaseName: "N/A",
-          ConstringServerName: "N/A",
-          ISBI: false,
-          ConnectionType: "N/A",
-          IsDecomm: false,
-          ConnectionStringFound: false,
-        } as IConnectionStringWithFound)
+  const obs$ = from(
+    fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
+  ).pipe(
+    map((result: IConnectionString[]) => {
+      // ensure result is an array
+      if (!Array.isArray(result) || result.length === 0) {
+        return clientid.map(
+          (c) =>
+            ({
+              ClientID: c,
+              Namespace,
+              ConstringDatabaseName: "N/A",
+              ConstringServerName: "N/A",
+              ISBI: false,
+              ConnectionType: "N/A",
+              IsDecomm: false,
+              ConnectionStringFound: false,
+            }) as IConnectionStringWithFound
+        );
+      }
+
+      // result is an array of found rows — mark each as found
+      return result.map(
+        (r) =>
+          ({
+            ...r,
+            ConnectionStringFound: true,
+          }) as IConnectionStringWithFound
       );
-    }
+    })
+  );
 
-    // result is an array of found rows — mark each as found
-    return result.map((r) =>
-      ({
-        ...r,
-        ConnectionStringFound: true,
-      } as IConnectionStringWithFound)
-    );
-  })
-);
-
-// consume it (example)
-return await lastValueFrom(obs$);
-
+  // consume it (example)
+  return await lastValueFrom(obs$);
 }
 
 export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
@@ -549,7 +537,7 @@ export async function getServerPrincipal(
         server,
         db,
         q: `
-        select name , create_date, default_database_name  from sys.server_principals where name = 'custadds\\${name}'
+        select name , create_date, default_database_name  from sys.server_principals where name = '${name}'
               `,
       }),
     });
@@ -583,7 +571,7 @@ export async function getDatabasePrincipal(
         q: `
         select name, type_desc, create_date, modify_date
         from sys.database_principals
-        where name = 'custadds\\${name}'
+        where name = '${name}'
       `,
       }),
     });
@@ -595,7 +583,6 @@ export async function getDatabasePrincipal(
         message = resBody?.error ?? message; // ✅ error is a string
       } catch {}
       throw new Error(`getDatabasePrincipal failed (${res.status}): ${message}`);
-      
     }
     return await res.json();
   } catch (err) {
@@ -625,7 +612,7 @@ export async function fetchPermissionMappings(
             ON dp.principal_id = drm.member_principal_id
         JOIN sys.database_principals drp
             ON drm.role_principal_id = drp.principal_id
-        WHERE dp.name = 'custadds\\${name}'
+        WHERE dp.name = '${name}'
               `,
       }),
     });
