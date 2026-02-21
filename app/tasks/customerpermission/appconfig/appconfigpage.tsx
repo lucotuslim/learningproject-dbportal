@@ -43,18 +43,7 @@ const schema = z.object({
     customerdb: z.string().min(1, "Required"),
     customerdbserver: z.string().min(1, "Required"),
     monolilthconnectionstringdb: z.string().min(1, "Required"),
-    notallowedlist: z
-        .string()
-        .min(1, "Required")
-        .refine((value) => {
-            try {
-                const parsed = JSON.parse(value);
-                notAllowedListParsedSchema.parse(parsed);
-                return true;
-            } catch {
-                return false;
-            }
-        }, "Invalid JSON structure for Not Allowed List"),
+    domainprefix: z.string().min(1, "Required")
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -70,7 +59,7 @@ export default function Settings() {
             customerdb: "",
             customerdbserver: "",
             monolilthconnectionstringdb: "",
-            notallowedlist: ""
+            domainprefix: ""
         },
     });
 
@@ -198,6 +187,36 @@ export default function Settings() {
                 >
                     Save
                 </Button>
+
+
+                <FormLabel className="text-left">Domain Prefix</FormLabel>
+
+                <FormField
+                    control={form.control}
+                    name="domainprefix"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormControl>
+                                <Input {...field} disabled={!isEditing} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+
+                <Button
+                    type="button"
+                    disabled={
+                        !isEditing ||
+                        !form.formState.dirtyFields.domainprefix ||
+                        !!form.formState.errors.domainprefix
+                    }
+                    onClick={() => SubmitUpdateCustomerPermissionSetting("domainprefix")}
+                >
+                    Save
+                </Button>
+
+
 
                 {/* 
                 <FormLabel className="text-left">Not allow list</FormLabel>

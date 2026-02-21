@@ -2,6 +2,7 @@ export interface ICustomerPermissionConfig {
   customerdb: string
   customerdbserver: string
   monolilthconnectionstringdb: string
+  domainprefix: string
   // notallowedlist: Record<Environment, NotAllowedUser[]>
 }
 

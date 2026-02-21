@@ -284,7 +284,7 @@ const resolvers = {
           SET ConfigJson = JSON_MODIFY(
             ConfigJson,
             '$.${safeKey}',
-            JSON_QUERY(N'${safeValue}')
+            N'${safeValue}'
           ),
           UpdatedAt = SYSUTCDATETIME()
           OUTPUT inserted.*
