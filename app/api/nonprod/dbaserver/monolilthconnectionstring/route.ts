@@ -79,7 +79,7 @@ const resolvers = {
       SELECT 
            ${sqlColumns}
          FROM MonolithConnectionStrings_NonProd
-          WHERE ClientID = ${ClientId} AND Namespace = '${Namespace}'
+          WHERE isdecomm = 0 ANDClientID = ${ClientId} AND Namespace = '${Namespace}'
       `,
         }),
       }).then((res) => res.json());
@@ -104,7 +104,7 @@ const resolvers = {
           SELECT 
                ${sqlColumns}
              FROM MonolithConnectionStrings_nonprod
-              WHERE ClientID  in (${clientidtext}) AND Namespace = '${Namespace}'
+              WHERE  isdecomm = 0 AND ClientID  in (${clientidtext}) AND Namespace = '${Namespace}'
           `,
         }),
       }).then((res) => res.json());

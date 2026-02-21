@@ -78,7 +78,7 @@ const resolvers = {
       SELECT 
            ${sqlColumns}
          FROM MonolithConnectionStrings_prod
-          WHERE ClientID = ${ClientId} AND Namespace = '${Namespace}'
+          WHERE  isdecomm = 0 AND ClientID = ${ClientId} AND Namespace = '${Namespace}'
       `,
         }),
       }).then((res) => res.json());
@@ -86,30 +86,29 @@ const resolvers = {
     },
 
     ConnectionStringByClientArrayName: async (
-          _: unknown,
-          { db, ClientIds, Namespace }: { db: string; ClientIds: number[]; Namespace: string },
-          __: unknown,
-          info: GraphQLResolveInfo
-        ) => {
-          const fields = Object.keys(graphqlFields(info));
-          const sqlColumns = fields.map((f) => `[${f}]`).join(", ");
-          const clientidtext = ClientIds.join(",")
-          const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              db: db,
-              q: `
+      _: unknown,
+      { db, ClientIds, Namespace }: { db: string; ClientIds: number[]; Namespace: string },
+      __: unknown,
+      info: GraphQLResolveInfo
+    ) => {
+      const fields = Object.keys(graphqlFields(info));
+      const sqlColumns = fields.map((f) => `[${f}]`).join(", ");
+      const clientidtext = ClientIds.join(",");
+      const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          db: db,
+          q: `
           SELECT 
                ${sqlColumns}
-             FROM MonolithConnectionStrings_preprod
-              WHERE ClientID  in (${clientidtext}) AND Namespace = '${Namespace}'
+             FROM MonolithConnectionStrings_prod
+              WHERE  isdecomm = 0 AND ClientID  in (${clientidtext}) AND Namespace = '${Namespace}'
           `,
-            }),
-          }).then((res) => res.json());
-          return result;
-        },
-    
+        }),
+      }).then((res) => res.json());
+      return result;
+    },
   },
 };
 
