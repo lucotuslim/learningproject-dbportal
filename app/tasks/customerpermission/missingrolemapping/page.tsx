@@ -1,11 +1,10 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-import { ICustomerSecurityGroup, ICustomerPermissionConfig, IConnectionStringWithDbPermission } from "../interfaces";
+import { ICustomerPermissionConfig, IConnectionStringWithDbPermission } from "../interfaces";
 import { getAllMissingDbPermissions } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
-import { Input } from "@/components/ui/input";
 import { CustomerPermissionSetting } from "../appconfig"
 import { toast } from "sonner";
 export default function MissingRoleMappings() {

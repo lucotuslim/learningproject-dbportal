@@ -157,17 +157,17 @@ export function CheckClientDbPermissionContent({
             </TableHeader>
 
             <TableBody>
-                {data.map((info,index) => {
-                    const missingPermissions = info.dbpermission.filter(
-                        p =>
-                            !info.DatabaseUserMappings
-                                .map(m => m.toLowerCase())
-                                .includes(p.toLowerCase())
-                    )
+                {data.map((info, index) => {
+                    // const missingPermissions = info.dbpermission.filter(
+                    //     p =>
+                    //         !info.DatabaseUserMappings
+                    //             .map(m => m.toLowerCase())
+                    //             .includes(p.toLowerCase())
+                    // )
 
                     return (
                         <TableRow
-                                key={`${index}-${info.Namespace}-${info.ConstringDatabaseName}`}
+                            key={`${index}-${info.Namespace}-${info.ConstringDatabaseName}`}
 
                             className={!info.ConnectionStringFound ? "text-red-500" : ""}
                         >
@@ -321,7 +321,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {data.map((info,index) => (
+                            {data.map((info, index) => (
                                 <TableRow
                                     key={`${index}-${info.ClientID}-${info.ConstringDatabaseName}`}
                                     className={
@@ -335,7 +335,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
                                     <TableCell>{info.ConstringDatabaseName}</TableCell>
                                     <TableCell>{info.ConstringServerName}</TableCell>
                                     <TableCell>{info.ConnectionType}</TableCell>
-                                    <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
+                                    <TableCell>{info.IsDecomm === undefined ? "" : info.IsDecomm ? "Yes" : "No"}</TableCell>
                                     <TableCell>{info.ConnectionStringFound ? "Yes" : "No"}</TableCell>
                                 </TableRow>
                             ))}

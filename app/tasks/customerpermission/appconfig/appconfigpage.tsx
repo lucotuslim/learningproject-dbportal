@@ -199,7 +199,7 @@ export default function Settings() {
                     Save
                 </Button>
 
-
+                {/* 
                 <FormLabel className="text-left">Not allow list</FormLabel>
                 <FormField
                     control={form.control}
@@ -239,7 +239,7 @@ export default function Settings() {
                     onClick={() => SubmitUpdateCustomerPermissionSetting("notallowedlist")}
                 >
                     Save
-                </Button>
+                </Button> */}
 
 
 

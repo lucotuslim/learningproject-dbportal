@@ -45,7 +45,7 @@ export interface IConnectionString {
   ConnectionType: string;
   DatabaseConnectionLastModifiedTimestamp?: string; // ISO datetime
   CollectedTimeStamp?: string; // ISO datetime
-  IsDecomm: boolean;
+  IsDecomm?: boolean;
 }
 
 export interface IConnectionStringWithFound extends IConnectionString {

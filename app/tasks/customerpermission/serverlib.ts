@@ -197,7 +197,7 @@ export async function getclientdbpermissioninfo(
   const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
     ?.dbPermission ?? ["N/A"];
 
-  const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment, concurrency)).pipe(
+  const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment)).pipe(
     // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
     catchError((err) => {
       console.error("getClientWithDbInfo failed:", err);
@@ -329,8 +329,7 @@ export async function getClientWithDbInfo(
   db: string,
   clientid: number[],
   Namespace: string,
-  selectedEnvironment: string,
-  concurrency: number = 100
+  selectedEnvironment: string
 ): Promise<IConnectionStringWithFound[]> {
   if (clientid.length === 0) {
     return [];
@@ -340,35 +339,40 @@ export async function getClientWithDbInfo(
     fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
   ).pipe(
     map((result: IConnectionString[]) => {
-      // ensure result is an array
-      if (!Array.isArray(result) || result.length === 0) {
-        return clientid.map(
-          (c) =>
-            ({
-              ClientID: c,
-              Namespace,
-              ConstringDatabaseName: "N/A",
-              ConstringServerName: "N/A",
-              ISBI: false,
-              ConnectionType: "N/A",
-              IsDecomm: false,
-              ConnectionStringFound: false,
-            }) as IConnectionStringWithFound
-        );
+      const foundList = Array.isArray(result) ? result : [];
+      const foundMap = new Map<number, IConnectionString>();
+      for (const item of foundList) {
+        foundMap.set(Number(item.ClientID), item);
       }
+      // console.log("foundMap entries:", [...foundMap.entries()]);
 
       // result is an array of found rows — mark each as found
-      return result.map(
-        (r) =>
-          ({
-            ...r,
-            ConnectionStringFound: true,
-          }) as IConnectionStringWithFound
-      );
+      return clientid.map((c) => {
+        // console.log(
+        //   typeof c,
+        //   typeof Namespace,
+        //   "looking for ClientID in foundMap:",
+        //   c,
+        //   foundMap.has(c)
+        // );
+        const found = foundMap.get(c);
+        if (found) {
+          return { ...found, ConnectionStringFound: true } as IConnectionStringWithFound;
+        } else {
+          return {
+            ClientID: c,
+            Namespace,
+            ConstringDatabaseName: "",
+            ConstringServerName: "",
+            ISBI: undefined,
+            ConnectionType: "",
+            IsDecomm: undefined,
+            ConnectionStringFound: false,
+          } as IConnectionStringWithFound;
+        }
+      });
     })
   );
-
-  // consume it (example)
   return await lastValueFrom(obs$);
 }
 
@@ -436,49 +440,49 @@ export async function getCustomerSecurityGroups<T>(
   return data.data.customerSecurityGroups;
 }
 
-async function fetchConnectionStringByClientIdName(
-  db: string,
-  ClientId: number,
-  Namespace: string,
-  environment: string
-): Promise<IConnectionString[]> {
-  const query = `
-  query ConnectionStringByClientIdName($db: String!, $ClientId: Int!, $Namespace: String!) {
-    ConnectionStringByClientIdName(db: $db, ClientId: $ClientId, Namespace: $Namespace) {
-      ClientID
-      Namespace
-      ConstringDatabaseName
-      ConstringServerName
-      ISBI
-      ConnectionType
-      IsDecomm
-    }
-  }`;
-  const variables = { db: db, ClientId: ClientId, Namespace: Namespace };
-  const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
-    // `/api/${environment}/dbaserver/monolilthconnectionstring`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    }
-  );
-  const data = await res.json();
+// async function fetchConnectionStringByClientIdName(
+//   db: string,
+//   ClientId: number,
+//   Namespace: string,
+//   environment: string
+// ): Promise<IConnectionString[]> {
+//   const query = `
+//   query ConnectionStringByClientIdName($db: String!, $ClientId: Int!, $Namespace: String!) {
+//     ConnectionStringByClientIdName(db: $db, ClientId: $ClientId, Namespace: $Namespace) {
+//       ClientID
+//       Namespace
+//       ConstringDatabaseName
+//       ConstringServerName
+//       ISBI
+//       ConnectionType
+//       IsDecomm
+//     }
+//   }`;
+//   const variables = { db: db, ClientId: ClientId, Namespace: Namespace };
+//   const res = await fetch(
+//     `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
+//     // `/api/${environment}/dbaserver/monolilthconnectionstring`,
+//     {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ query, variables }),
+//     }
+//   );
+//   const data = await res.json();
 
-  console.log("GraphQL raw response:", {
-    ok: res.ok,
-    status: res.status,
-    data,
-    variables,
-  });
+//   console.log("GraphQL raw response:", {
+//     ok: res.ok,
+//     status: res.status,
+//     data,
+//     variables,
+//   });
 
-  if (data.errors) {
-    console.error(data.errors);
-    throw new Error(data.errors[0].message);
-  }
-  return data.data.ConnectionStringByClientIdName;
-}
+//   if (data.errors) {
+//     console.error(data.errors);
+//     throw new Error(data.errors[0].message);
+//   }
+//   return data.data.ConnectionStringByClientIdName;
+// }
 
 async function fetchConnectionStringByClientArrayName(
   db: string,
