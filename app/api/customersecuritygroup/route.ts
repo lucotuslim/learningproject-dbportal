@@ -25,6 +25,7 @@ type Query {
     server: String!
     db: String!
     environment: String!
+    domainprefix: String!
   ): [CustomerSecurityGroup!]!
 
   customerSecurityGroupByClientIdName(
@@ -33,6 +34,7 @@ type Query {
     environment: String!
     ClientId: Int!
     Namespace: String!
+    domainprefix: String!
   ): [CustomerSecurityGroup!]!
 }
 `;
@@ -42,7 +44,12 @@ const resolvers = {
   Query: {
     customerSecurityGroups: async (
       _: unknown,
-      { server, db, environment }: { server: string; db: string; environment: string }
+      {
+        server,
+        db,
+        environment,
+        domainprefix,
+      }: { server: string; db: string; environment: string; domainprefix: string }
     ) => {
       try {
         const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
@@ -52,12 +59,12 @@ const resolvers = {
             server,
             db,
             q: `
-                SELECT Top 100 [CustomerSecurityGroupsId]
+                SELECT  [CustomerSecurityGroupsId]
       ,[GroupSID]
       ,[Environment]
       ,[Namespace]
       ,[ClientId]
-      ,[GroupName]
+      , '${domainprefix}' + [GroupName] as GroupName
       ,[MetaData]
       ,[CollectedTimestamp]
       ,[Permission]
@@ -95,7 +102,15 @@ const resolvers = {
         environment,
         ClientId,
         Namespace,
-      }: { server: string; db: string; environment: string; ClientId: number; Namespace: string }
+        domainprefix,
+      }: {
+        server: string;
+        db: string;
+        environment: string;
+        ClientId: number;
+        Namespace: string;
+        domainprefix: string;
+      }
     ) => {
       try {
         const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
@@ -110,7 +125,7 @@ const resolvers = {
       ,[Environment]
       ,[Namespace]
       ,[ClientId]
-      ,[GroupName]
+      , '${domainprefix}' + [GroupName] as GroupName
       ,[MetaData]
       ,[CollectedTimestamp]
       ,[Permission]

@@ -20,7 +20,9 @@ export default function MissingRoleMappings() {
     const loaddata = useCallback(async () => {
         if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return setData([]);
         try {
-            const res = await getAllMissingDbPermissions(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
+            const res = await getAllMissingDbPermissions(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment,
+                customerpermissionsetting.domainprefix
+            );
             setData(res ?? []);
             setLoading(false);
         } catch (err) {

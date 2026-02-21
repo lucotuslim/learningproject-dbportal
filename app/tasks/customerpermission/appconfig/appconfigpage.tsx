@@ -34,16 +34,16 @@ export const NotAllowedUserSchema = z.object({
     type_desc: LoginTypeSchema,
 });
 
-const notAllowedListParsedSchema = z.record(
-    EnvironmentSchema,
-    z.array(NotAllowedUserSchema)
-);
+// const notAllowedListParsedSchema = z.record(
+//     EnvironmentSchema,
+//     z.array(NotAllowedUserSchema)
+// );
 
 const schema = z.object({
     customerdb: z.string().min(1, "Required"),
     customerdbserver: z.string().min(1, "Required"),
     monolilthconnectionstringdb: z.string().min(1, "Required"),
-    domainprefix: z.string().min(1, "Required")
+    domainprefix: z.string()
 });
 
 type FormValues = z.infer<typeof schema>;

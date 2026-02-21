@@ -58,13 +58,15 @@ export async function getAllMissingDbPermissions(
   customerdb: string,
   serverinventory: string,
   selectedEnvironment: string,
+  domainprefix: string,
   concurrency: number = 50
 ): Promise<IConnectionStringWithDbPermission[]> {
   const obs$ = from(
     getCustomerSecurityGroups<ICustomerSecurityGroup>(
       customerdbserver,
       customerdb,
-      selectedEnvironment
+      selectedEnvironment,
+      domainprefix
     )
   ).pipe(
     // 1️⃣ log groups
@@ -409,11 +411,12 @@ export async function getConnectionStrings<T>(db: string, environment: string): 
 export async function getCustomerSecurityGroups<T>(
   server: string,
   db: string,
-  environment: string
+  environment: string,
+  domainprefix: string
 ): Promise<T[]> {
   const query = `
-  query CustomerSecurityGroups($server: String!, $db: String!, $environment: String!) {
-  customerSecurityGroups(server: $server, db: $db, environment: $environment) {
+  query CustomerSecurityGroups($server: String!, $db: String!, $environment: String!, $domainprefix: String!) {
+  customerSecurityGroups(server: $server, db: $db, environment: $environment, domainprefix: $domainprefix) {
     GroupSID
     Environment
     ClientId
@@ -426,7 +429,12 @@ export async function getCustomerSecurityGroups<T>(
   }
 }
   `;
-  const variables = { server: server, db: db, environment: environment };
+  const variables = {
+    server: server,
+    db: db,
+    environment: environment,
+    domainprefix: domainprefix ?? "",
+  };
   const res = await fetch(`${process.env.APPDAPIROOT}/api/customersecuritygroup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

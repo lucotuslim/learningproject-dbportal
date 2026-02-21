@@ -38,7 +38,9 @@ export default function CustomerSecurityGroup() {
         //   ServerInventory["SERVERINVENTORY"]
         // );
         try {
-            const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment);
+            const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment,
+                customerpermissionsetting.domainprefix
+            );
             setData(res ?? []);
         } catch (err) {
             console.error("Failed to load customer permission setting:", err);
