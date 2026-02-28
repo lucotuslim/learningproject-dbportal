@@ -116,7 +116,7 @@ export function CheckClientDbPermissionContent({
                     selectedEnvironment,
                     100
                 )
-                setData(result)
+                setData(result.sort((a, b) => a.ClientID - b.ClientID)); // sort by ClientID
             } catch (e) {
                 setError((e as Error).message)
             } finally {
@@ -152,7 +152,7 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Server Principal Found?</TableHead>
                     <TableHead>Database Principal Found?</TableHead>
                     <TableHead>Remarks</TableHead>
-                    <TableHead> Error</TableHead>
+                    <TableHead>Error</TableHead>
                 </TableRow>
             </TableHeader>
 
@@ -302,7 +302,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[100vw] max-w-[950px] max-h-72 overflow-auto text-sm">
+            <PopoverContent className="w-[100vw] max-w-[950px] max-h-92 overflow-auto text-sm">
                 {loading && (<div className="flex justify-center py-4">
                     Loading...
                 </div>)}
