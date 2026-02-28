@@ -1,4 +1,5 @@
 "use server";
+import { error } from "console";
 import {
   IConnectionString,
   IConnectionStringWithFound,
@@ -230,7 +231,13 @@ export async function getclientdbpermissioninfo(
                   `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
                   err
                 );
-                return of([]);
+                return of([
+                  {
+                    name: name,
+                    error: true,
+                    errorMessage: err instanceof Error ? err.message : "Unknown error",
+                  },
+                ]);
               })
             );
 
@@ -242,7 +249,13 @@ export async function getclientdbpermissioninfo(
                   `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
                   err
                 );
-                return of([]);
+                return of([
+                  {
+                    name: name,
+                    error: true,
+                    errorMessage: err instanceof Error ? err.message : "Unknown error",
+                  },
+                ]);
               })
             );
 
@@ -288,6 +301,12 @@ export async function getclientdbpermissioninfo(
                   DatabasePrincipalFound: !!databasePrincipalName,
                   DatabaseUserMappings: dbUserMappings,
                   MissingRoleMappings: missingRoleMappings,
+                  error:
+                    sp[0] && "error" in sp[0] && sp[0].error
+                      ? sp[0].errorMessage
+                      : dp[0] && "error" in dp[0] && dp[0].error
+                        ? dp[0].errorMessage
+                        : null,
                 } as IConnectionStringWithDbPermission;
               }),
 
