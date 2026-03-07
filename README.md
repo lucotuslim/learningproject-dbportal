@@ -164,6 +164,6 @@ NonProd-Owner-Group - ClientId 2 all ok.
 NonProd-Owner-Group - ClientId 3 no monolith connection string.
 NonProd-Owner-Group - ClientId 4 have monolith connection string, but server not exists.
 NonProd-Owner-Group - ClientId 5 have monolith connection string, wrong namespace.
-NonProd-Owner-Group - ClientId 6 have monolith connection string and server. But no Server Principal.
+NonProd-Owner-Group - ClientId 6 have monolith connection string and server and Server Principal. But no Database Principal.
 NonProd-Owner-Group - ClientId 7 have monolith connection string and server and Server Principal. But no Database Principal.
 NonProd-Owner-Group - ClientId 8 have monolith connection string and server and Server Principal and Database Principal. But missing db user mapping to db.
