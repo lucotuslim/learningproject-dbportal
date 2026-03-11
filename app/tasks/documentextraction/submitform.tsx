@@ -81,6 +81,7 @@ export default function SubmitForm() {
       console.log(JSON.stringify(namespace));
       if (!namespace) throw new Error("Namespace not found");
       const documents: { DocumentGUID: string }[] = await fetchDocuments(namespace.ConstringServerName, namespace.ConstringDatabaseName);
+      if (documents.length===0) { toast.warning("No document found.")}
       const containername = `${namespace.Namespace}-${namespace.ClientID}`;
 
       // const tokenres = await fetch("/api/getapitoken", {
