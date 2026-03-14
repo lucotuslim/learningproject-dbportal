@@ -36,12 +36,12 @@ export const typeDefs = `#graphql
     configKey: String!
     configJson: String!
   }
-
-  extend type Query {
-    GetAppConfig(server: String!, db: String!, config: String!): [AppConfig!]!
+  
+  type Query {
+    GetAppConfig(server: String!, db: String!, config: String! ): [AppConfig!]!
   }
 
-  extend type Mutation {
+  type Mutation {
     AddAppConfig(input: AddAppConfigInput!): AppConfig
     DeleteAppConfig(input: DeleteAppConfigInput!): AppConfig
     UpdateAppConfig(input: UpdateAppConfigInput!): AppConfig

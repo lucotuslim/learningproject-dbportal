@@ -1,46 +1,4 @@
-import { ApolloServer } from "@apollo/server";
-import { startServerAndCreateNextHandler } from "@as-integrations/next";
-import { NextRequest } from "next/server";
-
-// 🧠 GraphQL Schema Definition
-const typeDefs = `#graphql
-scalar JSON
-scalar DateTime
-
-type CustomerSecurityGroup {
-  CustomerSecurityGroupsId: Int!
-  GroupSID: String!
-  Environment: String!
-  Namespace: String!
-  ClientId: Int!
-  GroupName: String!
-  MetaData: JSON
-  CollectedTimestamp: DateTime!
-  Permission: String!
-  IsDeleted: Boolean!
-}
-
-type Query {
-  customerSecurityGroups(
-    server: String!
-    db: String!
-    environment: String!
-    domainprefix: String!
-  ): [CustomerSecurityGroup!]!
-
-  customerSecurityGroupByClientIdName(
-    server: String!
-    db: String!
-    environment: String!
-    ClientId: Int!
-    Namespace: String!
-    domainprefix: String!
-  ): [CustomerSecurityGroup!]!
-}
-`;
-
-// 🧠 Resolvers
-const resolvers = {
+export const resolvers = {
   Query: {
     customerSecurityGroups: async (
       _: unknown,
@@ -148,16 +106,3 @@ const resolvers = {
     },
   },
 };
-
-// 🧠 Apollo Server
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// 🧠 Next.js Route Handler (App Router)
-const handler = startServerAndCreateNextHandler<NextRequest>(server);
-export async function GET(req: NextRequest) {
-  return handler(req);
-}
-export const POST = GET;

@@ -16,7 +16,7 @@ export async function UpdateGlobalSetting(
   `;
 
   const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/graphql`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -139,7 +139,7 @@ export async function GlobalSetting(): Promise<IGlobalSettings> {
     config: CONFIG_SECTION,
   };
 
-  const res = await fetch(`${process.env.APPDAPIROOT}/api/appconfig`, {
+  const res = await fetch(`${process.env.APPDAPIROOT}/api/graphql`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ query, variables }),

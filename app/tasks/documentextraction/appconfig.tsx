@@ -4,8 +4,8 @@ const CONFIG_SECTION = "DocumentExtractionTasksSetting";
 
 export async function UpdateDocumentExtractionTasksSetting(
   config: IDocumentConfig
-) :Promise<{data: string}>{
-  
+): Promise<{ data: string }> {
+
   const updateQuery = `
     mutation ($input: UpdateAppConfigInput!) {
       UpdateAppConfig(input: $input) {
@@ -23,9 +23,9 @@ export async function UpdateDocumentExtractionTasksSetting(
         query: updateQuery,
         variables: {
           input: {
-    server: process.env.APPCONFIGSERVER!,
-    db: process.env.APPCONFIGDB!,
-                configSection: CONFIG_SECTION,
+            server: process.env.APPCONFIGSERVER!,
+            db: process.env.APPCONFIGDB!,
+            configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -41,8 +41,8 @@ export async function UpdateDocumentExtractionTasksSetting(
 
 export async function DeleteDocumentExtractionTasksSetting(
   config: IDocumentConfig
-): Promise<{data: string}> {
-  
+): Promise<{ data: string }> {
+
   const deleteQuery = `
     mutation ($input: DeleteAppConfigInput!) {
       DeleteAppConfig(input: $input) {
@@ -60,10 +60,10 @@ export async function DeleteDocumentExtractionTasksSetting(
         query: deleteQuery,
         variables: {
           input: {
-            
-    server: process.env.APPCONFIGSERVER!,
-    db: process.env.APPCONFIGDB!,
-                configSection: CONFIG_SECTION,
+
+            server: process.env.APPCONFIGSERVER!,
+            db: process.env.APPCONFIGDB!,
+            configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -74,19 +74,19 @@ export async function DeleteDocumentExtractionTasksSetting(
   const result = await res.json();
   console.log("DeleteDocumentExtractionTasksSetting result:", result);
   return result;
-    
+
   if (!res.ok || result.errors?.length) {
     throw new Error(
       result.errors?.[0]?.message ??
-        "Failed to delete DocumentExtractionTasksSetting"
+      "Failed to delete DocumentExtractionTasksSetting"
     );
   }
 }
 
 export async function AddDocumentExtractionTasksSetting(
   config: IDocumentConfig
-): Promise<{data: string}> {
-  
+): Promise<{ data: string }> {
+
   const addQuery = `
     mutation ($input: AddAppConfigInput!) {
       AddAppConfig(input: $input) {
@@ -104,9 +104,9 @@ export async function AddDocumentExtractionTasksSetting(
         query: addQuery,
         variables: {
           input: {
-    server: process.env.APPCONFIGSERVER!,
-    db: process.env.APPCONFIGDB!,
-                configSection: CONFIG_SECTION,
+            server: process.env.APPCONFIGSERVER!,
+            db: process.env.APPCONFIGDB!,
+            configSection: CONFIG_SECTION,
             configJson: JSON.stringify(config),
           },
         },
@@ -136,7 +136,7 @@ export async function DocumentExtractionTasksSetting(): Promise<IDocumentConfig[
   };
 
   const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/graphql`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -16,7 +16,7 @@ export async function UpdateCustomerPermissionSetting(
   `;
 
     const res = await fetch(
-        `${process.env.APPDAPIROOT}/api/appconfig`,
+        `${process.env.APPDAPIROOT}/api/graphql`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -57,7 +57,7 @@ export async function CustomerPermissionSetting(): Promise<ICustomerPermissionCo
     };
 
     const res = await fetch(
-        `${process.env.APPDAPIROOT}/api/appconfig`,
+        `${process.env.APPDAPIROOT}/api/graphql`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },

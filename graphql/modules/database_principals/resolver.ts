@@ -1,44 +1,12 @@
-import { ApolloServer } from "@apollo/server";
-import { startServerAndCreateNextHandler } from "@as-integrations/next";
-import { NextRequest } from "next/server";
+// // import { appConfigService } from "./service";
 
-// 🧠 GraphQL Schema Definition
-const typeDefs = `#graphql
+// export interface GetAppConfigArgs {
+//   server: string;
+//   db: string;
+//   config: string;
+// }
 
-scalar DateTime
-
-type DatabasePrincipal {
-  name: String!
-  type_desc: String!
-  default_schema_name: String
-  create_date: DateTime
-  modify_date: DateTime
-  sid: String
-}
-
-type Query {
-  databaseprincipal(
-    server: String!
-    db: String!
-  ): [DatabasePrincipal!]!
-
-  databaseprincipalByName(
-    server: String!
-    db: String!
-    name: String!
-  ): [DatabasePrincipal!]!
-
-    databaseprincipalByNameType(
-    server: String!
-    db: String!
-    name: String!
-    type: String!
-  ): [DatabasePrincipal!]!
-}
-`;
-
-// 🧠 Resolvers
-const resolvers = {
+export const resolvers = {
   Query: {
     databaseprincipal: async (_: unknown, { server, db }: { server: string; db: string }) => {
       try {
@@ -125,16 +93,3 @@ const resolvers = {
     },
   },
 };
-
-// 🧠 Apollo Server
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// 🧠 Next.js Route Handler (App Router)
-const handler = startServerAndCreateNextHandler<NextRequest>(server);
-export async function GET(req: NextRequest) {
-  return handler(req);
-}
-export const POST = GET;
