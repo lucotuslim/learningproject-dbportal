@@ -1,5 +1,4 @@
 "use server";
-import { error } from "console";
 import {
   IConnectionString,
   IConnectionStringWithFound,

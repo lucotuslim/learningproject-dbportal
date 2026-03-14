@@ -1,12 +1,12 @@
 import { mergeTypeDefs, mergeResolvers } from "@graphql-tools/merge";
-import { loadFilesSync } from "@graphql-tools/load-files";
-import path from "path";
 import { baseTypeDefs } from "./baseSchema";
-
-const modules = loadFilesSync(path.join(process.cwd(), "src/graphql/modules/**/*.ts"), {
-  ignoreIndex: true,
-});
+import { modules } from "../modules";
 
 export const typeDefs = mergeTypeDefs([baseTypeDefs, ...modules.map((m) => m.typeDefs)]);
 
 export const resolvers = mergeResolvers(modules.map((m) => m.resolvers));
+
+export const loaders = modules.reduce<Record<string, unknown>>((acc, m) => {
+  if (m.loaders) Object.assign(acc, m.loaders);
+  return acc;
+}, {});
