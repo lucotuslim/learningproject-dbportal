@@ -136,7 +136,6 @@ export async function getAllMissingDbPermissions(
       // });
 
       // ✅ MUST return an Observable here
-
       return from(
         getclientdbpermissioninfo(
           serverinventory,
@@ -148,20 +147,19 @@ export async function getAllMissingDbPermissions(
           concurrency
         )
       ).pipe(
-        // ✅ attach group info here
         map((results) =>
-          results.map((r) => ({
-            ...r,
-            GroupName: combined.GroupName,
-          }))
-        ),
-        map((results) =>
-          results.filter(
-            (item) =>
-              item.ServerPrincipalFound === false ||
-              item.DatabasePrincipalFound === false ||
-              item.MissingRoleMappings.length > 0
-          )
+          results
+            .filter(
+              (item) =>
+                !item.error &&
+                (item.ServerPrincipalFound === false ||
+                  item.DatabasePrincipalFound === false ||
+                  item.MissingRoleMappings.length > 0)
+            )
+            .map((r) => ({
+              ...r,
+              GroupName: combined.GroupName,
+            }))
         )
       );
     }, concurrency),
@@ -225,6 +223,12 @@ export async function getclientdbpermissioninfo(
           mergeMap((item) => {
             // turn each async call into an Observable and catch error to return a safe default
             const sp$ = from(getServerPrincipal(item.ConstringServerName, "master", name)).pipe(
+              map((rows) =>
+                (rows ?? []).map((r) => ({
+                  ...r,
+                  servername: item.ConstringServerName,
+                }))
+              ),
               catchError((err) => {
                 console.error(
                   `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
@@ -232,6 +236,7 @@ export async function getclientdbpermissioninfo(
                 );
                 return of([
                   {
+                    servername: item.ConstringServerName,
                     name: name,
                     error: true,
                     errorMessage: err instanceof Error ? err.message : "Unknown error",
@@ -243,6 +248,13 @@ export async function getclientdbpermissioninfo(
             const dp$ = from(
               getDatabasePrincipal(item.ConstringServerName, item.ConstringDatabaseName, name)
             ).pipe(
+              map((rows) =>
+                (rows ?? []).map((r) => ({
+                  ...r,
+                  servername: item.ConstringServerName,
+                  databasename: item.ConstringDatabaseName,
+                }))
+              ),
               catchError((err) => {
                 console.error(
                   `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
@@ -250,6 +262,8 @@ export async function getclientdbpermissioninfo(
                 );
                 return of([
                   {
+                    servername: item.ConstringServerName,
+                    databasename: item.ConstringDatabaseName,
                     name: name,
                     error: true,
                     errorMessage: err instanceof Error ? err.message : "Unknown error",
@@ -277,8 +291,18 @@ export async function getclientdbpermissioninfo(
               dpmap: dpPermissionMap$,
             }).pipe(
               map(({ sp, dp, dpmap }) => {
-                const serverPrincipalName = sp?.[0]?.name ?? null;
-                const databasePrincipalName = dp?.[0]?.name ?? null;
+                // console.log("SP RAW:", sp);
+                // console.log("DP RAW:", dp);
+                // const serverPrincipalName = sp?.[0]?.name ?? null;
+                const spRow = sp.find((s) => s.servername === item.ConstringServerName && !s.error);
+                const serverPrincipal = spRow?.name ?? null;
+                const dpRow = dp.find(
+                  (d) =>
+                    d.servername === item.ConstringServerName &&
+                    d.databasename === item.ConstringDatabaseName &&
+                    !d.error
+                );
+                const databasePrincipal = dpRow?.name ?? null;
 
                 const dbUserMappings = Array.isArray(dpmap)
                   ? dpmap.map((d) => d.DatabaseRole).flat()
@@ -294,18 +318,20 @@ export async function getclientdbpermissioninfo(
                 return {
                   ...item,
                   dbpermission,
-                  serverPrincipal: serverPrincipalName,
-                  ServerPrincipalFound: !!serverPrincipalName,
-                  databasePrincipal: databasePrincipalName,
-                  DatabasePrincipalFound: !!databasePrincipalName,
+                  //serverPrincipal: serverPrincipalName,
+                  // serverPrincipal:
+                  //   sp.find((s) => s.servername === item.ConstringServerName)?.name ?? null,
+                  serverPrincipal,
+                  ServerPrincipalFound: !!serverPrincipal,
+                  databasePrincipal: databasePrincipal,
+                  DatabasePrincipalFound: !!databasePrincipal,
                   DatabaseUserMappings: dbUserMappings,
                   MissingRoleMappings: missingRoleMappings,
-                  error:
-                    sp[0] && "error" in sp[0] && sp[0].error
-                      ? sp[0].errorMessage
-                      : dp[0] && "error" in dp[0] && dp[0].error
-                        ? dp[0].errorMessage
-                        : null,
+                  error: spRow?.error
+                    ? spRow.errorMessage
+                    : dp?.[0]?.error
+                      ? dp[0].errorMessage
+                      : null,
                 } as IConnectionStringWithDbPermission;
               }),
 

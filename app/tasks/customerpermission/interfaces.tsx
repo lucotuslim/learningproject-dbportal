@@ -73,6 +73,8 @@ export interface IServerPrincipal {
   name: string;
   create_date: Date;
   default_database_name: string | null;
+  error: string;
+  errorMessage: string
 }
 
 export interface IDatabasePrincipal {
@@ -80,6 +82,8 @@ export interface IDatabasePrincipal {
   type_desc: string;
   create_date: Date;
   modify_date: Date;
+  error: string;
+  errorMessage: string
 }
 
 export interface IDatabaseUserMapping {

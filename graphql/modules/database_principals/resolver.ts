@@ -1,11 +1,3 @@
-// // import { appConfigService } from "./service";
-
-// export interface GetAppConfigArgs {
-//   server: string;
-//   db: string;
-//   config: string;
-// }
-
 export const resolvers = {
   Query: {
     databaseprincipal: async (_: unknown, { server, db }: { server: string; db: string }) => {
