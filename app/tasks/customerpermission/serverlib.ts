@@ -200,7 +200,7 @@ export async function getclientdbpermissioninfo(
   const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment)).pipe(
     // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
     catchError((err) => {
-      console.error("getClientWithDbInfo failed:", err);
+      console.error(`getClientWithDbInfo failed: for  ${Namespace} ${clientid}`, err);
       return of([]); // keep typing: returns empty array
     }),
 
