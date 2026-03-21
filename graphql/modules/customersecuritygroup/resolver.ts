@@ -10,13 +10,29 @@ export const resolvers = {
       }: { server: string; db: string; environment: string; domainprefix: string }
     ) => {
       try {
-        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            server,
-            db,
-            q: `
+          let sql = "";
+
+        if (environment === "preprod") {
+            sql = `
+                SELECT  [CustomerSecurityGroupsId]
+      ,[GroupSID]
+      ,[Environment]
+      ,[Namespace]
+      ,[ClientId]
+      , '${domainprefix}' + [GroupName] as GroupName
+      ,[MetaData]
+      ,[CollectedTimestamp]
+      ,[Permission]
+      ,[IsDeleted]
+  FROM [dbo].[CustomerSecurityGroups]
+  where Environment  in ('Config','PreProd','StaConTra','Stage','Train') 
+  and IsDeleted = 0
+  and Namespace <> 'NULL'
+  --and Namespace ='comptiainc' `
+        }
+        else {
+            sql = 
+          `
                 SELECT  [CustomerSecurityGroupsId]
       ,[GroupSID]
       ,[Environment]
@@ -32,7 +48,15 @@ export const resolvers = {
   and IsDeleted = 0
   and Namespace <> 'NULL'
   --and Namespace ='comptiainc'
-              `,
+              `
+        }
+        const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            server,
+            db,
+            q: sql
           }),
         });
 

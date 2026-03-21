@@ -14,16 +14,21 @@ export default function CustomerSecurityGroup() {
     console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
     const [data, setData] = useState<ICustomerSecurityGroup[]>([]);
     const [search, setSearch] = useState("");
+
     const filteredData = data.filter((item: ICustomerSecurityGroup) => {
-        if (search.endsWith("%")) {
-            const prefix = search.slice(0, -1); // remove %
-            return item.GroupName.startsWith(prefix);
-        } else if (search !== "") {
-            return item.GroupName === search;
+        const normalizedSearch = search.toLowerCase();
+        const groupName = item.GroupName.toLowerCase();
+
+        if (normalizedSearch.endsWith("%")) {
+            const prefix = normalizedSearch.slice(0, -1); // remove %
+            return groupName.startsWith(prefix);
+        } else if (normalizedSearch !== "") {
+            return groupName === normalizedSearch;
         } else {
             return true;
         }
     });
+
     const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
     useEffect(() => {
         CustomerPermissionSetting().then(setcustomerpermissionsetting)
@@ -38,6 +43,7 @@ export default function CustomerSecurityGroup() {
         //   ServerInventory["SERVERINVENTORY"]
         // );
         try {
+            setData([]);
             const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment,
                 customerpermissionsetting.domainprefix
             );
