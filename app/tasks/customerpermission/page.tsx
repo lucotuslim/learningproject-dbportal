@@ -15,7 +15,7 @@ export default function Page() {
 
   return (
     <div className="w-full gap-6 m-6">
-      <Tabs defaultValue="missingrolemappings" className="w-full">
+      <Tabs defaultValue="settings" className="w-full">
         <TabsList className="w-full">
 
           <TabsTrigger value="missingrolemappings" className="w-full">
