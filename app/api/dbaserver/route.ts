@@ -8,7 +8,9 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     if (!body?.db || !body?.q) {
-      return new Response(JSON.stringify({ error: "Missing required fields: db, q" }), { status: 400 });
+      return new Response(JSON.stringify({ error: "Missing required fields: db, q" }), {
+        status: 400,
+      });
     }
     const rows = await getDbaserverData(body.db, body.q);
     return new Response(JSON.stringify(rows), { status: 200 });
@@ -18,66 +20,73 @@ export async function POST(req: Request) {
   }
 }
 
-async function getDbaserverData<T>(
-  dbName: string,
-  sqlText: string
-):Promise<T> {
+async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> {
   const serverName = process.env.DB_SERVER!;
-  const hasSqlLogin = Boolean(process.env.DB_USER);
-  console.log (sqlText)
-  // --- Case 1: Use SQL Auth via mssql ---
-  if (hasSqlLogin) {
-    const config: sql.config = {
-      server: serverName,
-      database: dbName,
-      options: {
-        encrypt: true,
-        trustServerCertificate: true,
-      },
-      pool: {
-        max: 5,
-        min: 0,
-        idleTimeoutMillis: 30000,
-      },
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-    };
+  //const hasSqlLogin = Boolean(process.env.DB_USER);
+  console.log(sqlText);
+  // // --- Case 1: Use SQL Auth via mssql ---
+  // if (hasSqlLogin) {
+  //   const config: sql.config = {
+  //     server: serverName,
+  //     database: dbName,
+  //     options: {
+  //       encrypt: true,
+  //       trustServerCertificate: true,
+  //     },
+  //     pool: {
+  //       max: 5,
+  //       min: 0,
+  //       idleTimeoutMillis: 30000,
+  //     },
+  //     user: process.env.DB_USER,
+  //     password: process.env.DB_PASSWORD,
+  //   };
 
-    try {
-      const pool = new sql.ConnectionPool(config);
-      await pool.connect();
-      console.log(`Connected via mssql: ${serverName}/${dbName}`);
-      const result = await pool.request().query(sqlText);
-      await pool.close();
-      return result.recordset as T;
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : JSON.stringify(err);
-      throw new Error(`mssql failed on ${serverName}/${dbName}: ${msg}`);
-    }
-  }
+  //   try {
+  //     const pool = new sql.ConnectionPool(config);
+  //     await pool.connect();
+  //     console.log(`Connected via mssql: ${serverName}/${dbName}`);
+  //     const result = await pool.request().query(sqlText);
+  //     await pool.close();
+  //     return result.recordset as T;
+  //   } catch (err: unknown) {
+  //     const msg = err instanceof Error ? err.message : JSON.stringify(err);
+  //     throw new Error(`mssql failed on ${serverName}/${dbName}: ${msg}`);
+  //   }
+  // }
 
   // --- Case 2: No DB_USER — use msnodesqlv8 (Trusted Connection) ---
-// inside runQuery fallback branch
-const conn = [
-  `server=${serverName}`,
-  `Database=${dbName}`,
-  `Trusted_Connection=Yes`,
-  `Driver={ODBC Driver 17 for SQL Server}`,
-  `Encrypt=yes`,
-  `TrustServerCertificate=yes`,
-].join(";") + ";";
-const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
+  // inside runQuery fallback branch
+  const QUERY_TIMEOUT_SEC = Number(process.env.DB_QUERY_TIMEOUT_SEC || 10);
 
-try {
-  const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
-  return rows as T;
-} catch (err) {
-  // log and rethrow so route returns a 504/500
-  console.error("msnodesqlv8 safe query error:", err);
-  throw err;
-}
+  const parts = [
+    `server=${serverName}`,
+    `Database=${dbName}`,
+    `Driver={${process.env.ConnectionDriver || "ODBC Driver 17 for SQL Server"}}`,
+    `Encrypt=yes`,
+    `TrustServerCertificate=yes`,
+    `QueryTimeout=${QUERY_TIMEOUT_SEC}`,
+  ];
 
+  if (process.env.DB_USER) {
+    parts.push(`UID=${process.env.DB_USER}`);
+    parts.push(`PWD=${process.env.DB_PASSWORD}`);
+  } else {
+    parts.push(`Trusted_Connection=Yes`);
+  }
 
+  const conn = parts.join(";") + ";";
+
+  const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
+
+  try {
+    const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
+    return rows as T;
+  } catch (err) {
+    // log and rethrow so route returns a 504/500
+    console.error("msnodesqlv8 safe query error:", err);
+    throw err;
+  }
 
   // console.log("Falling back to msnodesqlv8 trusted connection...");
   // const util = await import("util");

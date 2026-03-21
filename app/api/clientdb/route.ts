@@ -65,6 +65,25 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
     Encrypt=yes;
     TrustServerCertificate=yes;
   `;
+  // const QUERY_TIMEOUT_SEC = Number(process.env.DB_QUERY_TIMEOUT_SEC || 5);
+
+  // const parts = [
+  //   `server=${serverName}`,
+  //   `Database=${dbName}`,
+  //   `Driver={${process.env.ConnectionDriver || "ODBC Driver 17 for SQL Server"}}`,
+  //   `Encrypt=yes`,
+  //   `TrustServerCertificate=yes`,
+  //   `QueryTimeout=${QUERY_TIMEOUT_SEC}`,
+  // ];
+
+  // if (process.env.DB_USER) {
+  //   parts.push(`UID=${process.env.DB_USER}`);
+  //   parts.push(`PWD=${process.env.DB_PASSWORD}`);
+  // } else {
+  //   parts.push(`Trusted_Connection=Yes`);
+  // }
+
+  // const conn = parts.join(";") + ";";
 
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
 
