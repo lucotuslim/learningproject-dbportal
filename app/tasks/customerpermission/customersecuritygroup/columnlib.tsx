@@ -251,6 +251,17 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment,Clie
         CustomerPermissionSetting().then(setcustomerpermissionsetting)
     }, [])
 
+    let clientIDList = "None";
+
+    try {
+        if (typeof metaData === "string") {
+            const parsed = JSON.parse(metaData);
+            clientIDList = parsed.clientIDList || "None";
+        }
+    } catch {
+        clientIDList = "Invalid JSON";
+    }
+
     const loadClients = async () => {
         if (loading || data.length > 0) return
 
@@ -303,7 +314,8 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment,Clie
         <Popover>
             <PopoverTrigger asChild>
                 <Button variant="link" className="p-0 h-auto" onClick={loadClients}>
-                    {metaData ? metaData.toString() : 'None'}
+                    {/* {metaData ? metaData.toString() : 'None'} */}
+                    {clientIDList}
                 </Button>
             </PopoverTrigger>
 

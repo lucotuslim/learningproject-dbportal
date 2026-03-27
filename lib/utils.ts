@@ -31,7 +31,6 @@ import util from "util";
 
 //   const config: mssql.config = {
 
-    
 //     driver: "msnodesqlv8" as const,
 //     pool: poolOptions,
 //     options: {
@@ -53,8 +52,6 @@ import util from "util";
 //   poolMap.set(connStr, { pool, connecting });
 //   return connecting;
 // }
-
-
 
 export function formatDateTime(value?: string | Date | null): string {
   if (!value) return "";

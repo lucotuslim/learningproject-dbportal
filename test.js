@@ -1,28 +1,42 @@
 // dbTestMsNodeSqlV8.js
-const util = require("util");
+import { inspect } from "util";
 
-// hide require from bundlers (not needed here but safe)
-const sql = eval("require")("msnodesqlv8");
+const sql = await import("msnodesqlv8");
 
-const conn = "server=azg1gussql12dnn.custadds.com;Database=tekion;Trusted_Connection=Yes;Driver={ODBC Driver 17 for SQL Server};Encrypt=yes;TrustServerCertificate=yes;";
-const q = "exec dbo.GetDocumentListAll @IsJson  = 0";
+const conn =
+  "server=192.168.100.151;" +
+  "Database=AdminDB;" +
+  "Driver={ODBC Driver 18 for SQL Server};" +
+  "Encrypt=yes;" +
+  "TrustServerCertificate=yes;" +
+  "Uid=sa;" +
+  "PWD=Yukon900";
 
-console.log("Running msnodesqlv8 test...");
+const q = "SELECT TOP 1 * FROM sys.tables";
 
-sql.query(conn, q, (err, rows,output) => {
+console.log("Running msnodesqlv8 test...again");
+
+console.log("Connection string:", conn);
+
+
+sql.query(conn, q, (err, rows, output) => {
   if (err) {
-    // print deep object structure
-    console.error("msnodesqlv8 query ERROR (util.inspect):");
-    console.error(util.inspect(err, { depth: 10, colors: false }));
-    // also print JSON-safe form if possible
+    console.error("msnodesqlv8 query ERROR (inspect):");
+    console.error(inspect(err, { depth: 10 }));
+
     try {
-      console.error("msnodesqlv8 query ERROR (JSON):", JSON.stringify(err, Object.getOwnPropertyNames(err), 2));
+      console.error(
+        "msnodesqlv8 query ERROR (JSON):",
+        JSON.stringify(err, Object.getOwnPropertyNames(err), 2)
+      );
     } catch (e) {
-      console.error("error JSONifying err:", e && e.message);
+      console.error("error JSONifying err:", e?.message);
     }
+
     process.exit(1);
   }
-  console.log("msnodesqlv8 OK rows:", rows);
-  console.log("msnodesqlv8 output", output);
+
+  console.log("✅ Rows:", rows);
+  console.log("Output:", output);
   process.exit(0);
 });
