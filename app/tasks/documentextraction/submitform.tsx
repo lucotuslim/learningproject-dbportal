@@ -131,7 +131,7 @@ export default function SubmitForm() {
           DocumentsGUID: batch
           //  DocumentsGUID: documents, // large array OK for API route
         };
-
+        console.log (JSON.stringify(submitBulkExportParams))
         const bulksubmitres = await fetch('/api/documentextraction/submitBulkExport', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
