@@ -87,12 +87,15 @@ export async function getAllMissingDbPermissions(
     mergeMap((group$) =>
       group$.pipe(
         reduce(
-          (acc: { ns?: string; gn?: string; perm?: string; custenv?: string;  ids: Set<number> }, curr) => {
+          (
+            acc: { ns?: string; gn?: string; perm?: string; custenv?: string; ids: Set<number> },
+            curr
+          ) => {
             // set bucket identifiers if not set yet
             if (!acc.ns) acc.ns = curr.Namespace;
             if (!acc.gn) acc.gn = curr.GroupName;
             if (!acc.perm) acc.perm = curr.Permission;
-            if (!acc.custenv) acc.custenv = curr.Environment
+            if (!acc.custenv) acc.custenv = curr.Environment;
             tap(() => console.log(curr.MetaData.clientIDList));
 
             const clientIds = normalizeClientIdsFromMeta(curr.MetaData);
@@ -191,7 +194,6 @@ export async function getclientdbpermissioninfo(
   clientpermission: string,
   environment: string,
   ClientEnvironment: string,
-  concurrency: number = 100
   concurrency: number = 5
 ): Promise<IConnectionStringWithDbPermission[]> {
   const PermissionMap: IPermissionMapping[] = [
@@ -203,7 +205,9 @@ export async function getclientdbpermissioninfo(
   const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
     ?.dbPermission ?? ["N/A"];
 
-  const obs$ = from(getClientWithDbInfo(db, clientid, Namespace, environment,ClientEnvironment)).pipe(
+  const obs$ = from(
+    getClientWithDbInfo(db, clientid, Namespace, environment, ClientEnvironment)
+  ).pipe(
     // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
     catchError((err) => {
       console.error(`getClientWithDbInfo failed: for  ${Namespace} ${clientid}`, err);
@@ -388,83 +392,87 @@ export async function getClientWithDbInfo(
     return [];
   }
 
-//   const obs$ = from(
-//     fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
-//   ).pipe(
-//     map((result: IConnectionString[]) => {
-//       const foundList = Array.isArray(result) ? result : [];
-//       const foundMap = new Map<number, IConnectionString>();
-//       for (const item of foundList) {
-//         foundMap.set(Number(item.ClientID), item);
-//       }
-//       // console.log("foundMap entries:", [...foundMap.entries()]);
+  //   const obs$ = from(
+  //     fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
+  //   ).pipe(
+  //     map((result: IConnectionString[]) => {
+  //       const foundList = Array.isArray(result) ? result : [];
+  //       const foundMap = new Map<number, IConnectionString>();
+  //       for (const item of foundList) {
+  //         foundMap.set(Number(item.ClientID), item);
+  //       }
+  //       // console.log("foundMap entries:", [...foundMap.entries()]);
 
-//       // result is an array of found rows — mark each as found
-//       return clientid.map((c) => {
-//         // console.log(
-//         //   typeof c,
-//         //   typeof Namespace,
-//         //   "looking for ClientID in foundMap:",
-//         //   c,
-//         //   foundMap.has(c)
-//         // );
-//         const found = foundMap.get(c);
-//         if (found) {
-//           return { ...found, ConnectionStringFound: true } as IConnectionStringWithFound;
-//         } else {
-//           return {
-//             ClientID: c,
-//             Namespace,
-//             ConstringDatabaseName: "",
-//             ConstringServerName: "",
-//             ISBI: undefined,
-//             ConnectionType: "",
-//             IsDecomm: undefined,
-//             ConnectionStringFound: false,
-//           } as IConnectionStringWithFound;
-//         }
-//       });
-//     })
-//   );
-//   return await lastValueFrom(obs$);
-// 
-console.log (ClientEnvironment)
-const obs$ = from(
-  fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment,ClientEnvironment)
-).pipe(
-  map((result: IConnectionString[]) => {
-    const foundList = Array.isArray(result) ? result : [];
+  //       // result is an array of found rows — mark each as found
+  //       return clientid.map((c) => {
+  //         // console.log(
+  //         //   typeof c,
+  //         //   typeof Namespace,
+  //         //   "looking for ClientID in foundMap:",
+  //         //   c,
+  //         //   foundMap.has(c)
+  //         // );
+  //         const found = foundMap.get(c);
+  //         if (found) {
+  //           return { ...found, ConnectionStringFound: true } as IConnectionStringWithFound;
+  //         } else {
+  //           return {
+  //             ClientID: c,
+  //             Namespace,
+  //             ConstringDatabaseName: "",
+  //             ConstringServerName: "",
+  //             ISBI: undefined,
+  //             ConnectionType: "",
+  //             IsDecomm: undefined,
+  //             ConnectionStringFound: false,
+  //           } as IConnectionStringWithFound;
+  //         }
+  //       });
+  //     })
+  //   );
+  //   return await lastValueFrom(obs$);
+  //
+  console.log(ClientEnvironment);
+  const obs$ = from(
+    fetchConnectionStringByClientArrayName(
+      db,
+      clientid,
+      Namespace,
+      selectedEnvironment,
+      ClientEnvironment
+    )
+  ).pipe(
+    map((result: IConnectionString[]) => {
+      const foundList = Array.isArray(result) ? result : [];
 
-    // Build a Set of found ClientIDs
-    const foundIdSet = new Set(
-      foundList.map((item) => Number(item.ClientID))
-    );
+      // Build a Set of found ClientIDs
+      const foundIdSet = new Set(foundList.map((item) => Number(item.ClientID)));
 
-    // Mark all found records
-    const foundWithFlag: IConnectionStringWithFound[] = foundList.map((item) => ({
-      ...item,
-      ConnectionStringFound: true,
-    }));
-
-    // Build missing records using Set lookup (O(1))
-    const missing: IConnectionStringWithFound[] = clientid
-      .filter((c) => !foundIdSet.has(c))
-      .map((c) => ({
-        ClientID: c,
-        Namespace,
-        ConstringDatabaseName: "",
-        ConstringServerName: "",
-        ISBI: undefined,
-        ConnectionType: "",
-        IsDecomm: undefined,
-        ConnectionStringFound: false,
+      // Mark all found records
+      const foundWithFlag: IConnectionStringWithFound[] = foundList.map((item) => ({
+        ...item,
+        ConnectionStringFound: true,
       }));
 
-    return [...foundWithFlag, ...missing];
-  })
-);
+      // Build missing records using Set lookup (O(1))
+      const missing: IConnectionStringWithFound[] = clientid
+        .filter((c) => !foundIdSet.has(c))
+        .map((c) => ({
+          ClientID: c,
+          Namespace,
+          ConstringDatabaseName: "",
+          ConstringServerName: "",
+          ISBI: undefined,
+          ConnectionType: "",
+          IsDecomm: undefined,
+          ConnectionStringFound: false,
+        }));
 
-return await lastValueFrom(obs$);
+      return [...foundWithFlag, ...missing];
+    })
+  );
+
+  return await lastValueFrom(obs$);
 }
 
 export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
@@ -602,7 +610,12 @@ async function fetchConnectionStringByClientArrayName(
       IsDecomm
     }
   }`;
-  const variables = { db: db, ClientIds: ClientIds, Namespace: Namespace, ClientEnvironment: ClientEnvironment};
+  const variables = {
+    db: db,
+    ClientIds: ClientIds,
+    Namespace: Namespace,
+    ClientEnvironment: ClientEnvironment,
+  };
   const res = await fetch(
     `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
     // `/api/${environment}/dbaserver/monolilthconnectionstring`,

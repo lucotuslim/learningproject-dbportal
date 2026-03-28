@@ -83,7 +83,7 @@ export function CheckClientDbPermissionContent({
     Namespace: string
     clientpermission: string
     selectedEnvironment: string
-    ClientEnvironment:string
+    ClientEnvironment: string
 
 }) {
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
@@ -129,7 +129,7 @@ export function CheckClientDbPermissionContent({
             }
         }
         load()
-    }, [metaData, Namespace, clientpermission, name, selectedEnvironment, customerpermissionsetting])
+    }, [metaData, Namespace, clientpermission, name, selectedEnvironment, customerpermissionsetting, ClientEnvironment])
 
     if (loading) {
         return (
@@ -241,7 +241,7 @@ export function CheckClientDbPermissionContent({
 }
 
 
-export function ClientIDListCell({ metaData, Namespace, selectedEnvironment,ClientEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string ,ClientEnvironment:string}) {
+export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, ClientEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string, ClientEnvironment: string }) {
     const [data, setData] = useState<IConnectionStringWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -301,7 +301,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment,Clie
         setError(null)
         try {
             if (!customerpermissionsetting) return
-            const result = await getClientWithDbInfo(customerpermissionsetting.monolilthconnectionstringdb, clientArray, Namespace, selectedEnvironment,ClientEnvironment)
+            const result = await getClientWithDbInfo(customerpermissionsetting.monolilthconnectionstringdb, clientArray, Namespace, selectedEnvironment, ClientEnvironment)
             setData(result);
         } catch (err: unknown) {
             setError((err as Error).message)

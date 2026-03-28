@@ -1,8 +1,8 @@
 //import { NextResponse } from "next/server";
 //import os from "os";
-import { runSqlQuery } from "@/lib/dbpool";
+//import { runSqlQuery } from "@/lib/dbpool";
 //import sql from "mssql";
-//import { safeMsNodeSqlQuery } from "@/lib/utils";
+import { safeMsNodeSqlQuery } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -110,15 +110,15 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
 
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 20000); // query timeout
   try {
-    // const rows = await safeMsNodeSqlQuery(
-    //   conn,
-    //   `
-    //   SET NOCOUNT ON;
-    //   ${sqlText}
-    //   `,
-    //   QUERY_TIMEOUT_MS
-    // );
-    const rows = await runSqlQuery(conn, sqlText);
+    const rows = await safeMsNodeSqlQuery(
+      conn,
+      `
+      SET NOCOUNT ON;
+      ${sqlText}
+      `,
+      QUERY_TIMEOUT_MS
+    );
+    // const rows = await runSqlQuery(conn, sqlText);
     return rows;
   } catch (err) {
     console.error("msnodesqlv8 safe query error:", err);

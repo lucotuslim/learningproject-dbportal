@@ -1,8 +1,7 @@
 export const typeDefs = `#graphql
-
-
 scalar JSON
 scalar DateTime
+scalar Date
 
 type CustomerSecurityGroup {
   CustomerSecurityGroupsId: Int!
@@ -16,6 +15,15 @@ type CustomerSecurityGroup {
   Permission: String!
   IsDeleted: Boolean!
 }
+
+type CoreHCMDatabaseInventory {
+    ClientID: ID!
+    Namespace: String!
+    ClientEnvironment: String!
+    ConstringDatabaseName: String!
+    ConstringServerName: String!
+ }
+
 
 type Query {
   customerSecurityGroups(
@@ -33,6 +41,8 @@ type Query {
     Namespace: String!
     domainprefix: String!
   ): [CustomerSecurityGroup!]!
+
+  CoreHCMDatabaseInventoryByClientIdArray(db: String!, ClientIds: [Int!]!, Environment: String!,ClientEnvironment: String!): [CoreHCMDatabaseInventory!]!
 }
 
 `;

@@ -86,20 +86,24 @@ const resolvers = {
       return result;
     },
 
-    
-  ConnectionStringByClientArrayName: async (
+    ConnectionStringByClientArrayName: async (
       _: unknown,
-      { db, ClientIds, Namespace, ClientEnvironment }: 
-      { db: string; ClientIds: number[]; Namespace: string , ClientEnvironment:string},
+      {
+        db,
+        ClientIds,
+        Namespace,
+        ClientEnvironment,
+      }: { db: string; ClientIds: number[]; Namespace: string; ClientEnvironment: string },
       __: unknown,
       info: GraphQLResolveInfo
     ) => {
       const fields = Object.keys(graphqlFields(info));
       const sqlColumns = fields.map((f) => `[${f}]`).join(", ");
-      const clientidtext = ClientIds.join(",")
-      let sql; 
-      console.log (`ClientEnv is ${ClientEnvironment}`)
-      if (ClientEnvironment==="StaConTra") {sql = `
+      const clientidtext = ClientIds.join(",");
+      let sql;
+      console.log(`Clientnamespace is ${Namespace} ClientEnv is ${ClientEnvironment}`);
+      if (ClientEnvironment === "StaConTra") {
+        sql = `
  select CorePreProd.ClientID,
  ConstringDatabaseName as Namespace,
 	PreprodEnv.Environment,
@@ -114,14 +118,16 @@ on CorePreProd.ClientId = PreprodEnv.ClientID and
 CorePreProd.Namespace = PreprodEnv.Namespace
 Where  CorePreProd.ClientID  in (${clientidtext})
 and status ='Active' and Environment in ('Train','Config','Stage') 
-        `}
-      else {sql = `
+        `;
+      } else {
+        sql = `
       SELECT 
            ${sqlColumns}
          FROM MonolithConnectionStrings_preprod
           WHERE ClientID  in (${clientidtext})
           and IsDecomm = 0 
-      `}
+      `;
+      }
 
       const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {
         method: "POST",
@@ -130,16 +136,12 @@ and status ='Active' and Environment in ('Train','Config','Stage')
           db: db,
           q: sql,
         }),
-        
-          // -- AND Namespace = '${Namespace}
+
+        // -- AND Namespace = '${Namespace}
       }).then((res) => res.json());
       return result;
     },
-
   },
-
-  
-
 };
 
 const server = new ApolloServer({

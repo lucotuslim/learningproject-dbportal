@@ -1,6 +1,6 @@
 // import { NextResponse } from "next/server";
 // import os from "os";
-import sql from "mssql";
+//import sql from "mssql";
 import { safeMsNodeSqlQuery } from "@/lib/utils";
 
 export async function POST(req: Request) {
