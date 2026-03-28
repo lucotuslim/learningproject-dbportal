@@ -21,7 +21,7 @@ export default function MissingRoleMappings() {
         if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return setData([]);
         try {
             const res = await getAllMissingDbPermissions(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment,
-                customerpermissionsetting.domainprefix
+                customerpermissionsetting.domainprefix, 1
             );
             setData(res ?? []);
             setLoading(false);

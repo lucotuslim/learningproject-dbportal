@@ -59,7 +59,7 @@ export async function getAllMissingDbPermissions(
   serverinventory: string,
   selectedEnvironment: string,
   domainprefix: string,
-  concurrency: number = 50
+  concurrency: number = 5
 ): Promise<IConnectionStringWithDbPermission[]> {
   const obs$ = from(
     getCustomerSecurityGroups<ICustomerSecurityGroup>(
@@ -186,7 +186,7 @@ export async function getclientdbpermissioninfo(
   name: string,
   clientpermission: string,
   environment: string,
-  concurrency: number = 100
+  concurrency: number = 5
 ): Promise<IConnectionStringWithDbPermission[]> {
   const PermissionMap: IPermissionMapping[] = [
     { permission: "Owner", dbPermission: ["db_owner"] },
