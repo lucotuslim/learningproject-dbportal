@@ -18,9 +18,9 @@ export default function Page() {
       <Tabs defaultValue="settings" className="w-full">
         <TabsList className="w-full">
 
-          <TabsTrigger value="missingrolemappings" className="w-full">
+          {/* <TabsTrigger value="missingrolemappings" className="w-full">
             Missing Role Mappings
-          </TabsTrigger>
+          </TabsTrigger> */}
 
 
           <TabsTrigger value="customersecuritygroup" className="w-full">
@@ -34,9 +34,9 @@ export default function Page() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="missingrolemappings" className="w-full" >
+        {/* <TabsContent value="missingrolemappings" className="w-full" >
           <MissingRoleMappings />
-        </TabsContent>
+        </TabsContent> */}
 
         <TabsContent value="customersecuritygroup" className="w-full" >
           <CustomerSecurityGroup />

@@ -61,6 +61,7 @@ export function ActionsCell({
                             name={customer.GroupName}
                             clientpermission={customer.Permission}
                             selectedEnvironment={selectedEnvironment}
+                            ClientEnvironment={customer.Environment}
                         />
                     </div>
                 </DialogContent>
@@ -74,13 +75,16 @@ export function CheckClientDbPermissionContent({
     name,
     Namespace,
     clientpermission,
-    selectedEnvironment
+    selectedEnvironment,
+    ClientEnvironment
 }: {
     metaData?: CustomerSecurityGroupMetaData | string | null
     name: string
     Namespace: string
     clientpermission: string
     selectedEnvironment: string
+    ClientEnvironment:string
+
 }) {
     const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
@@ -114,6 +118,7 @@ export function CheckClientDbPermissionContent({
                     name,
                     clientpermission,
                     selectedEnvironment,
+                    ClientEnvironment,
                     100
                 )
                 setData(result.sort((a, b) => a.ClientID - b.ClientID)); // sort by ClientID
@@ -236,7 +241,7 @@ export function CheckClientDbPermissionContent({
 }
 
 
-export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string }) {
+export function ClientIDListCell({ metaData, Namespace, selectedEnvironment,ClientEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string ,ClientEnvironment:string}) {
     const [data, setData] = useState<IConnectionStringWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
@@ -296,7 +301,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment }: {
         setError(null)
         try {
             if (!customerpermissionsetting) return
-            const result = await getClientWithDbInfo(customerpermissionsetting.monolilthconnectionstringdb, clientArray, Namespace, selectedEnvironment)
+            const result = await getClientWithDbInfo(customerpermissionsetting.monolilthconnectionstringdb, clientArray, Namespace, selectedEnvironment,ClientEnvironment)
             setData(result);
         } catch (err: unknown) {
             setError((err as Error).message)

@@ -14,7 +14,8 @@ export const columns = (selectedEnvironment: string): ColumnDef<ICustomerSecurit
       cell: ({ row }) =>
         row.original.MetaData ? (
 
-          <ClientIDListCell metaData={row.original.MetaData} Namespace={row.original.Namespace} selectedEnvironment={selectedEnvironment} />
+          <ClientIDListCell metaData={row.original.MetaData} Namespace={row.original.Namespace} selectedEnvironment={selectedEnvironment}
+          ClientEnvironment={row.original.Environment} />
         ) : (
           "None"
         )
