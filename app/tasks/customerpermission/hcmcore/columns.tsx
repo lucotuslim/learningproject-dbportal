@@ -93,11 +93,9 @@ export const columns = (): ColumnDef<IHCMCore>[] => [
   { accessorKey: "Namespace", header: "Namespace" },
   { accessorKey: "ConstringDatabaseName", header: "Database Name" },
   { accessorKey: "ConstringServerName", header: "Server Name" },
-  { accessorKey: "ISBI", header: "Is BI" },
-  { accessorKey: "ConnectionType", header: "Connection Type" },
-  { accessorKey: "IsDecomm", header: "Is Decomm" }
-
-
+  // { accessorKey: "ISBI", header: "Is BI" },
+  // { accessorKey: "ConnectionType", header: "Connection Type" },
+  // { accessorKey: "IsDecomm", header: "Is Decomm" }
 ]
 
 

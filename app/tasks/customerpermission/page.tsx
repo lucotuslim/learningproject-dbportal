@@ -2,7 +2,7 @@
 import React from "react";
 //import MissingRoleMappings from "./missingrolemapping/page";
 import CustomerSecurityGroup from "./customersecuritygroup/page"
-import ConnectionString from "./monolilthconnectionstring/page"
+import HCMCore from "./hcmcore/page"
 import Settings from "./appconfig/appconfigpage"
 import {
   Tabs,
@@ -22,12 +22,11 @@ export default function Page() {
             Missing Role Mappings
           </TabsTrigger> */}
 
-
           <TabsTrigger value="customersecuritygroup" className="w-full">
             Customer Security Group
           </TabsTrigger>
-          <TabsTrigger value="connectionstring" className="w-full">
-            Connection String
+          <TabsTrigger value="hcmcore" className="w-full">
+            HCM Core
           </TabsTrigger>
           <TabsTrigger value="settings" className="w-full">
             Settings
@@ -41,8 +40,8 @@ export default function Page() {
         <TabsContent value="customersecuritygroup" className="w-full" >
           <CustomerSecurityGroup />
         </TabsContent>
-        <TabsContent value="connectionstring" className="w-full" >
-          <ConnectionString />
+        <TabsContent value="hcmcore" className="w-full" >
+          <HCMCore />
         </TabsContent>
         <TabsContent value="settings" className="w-full" >
           <Settings />

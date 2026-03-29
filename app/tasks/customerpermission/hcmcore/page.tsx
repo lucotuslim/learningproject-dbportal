@@ -8,7 +8,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { CustomerPermissionSetting } from "../appconfig"
 
-export default function ConnectionString() {
+export default function HCMCore() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
     console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);

@@ -22,8 +22,8 @@ type CoreHCMDatabaseInventory {
     ClientEnvironment: String!
     ConstringDatabaseName: String!
     ConstringServerName: String!
+    HCMCoreEnvironment: String!
  }
-
 
 type Query {
   customerSecurityGroups(
@@ -42,7 +42,7 @@ type Query {
     domainprefix: String!
   ): [CustomerSecurityGroup!]!
 
-  CoreHCMDatabaseInventoryByClientIdArray(db: String!, ClientIds: [Int!]!, Environment: String!,ClientEnvironment: String!): [CoreHCMDatabaseInventory!]!
+  
 }
 
 `;

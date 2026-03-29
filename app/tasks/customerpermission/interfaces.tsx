@@ -35,7 +35,7 @@ export interface IHCMCore {
   Namespace: string;
   ConstringDatabaseName: string;
   ConstringServerName: string;
-
+  HCMCoreEnvironment: string;
 }
 
 export interface IHCMCoreWithFound extends IHCMCore {
