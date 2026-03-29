@@ -1,7 +1,7 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-import { IConnectionString, ICustomerPermissionConfig } from "../interfaces";
+import { IHCMCore, ICustomerPermissionConfig } from "../interfaces";
 import { getConnectionStrings } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
@@ -12,9 +12,9 @@ export default function ConnectionString() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
     console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
-    const [data, setData] = useState<IConnectionString[]>([]);
+    const [data, setData] = useState<IHCMCore[]>([]);
     const [search, setSearch] = useState("");
-    const filteredData = data.filter((item: IConnectionString) => {
+    const filteredData = data.filter((item: IHCMCore) => {
         if (search.endsWith("%")) {
             const prefix = search.slice(0, -1); // remove %
             return item.Namespace.startsWith(prefix);
@@ -38,7 +38,7 @@ export default function ConnectionString() {
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getConnectionStrings<IConnectionString>(customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
+        const res = await getConnectionStrings<IHCMCore>(customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
         setData(res ?? []);
     }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
 

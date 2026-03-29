@@ -11,7 +11,7 @@ import { ColumnDef } from "@tanstack/react-table"
 // import { useState } from "react"
 // import { toast } from "sonner"
 // import { Row } from "@tanstack/react-table"
-import { IConnectionString } from "../interfaces"
+import { IHCMCore } from "../interfaces"
 // Recovery Model Cell Component
 
 // // Actions Cell Component
@@ -78,7 +78,7 @@ import { IConnectionString } from "../interfaces"
 //   )
 // }
 
-export const columns = (): ColumnDef<IConnectionString>[] => [
+export const columns = (): ColumnDef<IHCMCore>[] => [
   //  [CustomerSecurityGroupsId]
   //       ,[GroupSID]
   //       ,[Environment]

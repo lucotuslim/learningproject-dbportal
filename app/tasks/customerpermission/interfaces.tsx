@@ -30,30 +30,19 @@ export interface ICustomerSecurityGroup {
   IsDeleted: boolean;
 }
 
-export interface IConnectionString {
+export interface IHCMCore {
   ClientID: number;
   Namespace: string;
   ConstringDatabaseName: string;
   ConstringServerName: string;
-  ConStringLogin?: string;
-  ControlDBName?: string;
-  ControlServerName?: string;
-  Timeout?: number;
-  Comment?: string;
-  ISBI?: boolean;
-  StandardQueryTimeout?: number;
-  ClientTimeoutMinutes?: number;
-  ConnectionType: string;
-  DatabaseConnectionLastModifiedTimestamp?: string; // ISO datetime
-  CollectedTimeStamp?: string; // ISO datetime
-  IsDecomm?: boolean;
+
 }
 
-export interface IConnectionStringWithFound extends IConnectionString {
+export interface IHCMCoreWithFound extends IHCMCore {
   ConnectionStringFound: boolean;
 }
 
-export interface IConnectionStringWithDbPermission extends IConnectionStringWithFound {
+export interface IHCMCoreWithDbPermission extends IHCMCoreWithFound {
   dbpermission: string[]
   serverPrincipal: string | null
   ServerPrincipalFound: boolean | null
