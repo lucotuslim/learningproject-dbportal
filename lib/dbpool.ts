@@ -9,7 +9,8 @@ export async function runSqlQuery(
   queryText: string,
   timeoutMs: number,
   minpool: number,
-  maxpool: number
+  maxpool: number,
+  heartbeatSecs: number
 ) {
   if (!connectionString) {
     throw new Error("connectionString is required");
@@ -18,7 +19,7 @@ export async function runSqlQuery(
     throw new Error("queryText is required");
   }
   console.log(`[DB] Running query on ${maskConnectionString(connectionString)}: ${queryText}`);
-  const pool = await getOrCreatePool(connectionString, timeoutMs, minpool, maxpool);
+  const pool = await getOrCreatePool(connectionString, timeoutMs, minpool, maxpool, heartbeatSecs);
   const rows = await executeQuery(pool, queryText);
   return rows;
 }
@@ -27,7 +28,8 @@ async function getOrCreatePool(
   connectionString: string,
   timeoutMs: number,
   minpool: number,
-  maxpool: number
+  maxpool: number,
+  heartbeatSecs: number
 ): Promise<SqlPool> {
   const existing = poolByConnectionString.get(connectionString);
 
@@ -35,7 +37,12 @@ async function getOrCreatePool(
     return existing;
   }
 
-  const pool = new sql.Pool({ connectionString, floor: minpool, ceiling: maxpool });
+  const pool = new sql.Pool({
+    connectionString,
+    floor: minpool,
+    ceiling: maxpool,
+    heartbeatSecs: heartbeatSecs,
+  });
   attachPoolEvents(pool, connectionString);
 
   try {

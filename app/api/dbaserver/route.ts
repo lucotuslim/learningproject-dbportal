@@ -81,11 +81,19 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
   const minpool = Number(process.env.DBMinPool || 10); // query timeout
   const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
+  const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
 
   try {
     //const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
     //return rows as T;
-    const rows = await runSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS, minpool, maxpool);
+    const rows = await runSqlQuery(
+      conn,
+      sqlText,
+      QUERY_TIMEOUT_MS,
+      minpool,
+      maxpool,
+      heartbeatSecs
+    );
     return rows as T;
   } catch (err) {
     // log and rethrow so route returns a 504/500
