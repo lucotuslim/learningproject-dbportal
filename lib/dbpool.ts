@@ -4,7 +4,13 @@ type SqlPool = InstanceType<typeof sql.Pool>;
 
 //const poolByConnectionString = new Map();
 const poolByConnectionString = new Map<string, SqlPool>();
-export async function runSqlQuery(connectionString: string, queryText: string) {
+export async function runSqlQuery(
+  connectionString: string,
+  queryText: string,
+  timeoutMs: number,
+  minpool: number,
+  maxpool: number
+) {
   if (!connectionString) {
     throw new Error("connectionString is required");
   }
@@ -12,23 +18,28 @@ export async function runSqlQuery(connectionString: string, queryText: string) {
     throw new Error("queryText is required");
   }
   console.log(`[DB] Running query on ${maskConnectionString(connectionString)}: ${queryText}`);
-  const pool = await getOrCreatePool(connectionString);
+  const pool = await getOrCreatePool(connectionString, timeoutMs, minpool, maxpool);
   const rows = await executeQuery(pool, queryText);
   return rows;
 }
 
-async function getOrCreatePool(connectionString: string) {
+async function getOrCreatePool(
+  connectionString: string,
+  timeoutMs: number,
+  minpool: number,
+  maxpool: number
+): Promise<SqlPool> {
   const existing = poolByConnectionString.get(connectionString);
 
   if (existing) {
     return existing;
   }
 
-  const pool = new sql.Pool({ connectionString });
+  const pool = new sql.Pool({ connectionString, floor: minpool, ceiling: maxpool });
   attachPoolEvents(pool, connectionString);
 
   try {
-    await openPool(pool);
+    await openPool(pool, timeoutMs);
     // ✅ ONLY cache if successful
     poolByConnectionString.set(connectionString, pool);
     return pool;
@@ -57,7 +68,7 @@ function attachPoolEvents(pool: SqlPool, connectionString: string) {
   });
 }
 
-function openPool(pool: SqlPool, timeoutMs = 5000): Promise<void> {
+function openPool(pool: SqlPool, timeoutMs: number): Promise<void> {
   return new Promise((resolve, reject) => {
     let settled = false;
     const timer = setTimeout(() => {

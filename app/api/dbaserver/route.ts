@@ -1,7 +1,8 @@
 // import { NextResponse } from "next/server";
 // import os from "os";
 //import sql from "mssql";
-import { safeMsNodeSqlQuery } from "@/lib/utils";
+//import { safeMsNodeSqlQuery } from "@/lib/utils";
+import { runSqlQuery } from "@/lib/dbpool";
 
 export async function POST(req: Request) {
   try {
@@ -78,9 +79,13 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
   const conn = parts.join(";") + ";";
 
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
+  const minpool = Number(process.env.DBMinPool || 10); // query timeout
+  const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
 
   try {
-    const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
+    //const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
+    //return rows as T;
+    const rows = await runSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS, minpool, maxpool);
     return rows as T;
   } catch (err) {
     // log and rethrow so route returns a 504/500
