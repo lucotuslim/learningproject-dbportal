@@ -1,15 +1,15 @@
 "use client"
 import { ColumnDef } from "@tanstack/react-table"
-import { IConnectionStringWithDbPermission } from "../interfaces"
+import { IHCMCoreWithDbPermission } from "../interfaces"
 // import { ClientIDListCell, ActionsCell } from "./columnlib"
 
-export const columns = (): ColumnDef<IConnectionStringWithDbPermission>[] =>
+export const columns = (): ColumnDef<IHCMCoreWithDbPermission>[] =>
   [
     { accessorKey: "GroupName", header: "GroupName" },
     { accessorKey: "Namespace", header: "Namespace" },
     { accessorKey: "ConstringDatabaseName", header: "Database Name" },
     { accessorKey: "ConstringServerName", header: "Server Name" },
-    { accessorKey: "ConnectionStringFound", header: "Connection String Found" },
+    { accessorKey: "HCMCoreFound", header: "Connection String Found" },
     { accessorKey: "dbpermission", header: "Database Permission" },
     { accessorKey: "ServerPrincipalFound", header: "Server Principal Found" },
     { accessorKey: "DatabasePrincipalFound", header: "Database Principal Found" },

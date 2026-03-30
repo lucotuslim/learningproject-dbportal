@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react"
 import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover"
 import { getClientWithDbInfo, getclientdbpermissioninfo } from "../serverlib"
-import { CustomerSecurityGroupMetaData, IConnectionStringWithDbPermission, IConnectionStringWithFound, ICustomerPermissionConfig, ICustomerSecurityGroup } from "../interfaces"
+import { CustomerSecurityGroupMetaData, IHCMCoreWithDbPermission, IHCMCoreWithFound, ICustomerPermissionConfig, ICustomerSecurityGroup } from "../interfaces"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -86,7 +86,7 @@ export function CheckClientDbPermissionContent({
     ClientEnvironment: string
 
 }) {
-    const [data, setData] = useState<IConnectionStringWithDbPermission[]>([])
+    const [data, setData] = useState<IHCMCoreWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -174,14 +174,12 @@ export function CheckClientDbPermissionContent({
                         <TableRow
                             key={`${index}-${info.Namespace}-${info.ConstringDatabaseName}`}
 
-                            className={!info.ConnectionStringFound ? "text-red-500" : ""}
+                            className={!info.HCMCoreFound ? "text-red-500" : ""}
                         >
                             <TableCell>{info.ClientID}</TableCell>
                             <TableCell>{info.Namespace}</TableCell>
                             <TableCell>{info.ConstringDatabaseName}</TableCell>
                             <TableCell>{info.ConstringServerName}</TableCell>
-                            <TableCell>{info.ConnectionType}</TableCell>
-                            <TableCell>{info.IsDecomm ? "Yes" : "No"}</TableCell>
                             <TableCell>{info.dbpermission.join(", ")}</TableCell>
                             <TableCell>{info.DatabaseUserMappings.join(", ")}</TableCell>
                             <TableCell>
@@ -242,7 +240,7 @@ export function CheckClientDbPermissionContent({
 
 
 export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, ClientEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string, ClientEnvironment: string }) {
-    const [data, setData] = useState<IConnectionStringWithFound[]>([])
+    const [data, setData] = useState<IHCMCoreWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
@@ -334,7 +332,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, Cli
                                 <TableHead>ConstringServerName</TableHead>
                                 <TableHead>ConnectionType</TableHead>
                                 <TableHead>IsDecomm</TableHead>
-                                <TableHead>ConnectionStringFound?</TableHead>
+                                <TableHead>HCMCoreFound?</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -342,7 +340,7 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, Cli
                                 <TableRow
                                     key={`${index}-${info.ClientID}-${info.ConstringDatabaseName}`}
                                     className={
-                                        !info.ConnectionStringFound
+                                        !info.HCMCoreFound
                                             ? "text-red-500"
                                             : ""
                                     }
@@ -351,9 +349,8 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, Cli
                                     <TableCell>{info.Namespace}</TableCell>
                                     <TableCell>{info.ConstringDatabaseName}</TableCell>
                                     <TableCell>{info.ConstringServerName}</TableCell>
-                                    <TableCell>{info.ConnectionType}</TableCell>
-                                    <TableCell>{info.IsDecomm === undefined ? "" : info.IsDecomm ? "Yes" : "No"}</TableCell>
-                                    <TableCell>{info.ConnectionStringFound ? "Yes" : "No"}</TableCell>
+
+                                    <TableCell>{info.HCMCoreFound ? "Yes" : "No"}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>

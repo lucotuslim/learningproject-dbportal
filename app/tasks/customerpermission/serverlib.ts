@@ -1,8 +1,8 @@
 "use server";
 import {
-  IConnectionString,
-  IConnectionStringWithFound,
-  IConnectionStringWithDbPermission,
+  IHCMCore,
+  IHCMCoreWithFound,
+  IHCMCoreWithDbPermission,
   IPermissionMapping,
   IServerPrincipal,
   IDatabasePrincipal,
@@ -61,7 +61,7 @@ export async function getAllMissingDbPermissions(
   selectedEnvironment: string,
   domainprefix: string,
   concurrency: number = 5
-): Promise<IConnectionStringWithDbPermission[]> {
+): Promise<IHCMCoreWithDbPermission[]> {
   const obs$ = from(
     getCustomerSecurityGroups<ICustomerSecurityGroup>(
       customerdbserver,
@@ -195,7 +195,7 @@ export async function getclientdbpermissioninfo(
   environment: string,
   ClientEnvironment: string,
   concurrency: number = 5
-): Promise<IConnectionStringWithDbPermission[]> {
+): Promise<IHCMCoreWithDbPermission[]> {
   const PermissionMap: IPermissionMapping[] = [
     { permission: "Owner", dbPermission: ["db_owner"] },
     { permission: "ReadWrite", dbPermission: ["db_datawriter", "db_datareader"] },
@@ -221,7 +221,7 @@ export async function getclientdbpermissioninfo(
     map((res) => {
       const list = Array.isArray(res) ? res : [];
       console.log("rawCount", list.length, "raw sample", list.slice(0, 2));
-      const filtered = list.filter((item) => item.ConnectionStringFound);
+      const filtered = list.filter((item) => item.HCMCoreFound);
       console.log("filteredCount", filtered.length);
       return filtered;
     }),
@@ -342,7 +342,7 @@ export async function getclientdbpermissioninfo(
                     : dp?.[0]?.error
                       ? dp[0].errorMessage
                       : null,
-                } as IConnectionStringWithDbPermission;
+                } as IHCMCoreWithDbPermission;
               }),
 
               // If anything unexpected happens in mapping, return an error-annotated object
@@ -358,7 +358,7 @@ export async function getclientdbpermissioninfo(
                   DatabaseUserMappings: [],
                   MissingRoleMappings: [],
                   error: err instanceof Error ? err.message : "Unknown mapping error",
-                } as IConnectionStringWithDbPermission);
+                } as IHCMCoreWithDbPermission);
               })
             );
           }, concurrency),
@@ -387,75 +387,29 @@ export async function getClientWithDbInfo(
   Namespace: string,
   selectedEnvironment: string,
   ClientEnvironment: string
-): Promise<IConnectionStringWithFound[]> {
+): Promise<IHCMCoreWithFound[]> {
   if (clientid.length === 0) {
     return [];
   }
 
-  //   const obs$ = from(
-  //     fetchConnectionStringByClientArrayName(db, clientid, Namespace, selectedEnvironment)
-  //   ).pipe(
-  //     map((result: IConnectionString[]) => {
-  //       const foundList = Array.isArray(result) ? result : [];
-  //       const foundMap = new Map<number, IConnectionString>();
-  //       for (const item of foundList) {
-  //         foundMap.set(Number(item.ClientID), item);
-  //       }
-  //       // console.log("foundMap entries:", [...foundMap.entries()]);
-
-  //       // result is an array of found rows — mark each as found
-  //       return clientid.map((c) => {
-  //         // console.log(
-  //         //   typeof c,
-  //         //   typeof Namespace,
-  //         //   "looking for ClientID in foundMap:",
-  //         //   c,
-  //         //   foundMap.has(c)
-  //         // );
-  //         const found = foundMap.get(c);
-  //         if (found) {
-  //           return { ...found, ConnectionStringFound: true } as IConnectionStringWithFound;
-  //         } else {
-  //           return {
-  //             ClientID: c,
-  //             Namespace,
-  //             ConstringDatabaseName: "",
-  //             ConstringServerName: "",
-  //             ISBI: undefined,
-  //             ConnectionType: "",
-  //             IsDecomm: undefined,
-  //             ConnectionStringFound: false,
-  //           } as IConnectionStringWithFound;
-  //         }
-  //       });
-  //     })
-  //   );
-  //   return await lastValueFrom(obs$);
-  //
   console.log(ClientEnvironment);
   const obs$ = from(
-    fetchConnectionStringByClientArrayName(
-      db,
-      clientid,
-      Namespace,
-      selectedEnvironment,
-      ClientEnvironment
-    )
+    fetchHCMCoreByClientArrayName(db, clientid, Namespace, selectedEnvironment, ClientEnvironment)
   ).pipe(
-    map((result: IConnectionString[]) => {
+    map((result: IHCMCore[]) => {
       const foundList = Array.isArray(result) ? result : [];
 
       // Build a Set of found ClientIDs
       const foundIdSet = new Set(foundList.map((item) => Number(item.ClientID)));
 
       // Mark all found records
-      const foundWithFlag: IConnectionStringWithFound[] = foundList.map((item) => ({
+      const foundWithFlag: IHCMCoreWithFound[] = foundList.map((item) => ({
         ...item,
-        ConnectionStringFound: true,
+        HCMCoreFound: true,
       }));
 
       // Build missing records using Set lookup (O(1))
-      const missing: IConnectionStringWithFound[] = clientid
+      const missing: IHCMCoreWithFound[] = clientid
         .filter((c) => !foundIdSet.has(c))
         .map((c) => ({
           ClientID: c,
@@ -465,7 +419,8 @@ export async function getClientWithDbInfo(
           ISBI: undefined,
           ConnectionType: "",
           IsDecomm: undefined,
-          ConnectionStringFound: false,
+          HCMCoreFound: false,
+          HCMCoreEnvironment: undefined,
         }));
 
       return [...foundWithFlag, ...missing];
@@ -475,34 +430,30 @@ export async function getClientWithDbInfo(
   return await lastValueFrom(obs$);
 }
 
-export async function getConnectionStrings<T>(db: string, environment: string): Promise<T[]> {
+export async function getHCMCores<T>(db: string, environment: string): Promise<T[]> {
   const query = `
-  query ConnectionStrings($db: String!) {
-  ConnectionStrings(db: $db) {
-  ClientID
-  Namespace
-  ConstringDatabaseName
-  ConstringServerName
-  ISBI
-  ConnectionType
-  IsDecomm
+  query Query($db: String!, $environment: String!) {
+  CoreHCMDatabaseInventory(db: $db, Environment: $environment) {
+    ClientID
+    Namespace
+    ConstringDatabaseName
+    ConstringServerName
+    HCMCoreEnvironment
   }
-}`;
-  const variables = { db: db };
-  const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, variables }),
-    }
-  );
+}
+`;
+  const variables = { db, environment };
+  const res = await fetch(`${process.env.APPDAPIROOT}/api/graphql`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ query, variables }),
+  });
   const data = await res.json();
   if (data.errors) {
     console.error(data.errors);
     throw new Error(data.errors[0].message);
   }
-  return data.data.ConnectionStrings;
+  return data.data.CoreHCMDatabaseInventory;
 }
 
 export async function getCustomerSecurityGroups<T>(
@@ -545,61 +496,17 @@ export async function getCustomerSecurityGroups<T>(
   return data.data.customerSecurityGroups;
 }
 
-// async function fetchConnectionStringByClientIdName(
-//   db: string,
-//   ClientId: number,
-//   Namespace: string,
-//   environment: string
-// ): Promise<IConnectionString[]> {
-//   const query = `
-//   query ConnectionStringByClientIdName($db: String!, $ClientId: Int!, $Namespace: String!) {
-//     ConnectionStringByClientIdName(db: $db, ClientId: $ClientId, Namespace: $Namespace) {
-//       ClientID
-//       Namespace
-//       ConstringDatabaseName
-//       ConstringServerName
-//       ISBI
-//       ConnectionType
-//       IsDecomm
-//     }
-//   }`;
-//   const variables = { db: db, ClientId: ClientId, Namespace: Namespace };
-//   const res = await fetch(
-//     `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
-//     // `/api/${environment}/dbaserver/monolilthconnectionstring`,
-//     {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ query, variables }),
-//     }
-//   );
-//   const data = await res.json();
-
-//   console.log("GraphQL raw response:", {
-//     ok: res.ok,
-//     status: res.status,
-//     data,
-//     variables,
-//   });
-
-//   if (data.errors) {
-//     console.error(data.errors);
-//     throw new Error(data.errors[0].message);
-//   }
-//   return data.data.ConnectionStringByClientIdName;
-// }
-
-async function fetchConnectionStringByClientArrayName(
+async function fetchHCMCoreByClientArrayName(
   db: string,
   ClientIds: number[],
   Namespace: string,
   environment: string,
   ClientEnvironment: string
-): Promise<IConnectionString[]> {
+): Promise<IHCMCore[]> {
   const query = `
-  query ConnectionStringByClientArrayName($db: String!, $ClientIds: [Int!]!, $Namespace: String!,
+  query HCMCoreByClientArrayName($db: String!, $ClientIds: [Int!]!, $Namespace: String!,
   $ClientEnvironment:String!) {
-    ConnectionStringByClientArrayName(db: $db, ClientIds: $ClientIds, Namespace: $Namespace,
+    HCMCoreByClientArrayName(db: $db, ClientIds: $ClientIds, Namespace: $Namespace,
     ClientEnvironment:$ClientEnvironment) {
       ClientID
       Namespace
@@ -638,7 +545,7 @@ async function fetchConnectionStringByClientArrayName(
     console.error(data.errors);
     throw new Error(data.errors[0].message);
   }
-  return data.data.ConnectionStringByClientArrayName;
+  return data.data.HCMCoreByClientArrayName;
 }
 
 export async function getServerPrincipal(

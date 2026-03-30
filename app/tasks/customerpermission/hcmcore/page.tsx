@@ -2,7 +2,7 @@
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
 import { IHCMCore, ICustomerPermissionConfig } from "../interfaces";
-import { getConnectionStrings } from "../serverlib";
+import { getHCMCores } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ export default function HCMCore() {
         //   "Global Setting in Database Page:",
         //   ServerInventory["SERVERINVENTORY"]
         // );
-        const res = await getConnectionStrings<IHCMCore>(customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
+        const res = await getHCMCores<IHCMCore>(customerpermissionsetting.monolilthconnectionstringdb, selectedEnvironment);
         setData(res ?? []);
     }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
 
@@ -63,7 +63,5 @@ export default function HCMCore() {
         </div>
     );
 }
-
-
 
 

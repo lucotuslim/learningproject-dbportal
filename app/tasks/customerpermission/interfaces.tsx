@@ -35,11 +35,11 @@ export interface IHCMCore {
   Namespace: string;
   ConstringDatabaseName: string;
   ConstringServerName: string;
-  HCMCoreEnvironment: string;
+  HCMCoreEnvironment?: string;
 }
 
 export interface IHCMCoreWithFound extends IHCMCore {
-  ConnectionStringFound: boolean;
+  HCMCoreFound: boolean;
 }
 
 export interface IHCMCoreWithDbPermission extends IHCMCoreWithFound {

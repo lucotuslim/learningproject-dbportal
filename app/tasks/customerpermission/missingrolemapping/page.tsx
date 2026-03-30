@@ -1,7 +1,7 @@
 "use client";
 import { columns } from "./columns"
 import { DataTable } from "./data-table";
-import { ICustomerPermissionConfig, IConnectionStringWithDbPermission } from "../interfaces";
+import { ICustomerPermissionConfig, IHCMCoreWithDbPermission } from "../interfaces";
 import { getAllMissingDbPermissions } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
@@ -11,7 +11,7 @@ export default function MissingRoleMappings() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
     const [loading, setLoading] = useState<boolean>(true)
-    const [data, setData] = useState<IConnectionStringWithDbPermission[]>([]);
+    const [data, setData] = useState<IHCMCoreWithDbPermission[]>([]);
     const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
     useEffect(() => {
         CustomerPermissionSetting().then(setcustomerpermissionsetting)
