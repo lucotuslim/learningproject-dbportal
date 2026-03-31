@@ -1,71 +1,31 @@
-import sql from "msnodesqlv8";
+import { spawn } from "child_process";
 
-const connstr = "server=azg1gussql12dnn.custadds.com;Database=tekion;Trusted_Connection=Yes;Driver={ODBC Driver 17 for SQL Server};Encrypt=yes;TrustServerCertificate=yes;";
+function runWithTimeout() {
+  const child = spawn("node", ["dbWorker.js"], {
+    stdio: "inherit", // show logs
+  });
 
-export function createR() {
-  return new Promise((resolve, reject) => {
-    let settled = false; // guard to prevent double resolve/reject
-    const safeResolve = (v) => {
-      if (settled) {
-        console.warn('createR: duplicate resolve ignored');
-        return;
-      }
-      settled = true;
-      resolve(v);
-    };
-    const safeReject = (err) => {
-      if (settled) {
-        console.warn('createR: duplicate reject ignored', err);
-        return;
-      }
-      settled = true;
-      reject(err);
-    };
+  const timeoutMs = 5000;
 
-    sql.open(connstr, (err, conn) => {
-      if (err) return safeReject(new Error("Failed to connect to database: " + err.message));
+  const timer = setTimeout(() => {
+    console.log("❌ Timeout reached - killing child");
+    child.kill("SIGKILL"); // 💥 guaranteed kill
+  }, timeoutMs);
 
-      const pm = conn.procedureMgr();
+  child.on("exit", (code, signal) => {
+    clearTimeout(timer);
 
-      pm.callproc(
-        "[dbo].[GetDocumentListAll]",
-        [null, "DOCUMENTMANAGEMENT", false, null],
-        (err, rows, output) => {
-          try {
-            if (err) return safeReject(new Error("Procedure failed: " + err.message));
+    if (signal === "SIGKILL") {
+      console.log("Child was force killed");
+    } else {
+      console.log("Child exited with code:", code);
+    }
+  });
 
-            const fullRows = Array.isArray(rows) ? rows.map(r => ({ ...r })) : [];
-
-            console.log('rows.length =', rows && rows.length);
-            console.log('fullRows.length =', fullRows.length);
-
-            // resolve with the result
-            safeResolve({
-              success: true,
-              message: "succeeded",
-              data: fullRows,
-              output
-            });
-          } catch (ex) {
-            safeReject(ex);
-          } finally {
-            // always try to close the connection (defensive)
-            try {
-              if (conn && typeof conn.close === 'function') conn.close();
-            } catch (closeErr) {
-              console.warn('Error closing connection', closeErr);
-            }
-          }
-        }
-      );
-    });
+  child.on("error", (err) => {
+    clearTimeout(timer);
+    console.error("Failed to start child:", err);
   });
 }
 
-
-try {
-  const res =await createR();
-  console.log(JSON.stringify(res, null, 2));
-} catch (err) {
-  console.error(err);
-}
+runWithTimeout();

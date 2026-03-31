@@ -1,7 +1,7 @@
 // import { NextResponse } from "next/server";
 // import os from "os";
 //import sql from "mssql";
-//import { safeMsNodeSqlQuery } from "@/lib/utils";
+import { safeMsNodeSqlQuery, safeQueryAsync } from "@/lib/utils";
 import { runSqlQuery } from "@/lib/dbpool";
 
 export async function POST(req: Request) {
@@ -66,9 +66,8 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
     `Driver={${process.env.ConnectionDriver || "ODBC Driver 17 for SQL Server"}}`,
     `Encrypt=yes`,
     `TrustServerCertificate=yes`,
-    `QueryTimeout=${QUERY_TIMEOUT_SEC}`,
   ];
-
+  // `QueryTimeout=${QUERY_TIMEOUT_SEC}`,
   if (process.env.DB_USER) {
     parts.push(`UID=${process.env.DB_USER}`);
     parts.push(`PWD=${process.env.DB_PASSWORD}`);
@@ -84,16 +83,9 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
   const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
 
   try {
-    //const rows = await safeMsNodeSqlQuery(conn, sqlText, QUERY_TIMEOUT_MS);
-    //return rows as T;
-    const rows = await runSqlQuery(
-      conn,
-      sqlText,
-      QUERY_TIMEOUT_MS,
-      minpool,
-      maxpool,
-      heartbeatSecs
-    );
+    const rows = await safeQueryAsync(conn, sqlText, 5);
+    console.log(rows);
+    console.log(`rows: ${JSON.stringify(rows)}`);
     return rows as T;
   } catch (err) {
     // log and rethrow so route returns a 504/500

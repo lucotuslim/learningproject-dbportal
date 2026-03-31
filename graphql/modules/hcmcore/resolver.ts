@@ -67,12 +67,14 @@ export const resolvers = {
    Env.[Namespace] as [Namespace],
     Env.ConstringDatabaseName as ConstringDatabaseName,
     Env.ConstringServerName as ConstringServerName,
-    CorePreProd.Environment as HCMCoreEnvironment
+    CorePreProd.Environment as HCMCoreEnvironment,
+    '${Environment}' as ClientEnvironment
   from [DFCoreHCMManagement].[dbo].[CoreHCMDatabaseInventory${Environment}] CorePreProd
   inner join ServerInventory..[Vw_MonolithConnectionStrings_${Environment}_Env] Env
   on CorePreProd.ClientId = Env.ClientID and
   CorePreProd.Namespace = Env.Namespace
-  Where  CorePreProd.ClientID  in (${clientidtext}) and
+  Where CorePreProd.ClientID  in (${clientidtext})
+   and
    status ='Active'
    and CorePreProd.Environment = '${Environment}'
         `;

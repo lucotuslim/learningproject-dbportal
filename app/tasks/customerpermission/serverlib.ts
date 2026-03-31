@@ -504,27 +504,25 @@ async function fetchHCMCoreByClientArrayName(
   ClientEnvironment: string
 ): Promise<IHCMCore[]> {
   const query = `
-  query HCMCoreByClientArrayName($db: String!, $ClientIds: [Int!]!, $Namespace: String!,
-  $ClientEnvironment:String!) {
-    HCMCoreByClientArrayName(db: $db, ClientIds: $ClientIds, Namespace: $Namespace,
-    ClientEnvironment:$ClientEnvironment) {
-      ClientID
-      Namespace
-      ConstringDatabaseName
-      ConstringServerName
-      ISBI
-      ConnectionType
-      IsDecomm
-    }
-  }`;
+  query CoreHCMDatabaseInventoryByClientIdArray($db: String!, $clientIds: [Int!]!, $environment: String!, $clientEnvironment: String!) {
+  CoreHCMDatabaseInventoryByClientIdArray(db: $db, ClientIds: $clientIds, Environment: $environment, ClientEnvironment: $clientEnvironment) {
+    ClientID
+    Namespace
+    ClientEnvironment
+    ConstringDatabaseName
+    ConstringServerName
+    HCMCoreEnvironment
+  }
+}
+  `;
   const variables = {
-    db: db,
-    ClientIds: ClientIds,
-    Namespace: Namespace,
-    ClientEnvironment: ClientEnvironment,
+    db,
+    clientIds: ClientIds,
+    environment,
+    clientEnvironment: ClientEnvironment,
   };
   const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/${environment}/dbaserver/monolilthconnectionstring`,
+    `${process.env.APPDAPIROOT}/api/graphql`,
     // `/api/${environment}/dbaserver/monolilthconnectionstring`,
     {
       method: "POST",
@@ -545,7 +543,7 @@ async function fetchHCMCoreByClientArrayName(
     console.error(data.errors);
     throw new Error(data.errors[0].message);
   }
-  return data.data.HCMCoreByClientArrayName;
+  return data.data.CoreHCMDatabaseInventoryByClientIdArray;
 }
 
 export async function getServerPrincipal(

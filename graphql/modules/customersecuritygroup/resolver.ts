@@ -1,5 +1,5 @@
-import { GraphQLResolveInfo } from "graphql";
-import graphqlFields from "graphql-fields";
+// import { GraphQLResolveInfo } from "graphql";
+// import graphqlFields from "graphql-fields";
 
 export const resolvers = {
   Query: {

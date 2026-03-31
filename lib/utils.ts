@@ -68,67 +68,123 @@ export function formatDateTime(value?: string | Date | null): string {
   return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
 }
 
-export async function safeMsNodeSqlQuery(connStr: string, sqlText: string, timeoutMs: number) {
-  const msnodesqlv8 = eval("require")("msnodesqlv8");
-  const queryAsync = util.promisify(msnodesqlv8.query);
+// export async function safeMsNodeSqlQuery(
+//   connStr: string,
+//   sqlText: string,
+//   timeoutMs: number
+// ): Promise<unknown> {
+//   const msnodesqlv8 = eval("require")("msnodesqlv8");
+//   const queryAsync = util.promisify(msnodesqlv8.query);
 
-  return new Promise<unknown>((resolve, reject) => {
-    let finished = false;
-    // Convert any unexpected global exceptions/rejections during this call into a rejection
-    const onGlobalErr = (err: unknown) => {
+//   let timeoutHandle: NodeJS.Timeout | null = null;
+
+//   try {
+//     const result = await Promise.race([
+//       // Main query
+//       queryAsync(connStr, sqlText),
+
+//       // Timeout guard
+//       new Promise((_, reject) => {
+//         timeoutHandle = setTimeout(() => {
+//           reject(new Error("msnodesqlv8 query timed out"));
+//         }, timeoutMs);
+//       }),
+//     ]);
+
+//     return result;
+//   } catch (err) {
+//     // Normalize error
+//     throw err instanceof Error ? err : new Error(String(err));
+//   } finally {
+//     // Cleanup timeout
+//     if (timeoutHandle) {
+//       clearTimeout(timeoutHandle);
+//     }
+//   }
+// }
+
+interface SqlConnection {
+  query: (sql: string, params: unknown[], cb: (err: Error | null, rows: unknown) => void) => void;
+  close: () => void;
+}
+
+interface OpenOptions {
+  conn_str: string;
+  conn_timeout: number;
+}
+
+type QueryCallback = (err: Error | null, rows?: unknown) => void;
+
+export function safeMsNodeSqlQuery(
+  connStr: string,
+  sqlText: string,
+  conn_timeout: number,
+  callback: QueryCallback
+): void {
+  const sql = eval("require")("msnodesqlv8");
+  const co: OpenOptions = {
+    conn_str: connStr,
+    conn_timeout: conn_timeout, // seconds
+  };
+
+  let finished = false;
+  let conn: SqlConnection | null = null;
+
+  const timer = setTimeout(
+    () => {
       if (finished) return;
       finished = true;
-      cleanup();
-      // normalize
-      const e = err instanceof Error ? err : new Error(String(err));
-      return reject(e);
-    };
+      if (conn) {
+        try {
+          conn.close();
+        } catch {}
+      }
 
-    // Setup temporary listeners
-    process.once("uncaughtException", onGlobalErr);
-    process.once("unhandledRejection", onGlobalErr);
-
-    // JS-level timeout guard (ensures route responds)
-    const timer = setTimeout(() => {
-      if (finished) return;
+      callback(new Error("Query timed out"));
+    },
+    1000 * (conn_timeout + 30)
+  );
+  sql.open(co, (err: Error | null, connection: SqlConnection) => {
+    if (finished) return;
+    if (err) {
       finished = true;
-      cleanup();
-      return reject(new Error("msnodesqlv8 query timed out"));
-    }, timeoutMs);
-
-    function cleanup() {
       clearTimeout(timer);
-      process.removeListener("uncaughtException", onGlobalErr);
-      process.removeListener("unhandledRejection", onGlobalErr);
+      return callback(err);
     }
-
-    //console.log (sqlText);
-    // Now call the driver. It may synchronously throw — catch that.
-    try {
-      queryAsync(connStr, sqlText)
-        .then((rows: unknown) => {
-          //  console.log(rows);
-          if (finished) return;
-          finished = true;
-          cleanup();
-          resolve(rows);
-        })
-        .catch((err: unknown) => {
-          if (finished) return;
-          finished = true;
-          cleanup();
-          reject(err);
-        });
-    } catch (err) {
-      // synchronous thrown error (e.g., "Connection is not open")
+    conn = connection;
+    conn.query(sqlText, [], (err: Error | null, rows: unknown) => {
       if (finished) return;
       finished = true;
-      cleanup();
-      reject(err instanceof Error ? err : new Error(String(err)));
-    }
+      clearTimeout(timer);
+      if (conn) {
+        try {
+          conn.close();
+        } catch {}
+      }
+      if (err) {
+        return callback(err);
+      }
+      // ✅ FIX: must call callback (not return JSON directly)
+      const safeRows = JSON.parse(JSON.stringify(rows));
+      return callback(null, safeRows);
+    });
   });
 }
 
+export function safeQueryAsync(
+  connStr: string,
+  sqlText: string,
+  timeout: number
+): Promise<unknown> {
+  console.log("connStr:", connStr);
+
+  return new Promise((resolve, reject) => {
+    safeMsNodeSqlQuery(connStr, sqlText, timeout, (err, result) => {
+      if (err) return reject(err);
+      resolve(result);
+    });
+  });
+}
 interface PushResponse {
   url_token: string;
   payload: string;

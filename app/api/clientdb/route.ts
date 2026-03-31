@@ -2,7 +2,7 @@
 //import os from "os";
 //import { runSqlQuery } from "@/lib/dbpool";
 //import sql from "mssql";
-import { safeMsNodeSqlQuery } from "@/lib/utils";
+import { safeQueryAsync } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: Request) {
@@ -83,10 +83,10 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
       `Driver={${process.env.ConnectionDriver || "ODBC Driver 17 for SQL Server"}}`,
       `Encrypt=yes`,
       `TrustServerCertificate=yes`,
-      `Connection Timeout=${process.env.DB_CONNECTION_TIMEOUT_SEC || 5}`,
     ]
       .filter(Boolean)
       .join(";") + ";";
+  // `Connection Timeout=${process.env.DB_CONNECTION_TIMEOUT_SEC || 5}`,
 
   // const QUERY_TIMEOUT_SEC = Number(process.env.DB_QUERY_TIMEOUT_SEC || 5);
 
@@ -110,19 +110,30 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
 
   const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 20000); // query timeout
   try {
-    const rows = await safeMsNodeSqlQuery(
-      conn,
-      `
-      SET NOCOUNT ON;
-      ${sqlText}
-      `,
-      QUERY_TIMEOUT_MS
-    );
-    // const rows = await runSqlQuery(conn, sqlText);
+    // const rows = await safeMsNodeSqlQuery(
+    //   conn,
+    //   `
+    //   SET NOCOUNT ON;
+    //   ${sqlText}
+    //   `,
+    //   QUERY_TIMEOUT_MS
+    // );
+
+    // safeMsNodeSqlQuery(conn, sqlText, 5, (err, result) => {
+    //   if (err) throw err;
+    //   console.log(result);
+    //   console.log(`rows: ${JSON.stringify(result)}`);
+    //   return JSON.stringify(result);
+    // });
+    const rows = await safeQueryAsync(conn, sqlText, 5);
+
+    console.log(rows);
+    //console.log(`rows: ${JSON.stringify(rows)}`);
+
     return rows;
   } catch (err) {
-    console.error("msnodesqlv8 safe query error:", err);
-    throw err;
+    console.error("Error:", err);
+    //throw err;
   }
 }
 
