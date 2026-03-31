@@ -1,31 +1,56 @@
-import { spawn } from "child_process";
+import { fork } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
 
-function runWithTimeout() {
-  const child = spawn("node", ["dbWorker.js"], {
-    stdio: "inherit", // show logs
-  });
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+function runQueryWithTimeout(connStr, sqlText, timeoutMs = 5000) {
+  return new Promise((resolve, reject) => {
+    const child = fork(path.join(__dirname, "dbWorker.js"));
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`Query timeout (child killed) after ${timeoutMs} ms`));
+    }, timeoutMs);
 
-  const timeoutMs = 5000;
+    child.on("message", (msg) => {
+      clearTimeout(timer);
 
-  const timer = setTimeout(() => {
-    console.log("❌ Timeout reached - killing child");
-    child.kill("SIGKILL"); // 💥 guaranteed kill
-  }, timeoutMs);
+      if (msg.success) {
+        resolve(msg.data);
+      } else {
+        reject(new Error(msg.error));
+      }
+    });
 
-  child.on("exit", (code, signal) => {
-    clearTimeout(timer);
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
 
-    if (signal === "SIGKILL") {
-      console.log("Child was force killed");
-    } else {
-      console.log("Child exited with code:", code);
-    }
-  });
+    child.on("exit", (code, signal) => {
+      if (signal === "SIGKILL") {
+        reject(new Error("Child process killed"));
+      }
+    });
 
-  child.on("error", (err) => {
-    clearTimeout(timer);
-    console.error("Failed to start child:", err);
+    // send query to child
+    child.send({
+      connStr,
+      sqlText,
+    });
   });
 }
 
-runWithTimeout();
+(async () => {
+  try {
+    const result = await runQueryWithTimeout(
+      "server=wrongserver;Database=AdminDB;Uid=sa;PWD=Yukon900;Driver={ODBC Driver 18 for SQL Server};Encrypt=yes;TrustServerCertificate=yes;",
+      "SELECT 1 as Columnn1",
+      3000
+    );
+
+    console.log("Result:", result);
+  } catch (err) {
+    console.error("Error:", err.message);
+  }
+})();
