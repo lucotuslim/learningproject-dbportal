@@ -2,8 +2,9 @@
 //import os from "os";
 //import { runSqlQuery } from "@/lib/dbpool";
 //import sql from "mssql";
-import { safeQueryAsync } from "@/lib/utils";
+//import { safeQueryAsync } from "@/lib/utils";
 import { NextRequest, NextResponse } from "next/server";
+import { runQueryWithTimeout } from "@/lib/serverutils";
 
 export async function POST(req: Request) {
   try {
@@ -108,7 +109,7 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
 
   // const conn = parts.join(";") + ";";
 
-  const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 20000); // query timeout
+  const CONNECTION_TIMEOUT_MS = Number(process.env.DB_CONNECTION_TIMEOUT_MS || 5000);
   try {
     // const rows = await safeMsNodeSqlQuery(
     //   conn,
@@ -125,9 +126,9 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
     //   console.log(`rows: ${JSON.stringify(result)}`);
     //   return JSON.stringify(result);
     // });
-    const rows = await safeQueryAsync(conn, sqlText, 5);
+    const rows = await runQueryWithTimeout(conn, sqlText, CONNECTION_TIMEOUT_MS);
 
-    console.log(rows);
+    //console.log(rows);
     //console.log(`rows: ${JSON.stringify(rows)}`);
 
     return rows;

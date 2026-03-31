@@ -1,6 +1,60 @@
-'use server'
+"use server";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
-import {IApiTokenParams} from "@/interfaces/generic";
+import { IApiTokenParams } from "@/interfaces/generic";
+
+import { fork } from "child_process";
+//import { fileURLToPath } from "url";
+import path from "path";
+
+// import path from "path";
+// import { fileURLToPath } from "url";
+
+//const __filename = fileURLToPath(import.meta.url);
+//const __dirname = path.dirname(__filename);
+
+type ChildMessage = { success: true; data: unknown } | { success: false; error: string };
+
+export async function runQueryWithTimeout(
+  connStr: string,
+  sqlText: string,
+  timeoutMs: number = 5000
+) {
+  return new Promise((resolve, reject) => {
+    //const child = fork(path.join(__dirname, "dbWorker.js"));
+    //const workerPath = path.join(process.cwd(), "lib/dbWorker.js");
+    //const child = fork("/home/lucotus/Documents/GitHub/learningproject-dbportal/lib/dbWorker.js");
+    const workerPath = path.resolve(process.cwd(), "lib/dbWorker.js");
+    const child = fork(workerPath);
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`Query timeout (child killed) after ${timeoutMs} ms`));
+    }, timeoutMs);
+
+    child.on("message", (msg: unknown) => {
+      const message = msg as ChildMessage;
+
+      if (message.success) {
+        resolve(message.data);
+      } else {
+        reject(new Error(message.error));
+      }
+    });
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
+    child.on("exit", (code, signal) => {
+      if (signal === "SIGKILL") {
+        reject(new Error("Child process killed"));
+      }
+    });
+    // send query to child
+    child.send({
+      connStr,
+      sqlText,
+    });
+  });
+}
 
 export interface TokenResponse {
   access_token: string;
@@ -16,18 +70,10 @@ export async function getApiToken({
   GrantType,
   ClientId,
   Scope,
-  ClientSecret = process.env.DocApiClientSecret
+  ClientSecret = process.env.DocApiClientSecret,
 }: IApiTokenParams): Promise<TokenResponse> {
   try {
-    if (
-      !Url ||
-      !Method ||
-      !ContentType ||
-      !GrantType ||
-      !ClientId ||
-      !Scope ||
-      !ClientSecret
-    ) {
+    if (!Url || !Method || !ContentType || !GrantType || !ClientId || !Scope || !ClientSecret) {
       throw new Error("Missing required parameters");
     }
 
@@ -62,8 +108,7 @@ export async function getApiToken({
   }
 }
 
-
-export async function  chunkArray<T>(arr: T[], size: number): Promise<T[][]> {
+export async function chunkArray<T>(arr: T[], size: number): Promise<T[][]> {
   const result: T[][] = [];
   for (let i = 0; i < arr.length; i += size) {
     result.push(arr.slice(i, i + size));

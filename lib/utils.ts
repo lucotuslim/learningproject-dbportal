@@ -4,7 +4,7 @@ import { ApiInterface } from "@/interfaces/generic";
 import { IApiTokenParams } from "@/interfaces/generic";
 //import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
 // safeMsNodeSqlQuery.ts (paste into your helper or route)
-import util from "util";
+//import util from "util";
 // use eval(require) if your bundler rewrites require at build time:
 // import * as mssql from "mssql";
 

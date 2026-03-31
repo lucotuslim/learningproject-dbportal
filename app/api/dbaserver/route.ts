@@ -1,8 +1,9 @@
 // import { NextResponse } from "next/server";
 // import os from "os";
 //import sql from "mssql";
-import { safeMsNodeSqlQuery, safeQueryAsync } from "@/lib/utils";
-import { runSqlQuery } from "@/lib/dbpool";
+// import { safeMsNodeSqlQuery, safeQueryAsync } from "@/lib/utils";
+// import { runSqlQuery } from "@/lib/dbpool";
+import { runQueryWithTimeout } from "@/lib/serverutils";
 
 export async function POST(req: Request) {
   try {
@@ -58,7 +59,7 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
 
   // --- Case 2: No DB_USER — use msnodesqlv8 (Trusted Connection) ---
   // inside runQuery fallback branch
-  const QUERY_TIMEOUT_SEC = Number(process.env.DB_QUERY_TIMEOUT_SEC || 10);
+  // const QUERY_TIMEOUT_SEC = Number(process.env.DB_QUERY_TIMEOUT_SEC || 10);
 
   const parts = [
     `server=${serverName}`,
@@ -76,16 +77,15 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
   }
 
   const conn = parts.join(";") + ";";
-
-  const QUERY_TIMEOUT_MS = Number(process.env.DB_QUERY_TIMEOUT_MS || 10000); // query timeout
-  const minpool = Number(process.env.DBMinPool || 10); // query timeout
-  const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
-  const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
+  // const minpool = Number(process.env.DBMinPool || 10); // query timeout
+  // const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
+  // const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
+  const CONNECTION_TIMEOUT_MS = Number(process.env.DB_CONNECTION_TIMEOUT_MS || 5000); // query timeout
 
   try {
-    const rows = await safeQueryAsync(conn, sqlText, 5);
-    console.log(rows);
-    console.log(`rows: ${JSON.stringify(rows)}`);
+    const rows = await runQueryWithTimeout(conn, sqlText, CONNECTION_TIMEOUT_MS);
+    //    console.log(rows);
+    //console.log(`rows: ${JSON.stringify(rows)}`);
     return rows as T;
   } catch (err) {
     // log and rethrow so route returns a 504/500
