@@ -14,8 +14,10 @@ export async function UpdateDocumentExtractionTasksSetting(
     }
   `;
 
+  console.log("UpdateDocumentExtractionTasksSetting config:", config);
+
   const res = await fetch(
-    `${process.env.APPDAPIROOT}/api/appconfig`,
+    `${process.env.APPDAPIROOT}/api/graphql`,
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },

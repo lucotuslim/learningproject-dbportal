@@ -161,6 +161,8 @@ const resolvers = {
     ) => {
       const { server, db, configSection, configJson } = input;
 
+      console.log("UpdateAppConfig input:", input);
+
       try {
         const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
           method: "POST",

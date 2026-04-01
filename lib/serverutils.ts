@@ -1,8 +1,8 @@
 "use server";
 import { createCipheriv, createDecipheriv, randomBytes } from "crypto";
+import { fork } from "child_process";
 import { IApiTokenParams } from "@/interfaces/generic";
 
-import { fork } from "child_process";
 //import { fileURLToPath } from "url";
 import path from "path";
 
@@ -13,6 +13,7 @@ import path from "path";
 //const __dirname = path.dirname(__filename);
 
 type ChildMessage = { success: true; data: unknown } | { success: false; error: string };
+//export const runtime = "nodejs";
 
 export async function runQueryWithTimeout(
   connStr: string,
@@ -22,8 +23,25 @@ export async function runQueryWithTimeout(
   return new Promise((resolve, reject) => {
     //const child = fork(path.join(__dirname, "dbWorker.js"));
     //const workerPath = path.join(process.cwd(), "lib/dbWorker.js");
-    //const child = fork("/home/lucotus/Documents/GitHub/learningproject-dbportal/lib/dbWorker.js");
-    const workerPath = path.resolve(process.cwd(), "lib/dbWorker.js");
+    //    const child = fork("dbWorker.js");
+    //const workerPath = path.resolve(process.cwd(), "lib/dbWorker.js");
+    // const child = fork(workerPath);
+    // const workerPath = path.resolve(
+    //   "/home/lucotus/Documents/GitHub/learningproject-dbportal/workers/dbWorker.js"
+    // );
+
+    // const workerPath = path.resolve(
+    //   process.cwd(),
+    //   "/home/lucotus/Documents/GitHub/learningproject-dbportal/lib/dbWorker.js"
+    // );
+
+    const root = process.cwd();
+    // 2. Construct the path.
+    // Using a variable helps prevent Next.js from trying to "bundle" this file.
+    const workerRelativePath = "lib/dbWorker.js";
+    const workerPath = path.resolve(root, workerRelativePath);
+
+    console.log(workerPath);
     const child = fork(workerPath);
     const timer = setTimeout(() => {
       child.kill();
@@ -32,7 +50,6 @@ export async function runQueryWithTimeout(
 
     child.on("message", (msg: unknown) => {
       const message = msg as ChildMessage;
-
       if (message.success) {
         resolve(message.data);
       } else {
