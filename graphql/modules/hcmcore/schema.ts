@@ -8,7 +8,7 @@ type CoreHCMDatabaseInventory {
     Namespace: String!
     ConstringDatabaseName: String!
     ConstringServerName: String!
-    HCMCoreEnvironment: String!
+    HCMCoreEnvironment: String
  }
 
 type Query {

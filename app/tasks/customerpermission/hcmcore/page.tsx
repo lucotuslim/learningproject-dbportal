@@ -53,7 +53,7 @@ export default function HCMCore() {
         <div className="container mx-auto py-10">
             <div className="flex items-center justify-between mb-4">
                 <Input
-                    placeholder="Search Group Name. End % for like expression"
+                    placeholder="Search Namespace. End % for like expression"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     className="w-128"

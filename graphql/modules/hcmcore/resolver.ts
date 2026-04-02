@@ -4,19 +4,16 @@ export const resolvers = {
       _: unknown,
       { db, Environment }: { db: string; Environment: string }
     ) => {
-      const sql = `
-        select CorePreProd.ClientID,
+      const sql = ` 
+       select CoreHCM.ClientID,
    Env.[Namespace] as [Namespace],
     Env.ConstringDatabaseName as ConstringDatabaseName,
     Env.ConstringServerName as ConstringServerName,
-    CorePreProd.Environment as HCMCoreEnvironment
-  from [DFCoreHCMManagement].[dbo].[CoreHCMDatabaseInventory${Environment}] CorePreProd
+    Environment as HCMCoreEnvironment
+  from [DFCoreHCMManagement].[dbo].[CoreHCMDatabaseInventory${Environment}] CoreHCM
   inner join ServerInventory..[Vw_MonolithConnectionStrings_${Environment}_Env] Env
-  on CorePreProd.ClientId = Env.ClientID and
-  CorePreProd.Namespace = Env.Namespace
-  Where
-   status ='Active'
-   and CorePreProd.Environment = '${Environment}'
+  on CoreHCM.ClientId = Env.ClientID 
+  and CoreHCM.Namespace = Env.Namespace
         `;
 
       const result = await fetch(`${process.env.APPDAPIROOT}/api/dbaserver`, {

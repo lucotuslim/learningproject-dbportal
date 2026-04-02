@@ -16,15 +16,6 @@ type CustomerSecurityGroup {
   IsDeleted: Boolean!
 }
 
-type CoreHCMDatabaseInventory {
-    ClientID: ID!
-    Namespace: String!
-    ClientEnvironment: String!
-    ConstringDatabaseName: String!
-    ConstringServerName: String!
-    HCMCoreEnvironment: String!
- }
-
 type Query {
   customerSecurityGroups(
     server: String!
