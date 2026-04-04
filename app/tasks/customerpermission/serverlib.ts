@@ -508,7 +508,6 @@ async function fetchHCMCoreByClientArrayName(
   CoreHCMDatabaseInventoryByClientIdArray(db: $db, ClientIds: $clientIds, Environment: $environment, ClientEnvironment: $clientEnvironment) {
     ClientID
     Namespace
-    ClientEnvironment
     ConstringDatabaseName
     ConstringServerName
     HCMCoreEnvironment

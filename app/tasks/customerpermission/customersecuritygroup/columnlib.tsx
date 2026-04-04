@@ -150,8 +150,7 @@ export function CheckClientDbPermissionContent({
                     <TableHead>Namespace</TableHead>
                     <TableHead>Database</TableHead>
                     <TableHead>Server</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Decomm</TableHead>
+
                     <TableHead>CustomerGroup Permission Required</TableHead>
                     <TableHead>Database User Mappings</TableHead>
                     <TableHead>Server Principal Found?</TableHead>

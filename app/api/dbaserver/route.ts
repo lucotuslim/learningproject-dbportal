@@ -2,8 +2,8 @@
 // import os from "os";
 //import sql from "mssql";
 // import { safeMsNodeSqlQuery, safeQueryAsync } from "@/lib/utils";
-// import { runSqlQuery } from "@/lib/dbpool";
-import { runQueryWithTimeout } from "@/lib/serverutils";
+import { runSqlQuery } from "@/lib/dbpool";
+//import { runQueryWithTimeout } from "@/lib/serverutils";
 
 export async function POST(req: Request) {
   try {
@@ -77,13 +77,20 @@ async function getDbaserverData<T>(dbName: string, sqlText: string): Promise<T> 
   }
 
   const conn = parts.join(";") + ";";
-  // const minpool = Number(process.env.DBMinPool || 10); // query timeout
-  // const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
-  // const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
-  const CONNECTION_TIMEOUT_MS = Number(process.env.DB_CONNECTION_TIMEOUT_MS || 5000); // query timeout
+  const minpool = Number(process.env.DBMinPool || 10); // query timeout
+  const maxpool = Number(process.env.DBMaxPool || 20); // query timeout
+  const heartbeatSecs = Number(process.env.heartbeatSecs || 30); // query timeout
+  const DBADB_CONNECTION_TIMEOUT_MS = Number(process.env.DBADB_CONNECTION_TIMEOUT_MS || 5000);
 
   try {
-    const rows = await runQueryWithTimeout(conn, sqlText, CONNECTION_TIMEOUT_MS);
+    const rows = await runSqlQuery(
+      conn,
+      sqlText,
+      DBADB_CONNECTION_TIMEOUT_MS,
+      minpool,
+      maxpool,
+      heartbeatSecs
+    );
     //    console.log(rows);
     //console.log(`rows: ${JSON.stringify(rows)}`);
     return rows as T;
