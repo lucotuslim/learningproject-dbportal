@@ -127,14 +127,12 @@ async function getClientData(serverName: string, dbName: string, sqlText: string
     //   return JSON.stringify(result);
     // });
     const rows = await runQueryWithTimeout(conn, sqlText, CONNECTION_TIMEOUT_MS);
-
     //console.log(rows);
     //console.log(`rows: ${JSON.stringify(rows)}`);
-
     return rows;
   } catch (err) {
     console.error("Error:", err);
-    //throw err;
+    throw err;
   }
 }
 
