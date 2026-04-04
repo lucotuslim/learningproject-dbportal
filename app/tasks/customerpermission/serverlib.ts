@@ -582,35 +582,75 @@ export async function getDatabasePrincipal(
   db: string,
   name: string
 ): Promise<IDatabasePrincipal[]> {
+  const query = `
+ query DatabaseprincipalByName($server: String!, $db: String!, $name: String!) {
+  databaseprincipalByName(server: $server, db: $db, name: $name) {
+    name
+    type_desc
+    default_schema_name
+    create_date
+    modify_date
+  }
+}
+  `;
+  const variables = {
+    server,
+    db,
+    name,
+  };
+
   try {
-    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        server,
-        db,
-        q: `
-        select name, type_desc, create_date, modify_date
-        from sys.database_principals
-        where name = '${name}'
-      `,
-      }),
+      body: JSON.stringify({ query, variables }),
     });
-
-    if (!res.ok) {
-      let message = res.statusText;
-      try {
-        const resBody = await res.json();
-        message = resBody?.error ?? message; // ✅ error is a string
-      } catch {}
-      throw new Error(`getDatabasePrincipal failed (${res.status}): ${message}`);
+    const data = await res.json();
+    if (data.errors) {
+      console.error(data.errors);
+      throw new Error(data.errors[0].message);
     }
-    return await res.json();
+    return data.data.databaseprincipalByName;
   } catch (err) {
     console.error("getDatabasePrincipal error:", err);
     throw err; // rethrow so caller can handle
   }
 }
+
+// export async function getDatabasePrincipal(
+//   server: string,
+//   db: string,
+//   name: string
+// ): Promise<IDatabasePrincipal[]> {
+//   try {
+//     const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         server,
+//         db,
+//         q: `
+//         select name, type_desc, create_date, modify_date
+//         from sys.database_principals
+//         where name = '${name}'
+//       `,
+//       }),
+//     });
+
+//     if (!res.ok) {
+//       let message = res.statusText;
+//       try {
+//         const resBody = await res.json();
+//         message = resBody?.error ?? message; // ✅ error is a string
+//       } catch {}
+//       throw new Error(`getDatabasePrincipal failed (${res.status}): ${message}`);
+//     }
+//     return await res.json();
+//   } catch (err) {
+//     console.error("getDatabasePrincipal error:", err);
+//     throw err; // rethrow so caller can handle
+//   }
+// }
 
 export async function fetchPermissionMappings(
   server: string,

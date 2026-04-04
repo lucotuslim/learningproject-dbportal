@@ -15,14 +15,14 @@ export const resolvers = {
         });
 
         if (!res.ok) {
-          const errBody = await res.json().catch(() => null);
+          const data = await res.json();
+          // throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
           throw new Error(
-            errBody?.error
-              ? `DatabasePrincipalApi failed: ${errBody.error}`
-              : `DatabasePrincipalApi failed with status ${res.status}`
+            data?.error
+              ? `DatabasePrincipalApi failed: ${data.error} (${data.code})`
+              : `DatabasePrincipalApi failed: ${res.status} ${res.statusText}`
           );
         }
-
         return await res.json();
       } catch (err) {
         console.error("DatabasePrincipalApi error:", err);
@@ -48,7 +48,13 @@ export const resolvers = {
           }),
         });
         if (!res.ok) {
-          throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          const data = await res.json();
+          // throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          throw new Error(
+            data?.error
+              ? `DatabasePrincipalApi failed: ${data.error} (${data.code})`
+              : `DatabasePrincipalApi failed: ${res.status} ${res.statusText}`
+          );
         }
         return await res.json();
       } catch (err) {
@@ -75,7 +81,13 @@ export const resolvers = {
           }),
         });
         if (!res.ok) {
-          throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          const data = await res.json();
+          // throw new Error(`DatabasePrincipalApi failed: ${res.statusText}`);
+          throw new Error(
+            data?.error
+              ? `DatabasePrincipalApi failed: ${data.error} (${data.code})`
+              : `DatabasePrincipalApi failed: ${res.status} ${res.statusText}`
+          );
         }
         return await res.json();
       } catch (err) {
