@@ -1,4 +1,5 @@
 "use server";
+
 import {
   IHCMCore,
   IHCMCoreWithFound,
@@ -11,7 +12,7 @@ import {
   CustomerSecurityGroupMetaData,
 } from "./interfaces";
 import { from, toArray, lastValueFrom, mergeMap, map, of, forkJoin } from "rxjs";
-import { catchError, groupBy, reduce, tap } from "rxjs/operators";
+import { catchError, groupBy, reduce, tap, filter } from "rxjs/operators";
 
 type CombinedGroup = {
   Namespace: string;
@@ -75,15 +76,12 @@ export async function getAllMissingDbPermissions(
       console.log("🔹 CustomerSecurityGroups count:", groups.length);
       console.log("🔹 Sample group:", groups[0]);
     }),
-
     // flatten groups
     mergeMap((groups) => from(groups)),
-
     groupBy(
       (g: ICustomerSecurityGroup) =>
-        `${g.Namespace ?? ""}|${g.GroupName ?? ""}|${g.Permission ?? ""}`
+        `${g.Namespace ?? ""}|${g.GroupName ?? ""}|${g.Permission ?? ""} |${g.Environment ?? ""}`
     ),
-
     mergeMap((group$) =>
       group$.pipe(
         reduce(
@@ -107,6 +105,7 @@ export async function getAllMissingDbPermissions(
             ns: undefined as string | undefined,
             gn: undefined as string | undefined,
             perm: undefined as string | undefined,
+            custenv: undefined as string | undefined,
             ids: new Set<number>(),
           }
         ),
@@ -186,6 +185,9 @@ export async function getAllMissingDbPermissions(
   return await lastValueFrom(obs$);
 }
 
+const failedServers = new Map<string, string>();
+const failedDatabases = new Map<string, Map<string, string>>();
+
 export async function getclientdbpermissioninfo(
   db: string,
   clientid: number[],
@@ -194,7 +196,7 @@ export async function getclientdbpermissioninfo(
   clientpermission: string,
   environment: string,
   ClientEnvironment: string,
-  concurrency: number = 5
+  concurrency: number = 1
 ): Promise<IHCMCoreWithDbPermission[]> {
   const PermissionMap: IPermissionMapping[] = [
     { permission: "Owner", dbPermission: ["db_owner"] },
@@ -208,178 +210,379 @@ export async function getclientdbpermissioninfo(
   const obs$ = from(
     getClientWithDbInfo(db, clientid, Namespace, environment, ClientEnvironment)
   ).pipe(
-    // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
     catchError((err) => {
-      console.error(`getClientWithDbInfo failed: for  ${Namespace} ${clientid}`, err);
-      return of([]); // keep typing: returns empty array
+      console.error(`getClientWithDbInfo failed`, err);
+      return of([]);
     }),
 
-    tap((rawresult) =>
-      console.log("raw result count", Array.isArray(rawresult) ? rawresult.length : 0)
-    ),
+    map((res) => (Array.isArray(res) ? res : [])),
+    map((list) => list.filter((item) => item.HCMCoreFound)),
 
-    map((res) => {
-      const list = Array.isArray(res) ? res : [];
-      console.log("rawCount", list.length, "raw sample", list.slice(0, 2));
-      const filtered = list.filter((item) => item.HCMCoreFound);
-      console.log("filteredCount", filtered.length);
-      return filtered;
-    }),
+    mergeMap((items) =>
+      from(items).pipe(
+        // 🔥 SKIP FAILED SERVER / DB EARLY
+        // filter((item: IHCMCoreWithFound) => {
+        //if (failedServers.has(item.ConstringServerName)) return false;
+        //const dbMap = failedDatabases.get(item.ConstringServerName);
+        //if (dbMap?.has(item.ConstringDatabaseName)) return false;
+        //   return true;
+        // }),
 
-    // For each item: call the three async functions in parallel but handle errors locally
-    mergeMap(
-      (items) =>
-        from(items).pipe(
-          mergeMap((item) => {
-            // turn each async call into an Observable and catch error to return a safe default
-            const sp$ = from(getServerPrincipal(item.ConstringServerName, "master", name)).pipe(
-              map((rows) =>
-                (rows ?? []).map((r) => ({
-                  ...r,
+        mergeMap((item) => {
+          const server = item.ConstringServerName;
+          const database = item.ConstringDatabaseName;
+          const failedserver = failedServers.get(server);
+          const faileddb = failedDatabases.get(server)?.get(database);
+
+          if (failedServers.has(server) || failedDatabases.get(server)?.has(database)) {
+            console.warn(`Skipping ${server}/${database} due to previous failure`);
+            return of({
+              ...item,
+              dbpermission,
+              serverPrincipal: null,
+              ServerPrincipalFound: null,
+              databasePrincipal: null,
+              DatabasePrincipalFound: null,
+              DatabaseUserMappings: [] as string[],
+              MissingRoleMappings: [] as string[],
+              error: failedserver ?? faileddb ?? "Unknown previous error",
+            } satisfies IHCMCoreWithDbPermission);
+          }
+
+          // ------------------------
+          // SERVER PRINCIPAL
+          // ------------------------
+          const sp$ = from(getServerPrincipal(server, "master", name)).pipe(
+            map((rows) =>
+              (rows ?? []).map((r) => ({
+                ...r,
+                servername: item.ConstringServerName,
+              }))
+            ),
+            catchError((err) => {
+              const msg = err?.message ?? "Unknown error";
+              failedServers.set(server, msg);
+              console.error(`Server FAILED: ${server}`, msg);
+              return of([
+                {
                   servername: item.ConstringServerName,
-                }))
-              ),
-              catchError((err) => {
-                console.error(
-                  `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
-                  err
-                );
-                return of([
-                  {
-                    servername: item.ConstringServerName,
-                    name: name,
-                    error: true,
-                    errorMessage: err instanceof Error ? err.message : "Unknown error",
-                  },
-                ]);
-              })
-            );
+                  name: name,
+                  error: msg,
+                  //errorMessage: err instanceof Error ? err.message : "Unknown error",
+                  // errorMessage: "stupid alread al",
+                },
+              ]);
+            })
+          );
 
-            const dp$ = from(
-              getDatabasePrincipal(item.ConstringServerName, item.ConstringDatabaseName, name)
-            ).pipe(
-              map((rows) =>
-                (rows ?? []).map((r) => ({
-                  ...r,
+          // ------------------------
+          // DATABASE PRINCIPAL
+          // ------------------------
+          const dp$ = from(getDatabasePrincipal(server, database, name)).pipe(
+            map((rows) =>
+              (rows ?? []).map((r) => ({
+                ...r,
+                servername: item.ConstringServerName,
+                databasename: item.ConstringDatabaseName,
+              }))
+            ),
+            catchError((err) => {
+              const msg = err?.message ?? "Unknown error";
+              if (!failedDatabases.has(server)) {
+                failedDatabases.set(server, new Map());
+              }
+              failedDatabases.get(server)!.set(database, msg);
+              console.error(`DB FAILED: ${server}/${database}`, msg);
+              return of([
+                {
                   servername: item.ConstringServerName,
                   databasename: item.ConstringDatabaseName,
-                }))
-              ),
-              catchError((err) => {
-                console.error(
-                  `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
-                  err
-                );
-                return of([
-                  {
-                    servername: item.ConstringServerName,
-                    databasename: item.ConstringDatabaseName,
-                    name: name,
-                    error: true,
-                    errorMessage: err instanceof Error ? err.message : "Unknown error",
-                  },
-                ]);
-              })
-            );
+                  name: name,
+                  error: msg,
 
-            const dpPermissionMap$ = from(
-              fetchPermissionMappings(item.ConstringServerName, item.ConstringDatabaseName, name)
-            ).pipe(
-              catchError((err) => {
-                console.error(
-                  `fetchPermissionMappings failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
-                  err
-                );
-                return of([]);
-              })
-            );
+                  // error: true,
+                  // errorMessage: err instanceof Error ? err.message : "Unknown error",
+                },
+              ]);
+            })
+          );
 
-            // run the three calls in parallel and build the result
-            return forkJoin({
-              sp: sp$,
-              dp: dp$,
-              dpmap: dpPermissionMap$,
-            }).pipe(
-              map(({ sp, dp, dpmap }) => {
-                // console.log("SP RAW:", sp);
-                // console.log("DP RAW:", dp);
-                // const serverPrincipalName = sp?.[0]?.name ?? null;
-                const spRow = sp.find((s) => s.servername === item.ConstringServerName && !s.error);
-                const serverPrincipal = spRow?.name ?? null;
-                const dpRow = dp.find(
-                  (d) =>
-                    d.servername === item.ConstringServerName &&
-                    d.databasename === item.ConstringDatabaseName &&
-                    !d.error
-                );
-                const databasePrincipal = dpRow?.name ?? null;
+          // ------------------------
+          // PERMISSION MAP
+          // ------------------------
+          const dpPermissionMap$ = from(fetchPermissionMappings(server, database, name)).pipe(
+            catchError((err) => {
+              console.error(`Permission map failed ${server}/${database}`, err);
+              return of([]);
+            })
+          );
 
-                const dbUserMappings = Array.isArray(dpmap)
-                  ? dpmap.map((d) => d.DatabaseRole).flat()
-                  : [];
+          return forkJoin({
+            sp: sp$,
+            dp: dp$,
+            dpmap: dpPermissionMap$,
+          }).pipe(
+            // 🔥 SKIP if either failed
+            filter(({ sp, dp }) => sp !== null && dp !== null),
 
-                const missingRoleMappings = dbpermission.filter(
-                  (p) =>
-                    !dbUserMappings
-                      .map((r: string) => r?.toLowerCase?.() ?? "")
-                      .includes(p.toLowerCase())
-                );
+            map(({ sp, dp, dpmap }) => {
+              // const spRow = sp.find((s) => s.servername === item.ConstringServerName && !s.error);
+              const spRow = sp.find((s) => s.servername === item.ConstringServerName);
 
-                return {
-                  ...item,
-                  dbpermission,
-                  //serverPrincipal: serverPrincipalName,
-                  // serverPrincipal:
-                  //   sp.find((s) => s.servername === item.ConstringServerName)?.name ?? null,
-                  serverPrincipal,
-                  ServerPrincipalFound: !!serverPrincipal,
-                  databasePrincipal: databasePrincipal,
-                  DatabasePrincipalFound: !!databasePrincipal,
-                  DatabaseUserMappings: dbUserMappings,
-                  MissingRoleMappings: missingRoleMappings,
-                  error: spRow?.error
-                    ? spRow.errorMessage
-                    : dp?.[0]?.error
-                      ? dp[0].errorMessage
-                      : null,
-                } as IHCMCoreWithDbPermission;
-              }),
+              const serverPrincipal = spRow?.name ?? null;
 
-              // If anything unexpected happens in mapping, return an error-annotated object
-              catchError((err) => {
-                console.error("Mapping error for item", item.ClientID, err);
-                return of({
-                  ...item,
-                  dbpermission,
-                  serverPrincipal: null,
-                  ServerPrincipalFound: null,
-                  databasePrincipal: null,
-                  DatabasePrincipalFound: null,
-                  DatabaseUserMappings: [],
-                  MissingRoleMappings: [],
-                  error: err instanceof Error ? err.message : "Unknown mapping error",
-                } as IHCMCoreWithDbPermission);
-              })
-            );
-          }, concurrency),
-          toArray()
-        ),
-      1 // outer mergeMap concurrency - we only need 1 since inner controls concurrency
+              // const dpRow = dp.find(
+              //   (d) =>
+              //     d.servername === item.ConstringServerName &&
+              //     d.databasename === item.ConstringDatabaseName &&
+              //     !d.error
+              // );
+
+              const dpRow = dp.find(
+                (d) =>
+                  d.servername === item.ConstringServerName &&
+                  d.databasename === item.ConstringDatabaseName
+              );
+
+              const databasePrincipal = dpRow?.name ?? null;
+
+              const dbUserMappings = Array.isArray(dpmap)
+                ? dpmap.map((d) => d.DatabaseRole).flat()
+                : [];
+
+              const missingRoleMappings = dbpermission.filter(
+                (p) =>
+                  !dbUserMappings
+                    .map((r: string) => r?.toLowerCase?.() ?? "")
+                    .includes(p.toLowerCase())
+              );
+
+              return {
+                ...item,
+                dbpermission,
+                serverPrincipal,
+                ServerPrincipalFound: !!serverPrincipal,
+                databasePrincipal,
+                DatabasePrincipalFound: !!databasePrincipal,
+                DatabaseUserMappings: dbUserMappings,
+                MissingRoleMappings: missingRoleMappings,
+                error: spRow?.error ? spRow.error : dpRow?.error ? dpRow.error : null,
+              } as IHCMCoreWithDbPermission;
+            }),
+
+            catchError((err) => {
+              console.error("Mapping error", err);
+              return of({
+                ...item,
+                dbpermission,
+                error: err?.message ?? "Mapping error",
+              } as IHCMCoreWithDbPermission);
+            })
+          );
+        }, concurrency),
+
+        toArray()
+      )
     ),
-
-    // flatten the arrays emitted by per-chunk to a single array
-    mergeMap((results) => from(results || [])),
-
-    toArray(),
-
-    tap((final) => {
-      console.log("✅ FINAL RESULT COUNT:", final.length);
-      if (final.length) console.log("✅ FINAL SAMPLE:", final[0]);
-    })
+    mergeMap((results) => from(results)),
+    toArray()
   );
 
   return await lastValueFrom(obs$);
 }
+
+// export async function getclientdbpermissioninfo(
+//   db: string,
+//   clientid: number[],
+//   Namespace: string,
+//   name: string,
+//   clientpermission: string,
+//   environment: string,
+//   ClientEnvironment: string,
+//   concurrency: number = 5
+// ): Promise<IHCMCoreWithDbPermission[]> {
+//   const PermissionMap: IPermissionMapping[] = [
+//     { permission: "Owner", dbPermission: ["db_owner"] },
+//     { permission: "ReadWrite", dbPermission: ["db_datawriter", "db_datareader"] },
+//     { permission: "ReadOnly", dbPermission: ["db_datareader"] },
+//   ];
+
+//   const dbpermission = PermissionMap.find((m) => m.permission === clientpermission)
+//     ?.dbPermission ?? ["N/A"];
+
+//   const obs$ = from(
+//     getClientWithDbInfo(db, clientid, Namespace, environment, ClientEnvironment)
+//   ).pipe(
+//     // Protect upstream call: if getClientWithDbInfo rejects, log and continue with empty array
+//     catchError((err) => {
+//       console.error(`getClientWithDbInfo failed: for  ${Namespace} ${clientid}`, err);
+//       return of([]); // keep typing: returns empty array
+//     }),
+
+//     tap((rawresult) =>
+//       console.log("raw result count", Array.isArray(rawresult) ? rawresult.length : 0)
+//     ),
+
+//     map((res) => {
+//       const list = Array.isArray(res) ? res : [];
+//       console.log("rawCount", list.length, "raw sample", list.slice(0, 2));
+//       const filtered = list.filter((item) => item.HCMCoreFound);
+//       console.log("filteredCount", filtered.length);
+//       return filtered;
+//     }),
+
+//     // For each item: call the three async functions in parallel but handle errors locally
+//     mergeMap(
+//       (items) =>
+//         from(items).pipe(
+//           mergeMap((item) => {
+//             // turn each async call into an Observable and catch error to return a safe default
+//             const sp$ = from(getServerPrincipal(item.ConstringServerName, "master", name)).pipe(
+//               map((rows) =>
+//                 (rows ?? []).map((r) => ({
+//                   ...r,
+//                   servername: item.ConstringServerName,
+//                 }))
+//               ),
+//               catchError((err) => {
+//                 console.error(
+//                   `getServerPrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}:`,
+//                   err
+//                 );
+//                 return of([
+//                   {
+//                     servername: item.ConstringServerName,
+//                     name: name,
+//                     error: true,
+//                     errorMessage: err instanceof Error ? err.message : "Unknown error",
+//                   },
+//                 ]);
+//               })
+//             );
+
+//             const dp$ = from(
+//               getDatabasePrincipal(item.ConstringServerName, item.ConstringDatabaseName, name)
+//             ).pipe(
+//               map((rows) =>
+//                 (rows ?? []).map((r) => ({
+//                   ...r,
+//                   servername: item.ConstringServerName,
+//                   databasename: item.ConstringDatabaseName,
+//                 }))
+//               ),
+//               catchError((err) => {
+//                 console.error(
+//                   `getDatabasePrincipal failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
+//                   err
+//                 );
+//                 return of([
+//                   {
+//                     servername: item.ConstringServerName,
+//                     databasename: item.ConstringDatabaseName,
+//                     name: name,
+//                     error: true,
+//                     errorMessage: err instanceof Error ? err.message : "Unknown error",
+//                   },
+//                 ]);
+//               })
+//             );
+
+//             const dpPermissionMap$ = from(
+//               fetchPermissionMappings(item.ConstringServerName, item.ConstringDatabaseName, name)
+//             ).pipe(
+//               catchError((err) => {
+//                 console.error(
+//                   `fetchPermissionMappings failed for ${item.ClientID} @ ${item.ConstringServerName}/${item.ConstringDatabaseName}:`,
+//                   err
+//                 );
+//                 return of([]);
+//               })
+//             );
+
+//             // run the three calls in parallel and build the result
+//             return forkJoin({
+//               sp: sp$,
+//               dp: dp$,
+//               dpmap: dpPermissionMap$,
+//             }).pipe(
+//               map(({ sp, dp, dpmap }) => {
+//                 // console.log("SP RAW:", sp);
+//                 // console.log("DP RAW:", dp);
+//                 // const serverPrincipalName = sp?.[0]?.name ?? null;
+//                 const spRow = sp.find((s) => s.servername === item.ConstringServerName && !s.error);
+//                 const serverPrincipal = spRow?.name ?? null;
+//                 const dpRow = dp.find(
+//                   (d) =>
+//                     d.servername === item.ConstringServerName &&
+//                     d.databasename === item.ConstringDatabaseName &&
+//                     !d.error
+//                 );
+//                 const databasePrincipal = dpRow?.name ?? null;
+
+//                 const dbUserMappings = Array.isArray(dpmap)
+//                   ? dpmap.map((d) => d.DatabaseRole).flat()
+//                   : [];
+
+//                 const missingRoleMappings = dbpermission.filter(
+//                   (p) =>
+//                     !dbUserMappings
+//                       .map((r: string) => r?.toLowerCase?.() ?? "")
+//                       .includes(p.toLowerCase())
+//                 );
+
+//                 return {
+//                   ...item,
+//                   dbpermission,
+//                   //serverPrincipal: serverPrincipalName,
+//                   // serverPrincipal:
+//                   //   sp.find((s) => s.servername === item.ConstringServerName)?.name ?? null,
+//                   serverPrincipal,
+//                   ServerPrincipalFound: !!serverPrincipal,
+//                   databasePrincipal: databasePrincipal,
+//                   DatabasePrincipalFound: !!databasePrincipal,
+//                   DatabaseUserMappings: dbUserMappings,
+//                   MissingRoleMappings: missingRoleMappings,
+//                   error: spRow?.error
+//                     ? spRow.errorMessage
+//                     : dp?.[0]?.error
+//                       ? dp[0].errorMessage
+//                       : null,
+//                 } as IHCMCoreWithDbPermission;
+//               }),
+
+//               // If anything unexpected happens in mapping, return an error-annotated object
+//               catchError((err) => {
+//                 console.error("Mapping error for item", item.ClientID, err);
+//                 return of({
+//                   ...item,
+//                   dbpermission,
+//                   serverPrincipal: null,
+//                   ServerPrincipalFound: null,
+//                   databasePrincipal: null,
+//                   DatabasePrincipalFound: null,
+//                   DatabaseUserMappings: [],
+//                   MissingRoleMappings: [],
+//                   error: err instanceof Error ? err.message : "Unknown mapping error",
+//                 } as IHCMCoreWithDbPermission);
+//               })
+//             );
+//           }, concurrency),
+//           toArray()
+//         ),
+//       1 // outer mergeMap concurrency - we only need 1 since inner controls concurrency
+//     ),
+
+//     // flatten the arrays emitted by per-chunk to a single array
+//     mergeMap((results) => from(results || [])),
+//     toArray(),
+//     tap((final) => {
+//       console.log("✅ FINAL RESULT COUNT:", final.length);
+//       if (final.length) console.log("✅ FINAL SAMPLE:", final[0]);
+//     })
+//   );
+
+//   return await lastValueFrom(obs$);
+// }
 
 export async function getClientWithDbInfo(
   db: string,
@@ -545,35 +748,73 @@ async function fetchHCMCoreByClientArrayName(
   return data.data.CoreHCMDatabaseInventoryByClientIdArray;
 }
 
+// export async function getServerPrincipal(
+//   server: string,
+//   db: string,
+//   name: string
+// ): Promise<IServerPrincipal[]> {
+//   try {
+//     const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         server,
+//         db,
+//         q: `
+//         select name , create_date, default_database_name  from sys.server_principals where name = '${name}'
+//               `,
+//       }),
+//     });
+//     if (!res.ok) {
+//       let message = res.statusText;
+//       try {
+//         const resBody = await res.json();
+//         message = resBody?.error ?? message;
+//       } catch {}
+//       throw new Error(`getServerPrincipal failed (${res.status}): ${message}`);
+//     }
+//     return await res.json();
+//   } catch (err) {
+//     console.error("getServerPrincipal error:", err);
+//     throw err;
+//   }
+// }
+
 export async function getServerPrincipal(
   server: string,
   db: string,
   name: string
 ): Promise<IServerPrincipal[]> {
+  const query = `
+query ServerprincipalByName($server: String!, $db: String!, $name: String!) {
+  serverprincipalByName(server: $server, db: $db, name: $name) {
+    name
+    create_date
+    default_database_name
+  }
+}
+  `;
+  const variables = {
+    server,
+    db,
+    name,
+  };
+
   try {
-    const res = await fetch(`${process.env.APPDAPIROOT}/api/clientdb`, {
+    const res = await fetch(`${process.env.APPDAPIROOT}/api/graphql`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        server,
-        db,
-        q: `
-        select name , create_date, default_database_name  from sys.server_principals where name = '${name}'
-              `,
-      }),
+      body: JSON.stringify({ query, variables }),
     });
-    if (!res.ok) {
-      let message = res.statusText;
-      try {
-        const resBody = await res.json();
-        message = resBody?.error ?? message;
-      } catch {}
-      throw new Error(`getServerPrincipal failed (${res.status}): ${message}`);
+    const data = await res.json();
+    if (data.errors) {
+      console.error(data.errors);
+      throw new Error(data.errors[0].message);
     }
-    return await res.json();
+    return data.data.serverprincipalByName;
   } catch (err) {
     console.error("getServerPrincipal error:", err);
-    throw err;
+    throw err; // rethrow so caller can handle
   }
 }
 

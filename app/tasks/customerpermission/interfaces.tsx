@@ -20,7 +20,7 @@ export interface CustomerSecurityGroupMetaData {
 export interface ICustomerSecurityGroup {
   CustomerSecurityGroupsId: number;
   GroupSID: string;
-  Environment: "Prod" | "PreProd" | "NonProd";
+  Environment: "Prod" | "PreProd" | "NonProd" | "StaConTra";
   Namespace: string;
   ClientId: number;
   GroupName: string;
