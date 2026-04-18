@@ -320,10 +320,8 @@ export async function getclientdbpermissioninfo(
                     databasename: database,
                   }))
                 ),
-
                 catchError((err) => {
                   const msg = err?.message ?? "Unknown error";
-
                   if (!failedDatabases.has(server)) {
                     failedDatabases.set(server, new Map());
                   }
