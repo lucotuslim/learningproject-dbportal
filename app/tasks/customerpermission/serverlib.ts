@@ -11,8 +11,8 @@ import {
   ICustomerSecurityGroup,
   CustomerSecurityGroupMetaData,
 } from "./interfaces";
-import { from, toArray, lastValueFrom, mergeMap, map, of, forkJoin } from "rxjs";
-import { catchError, groupBy, reduce, tap, filter } from "rxjs/operators";
+import { from, toArray, lastValueFrom, mergeMap, map, of } from "rxjs";
+import { catchError, groupBy, reduce, tap } from "rxjs/operators";
 
 type CombinedGroup = {
   Namespace: string;
@@ -51,7 +51,6 @@ function normalizeClientIdsFromMeta(metadata: CustomerSecurityGroupMetaData): nu
     console.warn("No valid Client IDs found in MetaData:", metadata);
     return [];
   }
-
   return clientArray;
 }
 
@@ -227,7 +226,6 @@ export async function getclientdbpermissioninfo(
         mergeMap((item) => {
           const server = item.ConstringServerName;
           const database = item.ConstringDatabaseName;
-
           const failedserver = failedServers.get(server);
           const servererrorMessage = failedserver?.message;
           const servererrorCount = failedserver?.count;
@@ -387,7 +385,7 @@ export async function getclientdbpermissioninfo(
                         serverPrincipal,
                         ServerPrincipalFound: true,
                         databasePrincipal,
-                        DatabasePrincipalFound: true,
+                        DatabasePrincipalFound: !!databasePrincipal,
                         DatabaseUserMappings: dbUserMappings,
                         MissingRoleMappings: missingRoleMappings,
                         error: undefined,
@@ -399,7 +397,6 @@ export async function getclientdbpermissioninfo(
             })
           );
         }, concurrency),
-
         toArray()
       )
     ),
