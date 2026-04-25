@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/tabs"
 
 export default function Page() {
-
   return (
     <div className="w-full gap-6 m-6">
       <Tabs defaultValue="settings" className="w-full">

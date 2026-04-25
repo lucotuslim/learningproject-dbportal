@@ -29,14 +29,14 @@ export function ActionsCell({
         <>
             <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="h-8 w-8 p-0">
+                    <Button variant="ghost" className="h-8 w-8 p-0" data-testid="actions-button">
                         <MoreHorizontal />
                     </Button>
                 </DropdownMenuTrigger>
 
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem
+                    <DropdownMenuItem data-testid="check-db-permission"
                         onSelect={(e) => {
                             e.preventDefault()
                             setIsDialogOpen(true)
@@ -49,6 +49,7 @@ export function ActionsCell({
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent
+                    data-testid="customer-dialog"
                     className="mb-8 flex h-[calc(100vh-2rem)] min-w-[calc(100vw-2rem)] flex-col gap-0 p-0"
                 >
                     <DialogHeader>
@@ -143,7 +144,7 @@ export function CheckClientDbPermissionContent({
     }
 
     return (
-        <Table>
+        <Table data-testid="customer-table">
             <TableHeader>
                 <TableRow>
                     <TableHead>Client ID</TableHead>
