@@ -311,13 +311,13 @@ export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, Cli
     return (
         <Popover>
             <PopoverTrigger asChild>
-                <Button variant="link" className="p-0 h-auto" onClick={loadClients}>
+                <Button variant="link" className="p-0 h-auto" onClick={loadClients} disabled={!customerpermissionsetting}>
                     {/* {metaData ? metaData.toString() : 'None'} */}
                     {clientIDList}
                 </Button>
             </PopoverTrigger>
 
-            <PopoverContent className="w-[100vw] max-w-[950px] max-h-92 overflow-auto text-sm">
+            <PopoverContent className="w-[100vw] max-w-[950px] max-h-92 overflow-auto text-sm" data-testid="client-popover">
                 {loading && (<div className="flex justify-center py-4">
                     Loading...
                 </div>)}
