@@ -4,63 +4,70 @@ import { DataTable } from "./data-table";
 import { ICustomerSecurityGroup, ICustomerPermissionConfig } from "../interfaces";
 import { getCustomerSecurityGroups } from "../serverlib";
 import { useGlobalSetting } from "@/lib/store";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { CustomerPermissionSetting } from "../appconfig"
 import { toast } from "sonner";
+
 export default function CustomerSecurityGroup() {
     const selectedEnvironment = useGlobalSetting((state) => state.selectedEnvironment);
     const globalSettings = useGlobalSetting((state) => state.globalSettings);
-    console.log("Selected Environment in Customer Security Group Page:", selectedEnvironment);
+
     const [data, setData] = useState<ICustomerSecurityGroup[]>([]);
     const [search, setSearch] = useState("");
-
-    const filteredData = data.filter((item: ICustomerSecurityGroup) => {
-        const normalizedSearch = search.toLowerCase();
-        const groupName = item.GroupName.toLowerCase();
-
-        if (normalizedSearch.endsWith("%")) {
-            const prefix = normalizedSearch.slice(0, -1); // remove %
-            return groupName.startsWith(prefix);
-        } else if (normalizedSearch !== "") {
-            return groupName === normalizedSearch;
-        } else {
-            return true;
-        }
-    });
-
     const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
+
+    // Guard to ensure config only fetches once even in Strict Mode
+    const configFetched = useRef(false);
+
+    // 1. Fetch config once at the page level
     useEffect(() => {
-        CustomerPermissionSetting().then(setcustomerpermissionsetting)
-    }, [])
+        if (configFetched.current) return;
+        configFetched.current = true;
+
+        CustomerPermissionSetting()
+            .then(setcustomerpermissionsetting)
+            .catch(err => toast.error("Failed to load settings"));
+    }, []);
 
     const loaddata = useCallback(async () => {
-        if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return setData([]);
-        // // const ServerInventory = await GlobalSetting();
+        // Now we wait for customerpermissionsetting to be available before fetching data
+        if (!selectedEnvironment || !globalSettings || !customerpermissionsetting) return;
 
-        // console.log(
-        //   "Global Setting in Database Page:",
-        //   ServerInventory["SERVERINVENTORY"]
-        // );
         try {
-            setData([]);
-            const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(customerpermissionsetting.customerdbserver, customerpermissionsetting.customerdb, selectedEnvironment,
+            // Only clear data if we are actually about to fetch new stuff
+            // to prevent unnecessary "Loading..." flickers in Cypress
+            const res = await getCustomerSecurityGroups<ICustomerSecurityGroup>(
+                customerpermissionsetting.customerdbserver,
+                customerpermissionsetting.customerdb,
+                selectedEnvironment,
                 customerpermissionsetting.domainprefix
             );
             setData(res ?? []);
         } catch (err) {
-            console.error("Failed to load customer permission setting:", err);
+            console.error("Failed to load customer security groups:", err);
             toast.error(String(err))
         }
-    }, [selectedEnvironment, globalSettings, customerpermissionsetting]);  // dependencies used inside loaddata
+    }, [selectedEnvironment, globalSettings, customerpermissionsetting]);
 
     useEffect(() => {
         loaddata();
-    }, [loaddata]);   // now safe
+    }, [loaddata]);
 
-    if (!data || (data).length === 0) {
-        return <div className="container mx-auto py-10">Loading...</div>;
+    const filteredData = data.filter((item: ICustomerSecurityGroup) => {
+        const normalizedSearch = search.toLowerCase();
+        const groupName = item.GroupName.toLowerCase();
+        if (normalizedSearch.endsWith("%")) {
+            return groupName.startsWith(normalizedSearch.slice(0, -1));
+        }
+        return normalizedSearch === "" ? true : groupName === normalizedSearch;
+    });
+
+    // Handle initial loading state gracefully
+    if (!customerpermissionsetting || (data.length === 0 && !search)) {
+        return <div className="container mx-auto py-10">Loading Security Groups...</div>;
     }
+
     return (
         <div className="container mx-auto py-10">
             <div className="flex items-center justify-between mb-4">
@@ -71,7 +78,11 @@ export default function CustomerSecurityGroup() {
                     className="w-128"
                 />
             </div>
-            <DataTable columns={columns(selectedEnvironment)} data={filteredData} />
+            {/* Pass the setting into columns so ActionsCell doesn't have to fetch it */}
+            <DataTable
+                columns={columns(selectedEnvironment, customerpermissionsetting)}
+                data={filteredData}
+            />
         </div>
     );
 }

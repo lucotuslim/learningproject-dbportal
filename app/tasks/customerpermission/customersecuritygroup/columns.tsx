@@ -1,9 +1,9 @@
 "use client"
 import { ColumnDef } from "@tanstack/react-table"
-import { ICustomerSecurityGroup } from "../interfaces"
+import { ICustomerPermissionConfig, ICustomerSecurityGroup } from "../interfaces"
 import { ClientIDListCell, ActionsCell } from "./columnlib"
 
-export const columns = (selectedEnvironment: string): ColumnDef<ICustomerSecurityGroup>[] =>
+export const columns = (selectedEnvironment: string, customerpermissionsetting: ICustomerPermissionConfig): ColumnDef<ICustomerSecurityGroup>[] =>
   [
     { accessorKey: "GroupSID", header: "GroupSID" },
     { accessorKey: "Environment", header: "Environment" },
@@ -13,9 +13,10 @@ export const columns = (selectedEnvironment: string): ColumnDef<ICustomerSecurit
       header: "ClientID List",
       cell: ({ row }) =>
         row.original.MetaData ? (
-
           <ClientIDListCell metaData={row.original.MetaData} Namespace={row.original.Namespace} selectedEnvironment={selectedEnvironment}
-          ClientEnvironment={row.original.Environment} />
+            ClientEnvironment={row.original.Environment}
+            customerpermissionsetting={customerpermissionsetting}
+          />
         ) : (
           "None"
         )
@@ -27,7 +28,7 @@ export const columns = (selectedEnvironment: string): ColumnDef<ICustomerSecurit
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => (
-        <ActionsCell customer={row.original} selectedEnvironment={selectedEnvironment} />
+        <ActionsCell customer={row.original} selectedEnvironment={selectedEnvironment} customerpermissionsetting={customerpermissionsetting} />
       ),
     }
   ]

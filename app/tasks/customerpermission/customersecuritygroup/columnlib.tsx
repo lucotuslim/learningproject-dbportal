@@ -18,10 +18,12 @@ import { CustomerPermissionSetting } from "../appconfig";
 
 export function ActionsCell({
     customer,
-    selectedEnvironment
+    selectedEnvironment,
+    customerpermissionsetting
 }: {
     customer: ICustomerSecurityGroup,
-    selectedEnvironment: string
+    selectedEnvironment: string,
+    customerpermissionsetting: ICustomerPermissionConfig
 }) {
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
@@ -33,22 +35,22 @@ export function ActionsCell({
                         <MoreHorizontal />
                     </Button>
                 </DropdownMenuTrigger>
-
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" data-testid="actions-menu">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuItem data-testid="check-db-permission"
-                        onSelect={(e) => {
-                            e.preventDefault()
-                            setIsDialogOpen(true)
-                        }}
-                    >
-                        Check DB Permission
+                    <DropdownMenuItem asChild>
+                        <button
+                            data-testid="check-db-permission"
+                            onClick={() => setIsDialogOpen(true)}
+                        >
+                            Check DB Permission
+                        </button>
                     </DropdownMenuItem>
                 </DropdownMenuContent>
             </DropdownMenu>
 
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                 <DialogContent
+                    forceMount
                     data-testid="customer-dialog"
                     className="mb-8 flex h-[calc(100vh-2rem)] min-w-[calc(100vw-2rem)] flex-col gap-0 p-0"
                 >
@@ -63,6 +65,7 @@ export function ActionsCell({
                             clientpermission={customer.Permission}
                             selectedEnvironment={selectedEnvironment}
                             ClientEnvironment={customer.Environment}
+                            customerpermissionsetting={customerpermissionsetting}
                         />
                     </div>
                 </DialogContent>
@@ -77,7 +80,8 @@ export function CheckClientDbPermissionContent({
     Namespace,
     clientpermission,
     selectedEnvironment,
-    ClientEnvironment
+    ClientEnvironment,
+    customerpermissionsetting
 }: {
     metaData?: CustomerSecurityGroupMetaData | string | null
     name: string
@@ -85,16 +89,12 @@ export function CheckClientDbPermissionContent({
     clientpermission: string
     selectedEnvironment: string
     ClientEnvironment: string
+    customerpermissionsetting: ICustomerPermissionConfig
 
 }) {
     const [data, setData] = useState<IHCMCoreWithDbPermission[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
-
-    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
-    useEffect(() => {
-        CustomerPermissionSetting().then(setcustomerpermissionsetting)
-    }, [])
 
     useEffect(() => {
         if (!metaData || !customerpermissionsetting) return
@@ -239,15 +239,16 @@ export function CheckClientDbPermissionContent({
 }
 
 
-export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, ClientEnvironment }: { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string, ClientEnvironment: string }) {
+export function ClientIDListCell({ metaData, Namespace, selectedEnvironment, ClientEnvironment, customerpermissionsetting }:
+    { metaData?: CustomerSecurityGroupMetaData | string | null, Namespace: string, selectedEnvironment: string, ClientEnvironment: string, customerpermissionsetting: ICustomerPermissionConfig }) {
     const [data, setData] = useState<IHCMCoreWithFound[]>([])
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
-    useEffect(() => {
-        CustomerPermissionSetting().then(setcustomerpermissionsetting)
-    }, [])
+    // const [customerpermissionsetting, setcustomerpermissionsetting] = useState<ICustomerPermissionConfig>()
+    // useEffect(() => {
+    //     CustomerPermissionSetting().then(setcustomerpermissionsetting)
+    // }, [])
 
     let clientIDList = "None";
 
