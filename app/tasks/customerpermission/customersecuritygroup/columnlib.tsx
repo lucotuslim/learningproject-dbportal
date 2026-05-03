@@ -201,7 +201,7 @@ export function CheckClientDbPermissionContent({
                                     )
                                 }
                             </TableCell>
-                            <TableCell>
+                            <TableCell data-testid="validation-cell">
                                 {!info.error && (
                                     <div className="flex flex-col gap-1">
                                         {!info.ServerPrincipalFound && (

@@ -44,7 +44,7 @@ describe("ActionsCell", () => {
     cy.contains("Customer Security Group").click();
     // Wait for the button to not be disabled and be visible
     // cy.get('[data-testid="actions-button"]').first().scrollIntoView().should("be.visible").click();
-    cy.get('[data-testid="actions-button"]').first().realClick();
+    cy.get('[data-testid="actions-button"]').first().click();
     // Check if the menu exists in the DOM at all (even if hidden)
     cy.get('[data-testid="check-db-permission"]').should("be.visible").click();
 
@@ -54,6 +54,7 @@ describe("ActionsCell", () => {
         namespace: "CYNamespace",
         database: "NonProdClientDb2",
         server: "192.168.100.121",
+        permissionrequired: "db_owner",
         serverPrincipal: "Yes",
         databasePrincipal: "Yes",
         error: "",
@@ -63,16 +64,52 @@ describe("ActionsCell", () => {
         namespace: "CYNamespace",
         database: "NonProdClientDb4",
         server: "WrongIpaddress",
-        error: "DB_ERROR",
+        permissionrequired: "db_owner",
+        error: " ServerPrincipalApi failed: Query timeout (child killed) after 5000 ms (DB_ERROR)",
       },
       {
         clientId: "5",
         namespace: "WrongNamespace",
         database: "NonProdClientDb5",
         server: "192.168.100.121",
+        permissionrequired: "db_owner",
         serverPrincipal: "Yes",
         databasePrincipal: "No",
         remarks: "No Database Principal Found",
+        missingdbmapping: "db_owner",
+      },
+      {
+        clientId: "6",
+        namespace: "CYNamespace",
+        database: "NonProdClientDb6",
+        server: "192.168.100.121",
+        permissionrequired: "db_owner",
+        serverPrincipal: "Yes",
+        databasePrincipal: "No",
+        remarks: "No Database Principal Found",
+        missingdbmapping: "db_owner",
+      },
+      {
+        clientId: "7",
+        namespace: "CYNamespace",
+        database: "NonProdClientDb7",
+        server: "192.168.100.121",
+        permissionrequired: "db_owner",
+        serverPrincipal: "Yes",
+        databasePrincipal: "No",
+        remarks: "No Database Principal Found",
+        missingdbmapping: "db_owner",
+      },
+      {
+        clientId: "8",
+        namespace: "CYNamespace",
+        database: "NonProdClientDb8",
+        server: "192.168.100.121",
+        permissionrequired: "db_owner",
+        serverPrincipal: "Yes",
+        databasePrincipal: "Yes",
+        remarks: `Missing Db Role Mappings :    db_owner`,
+        missingdbmapping: "db_owner",
       },
     ];
 
@@ -89,6 +126,7 @@ describe("ActionsCell", () => {
           cy.get("td").eq(1).should("have.text", expected.namespace);
           cy.get("td").eq(2).should("have.text", expected.database);
           cy.get("td").eq(3).should("have.text", expected.server);
+          cy.get("td").eq(4).should("have.text", expected.permissionrequired);
 
           if (expected.serverPrincipal) {
             cy.get("td").eq(6).should("contain", expected.serverPrincipal);
@@ -97,11 +135,27 @@ describe("ActionsCell", () => {
           if (expected.databasePrincipal) {
             cy.get("td").eq(7).should("contain", expected.databasePrincipal);
           }
+          const remarksCell = cy.get("td").eq(8);
 
-          if (expected.remarks) {
-            cy.get("td").eq(8).should("contain", expected.remarks);
+          if (expected.error) {
+            // ❗ When error exists, your JSX does NOT render remarks
+            remarksCell
+              .should("not.contain", "No Database Principal Found")
+              .and("not.contain", "Missing Db Role Mappings");
+          } else if (expected.remarks === "No Database Principal Found") {
+            remarksCell.should("contain", "No Database Principal Found");
+          } else if (expected.remarks?.includes("Missing Db Role Mappings")) {
+            remarksCell.within(() => {
+              cy.contains("Missing Db Role Mappings").should("exist");
+            });
+          } else {
+            remarksCell.should(($td) => {
+              expect($td.text().trim()).to.equal("");
+            });
           }
-
+          if (expected.missingdbmapping) {
+            cy.get("li").should("contain", expected.missingdbmapping);
+          }
           if (expected.error) {
             cy.get("td").eq(9).should("contain", expected.error);
           }
