@@ -1,0 +1,12 @@
+services:
+  dbportal:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+
+    env_file:
+      - .env.local
+
+    ports:
+      - "3000:3000"
+      
